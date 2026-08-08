@@ -9,8 +9,9 @@ from app.schemas.mission import (
     MissionResponse,
     MissionListResponse,
     MissionPlanResponse,
+    MissionStepsPayload,
 )
-from app.services import mission_service
+from app.services import mission_service, execution_service
 
 router = APIRouter()
 
@@ -147,3 +148,94 @@ async def regenerate_mission_plan(
             detail="Mission not found in active workspace."
         )
     return MissionPlanResponse(**plan)
+
+# --- Execution Engine Endpoints ---
+
+@router.post("/missions/{id}/steps", response_model=MissionStepsPayload)
+async def convert_plan_to_steps(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.convert_plan_to_steps(db, workspace_id, id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.get("/missions/{id}/steps", response_model=MissionStepsPayload)
+async def get_mission_steps(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    data = await execution_service.get_mission_steps_and_execution(db, workspace_id, id)
+    return MissionStepsPayload(**data)
+
+@router.post("/missions/{id}/start", response_model=MissionStepsPayload)
+async def start_execution(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.start_execution(db, workspace_id, id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/missions/{id}/pause", response_model=MissionStepsPayload)
+async def pause_execution(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.pause_execution(db, workspace_id, id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/missions/{id}/resume", response_model=MissionStepsPayload)
+async def resume_execution(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    return await start_execution(id, workspace_id, db)
+
+@router.post("/missions/{id}/cancel", response_model=MissionStepsPayload)
+async def cancel_execution(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.cancel_execution(db, workspace_id, id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/mission-steps/{step_id}/complete", response_model=MissionStepsPayload)
+async def complete_step(
+    step_id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.complete_step(db, workspace_id, step_id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/mission-steps/{step_id}/skip", response_model=MissionStepsPayload)
+async def skip_step(
+    step_id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionStepsPayload:
+    try:
+        data = await execution_service.skip_step(db, workspace_id, step_id)
+        return MissionStepsPayload(**data)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

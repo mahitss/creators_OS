@@ -27,6 +27,39 @@ export interface MissionPlan {
   updated_at: string;
 }
 
+export interface MissionStep {
+  id: string;
+  mission_id: string;
+  plan_version_id?: string | null;
+  title: string;
+  description: string;
+  order: number;
+  status: 'pending' | 'ready' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  failure_reason?: string | null;
+  output?: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface MissionExecution {
+  id: string;
+  mission_id: string;
+  status: 'idle' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+  completed_steps_count: number;
+  total_steps_count: number;
+  created_at: string;
+  updated_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface MissionStepsPayload {
+  execution?: MissionExecution | null;
+  steps: MissionStep[];
+}
+
 export interface Mission {
   id: string;
   workspace_id: string;
@@ -188,6 +221,98 @@ export async function regenerateMissionPlan(id: string): Promise<MissionPlan> {
 
   if (!res.ok) {
     throw new Error(`Failed to regenerate mission plan (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function convertPlanToSteps(id: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/steps`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to convert plan to steps (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function fetchMissionSteps(id: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/steps`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch mission steps (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function startExecution(id: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to start execution (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function pauseExecution(id: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/pause`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to pause execution (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function cancelExecution(id: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to cancel execution (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function completeStep(stepId: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/mission-steps/${stepId}/complete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to complete step (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function skipStep(stepId: string): Promise<MissionStepsPayload> {
+  const res = await fetch(`${API_BASE_URL}/mission-steps/${stepId}/skip`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to skip step (HTTP ${res.status})`);
   }
 
   return await res.json();
