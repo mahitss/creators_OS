@@ -12,6 +12,7 @@ from app.schemas.home import (
     CalendarCommitmentItem,
 )
 from app.services import mission_service, memory_service, attention_service, calendar_service
+from app.services.context_engine import ContextEngine, ContextRequest, ContextPurpose, SourceType
 
 def get_time_of_day_greeting(user_name: str) -> str:
     hour = datetime.now(timezone.utc).hour
@@ -35,10 +36,21 @@ async def build_executive_brief(
         QuickActionItem(id="qa-attention", label="Attention Center", href="/attention", icon="🔔"),
         QuickActionItem(id="qa-missions", label="Missions Orchestrator", href="/missions", icon="⚡"),
         QuickActionItem(id="qa-content", label="Studio Content Canvas", href="/content", icon="🎨"),
+        QuickActionItem(id="qa-gmail", label="Email Triage", href="/gmail", icon="✉️"),
+        QuickActionItem(id="qa-drive", label="Document Context", href="/drive", icon="📄"),
         QuickActionItem(id="qa-memory", label="Context Vault Memory", href="/memory", icon="🧠"),
     ]
 
-    # 1. Single Source of Truth: Reconcile Attention Engine
+    # Use Unified Context Engine for Executive Brief Context Retrieval
+    ctx_req = ContextRequest(
+        workspace_id=workspace_id,
+        user_id="usr_alex",
+        purpose=ContextPurpose.EXECUTIVE_BRIEF,
+        allowed_sources=[SourceType.MISSION, SourceType.MEMORY, SourceType.CALENDAR, SourceType.ATTENTION]
+    )
+    ctx_res = await ContextEngine.retrieve(db, ctx_req)
+
+    # 1. Attention Items
     open_attentions, _, _ = await attention_service.list_attention_items(db, workspace_id, status_filter="open")
 
     needs_attention = []
@@ -70,7 +82,6 @@ async def build_executive_brief(
     # 2. Workspace Probes for Additional Recommendations
     active_missions, _ = await mission_service.list_workspace_missions(db, workspace_id, status_filter="active")
     all_missions, _ = await mission_service.list_workspace_missions(db, workspace_id, status_filter="all")
-    approved_mems, _ = await memory_service.list_memories(db, workspace_id, is_archived=False)
 
     if not primary_rec and active_missions:
         m_curr = active_missions[0]
@@ -82,29 +93,30 @@ async def build_executive_brief(
             action_href=f"/missions/{m_curr['id']}"
         )
 
-    # 3. Learned Memories Mapping
+    # 3. Learned Memories Mapping from ContextEngine
+    mem_items = [it for it in ctx_res.items if it.source_type == SourceType.MEMORY]
     learned_memories = [
         LearnedMemoryItem(
-            id=m["id"],
-            title=m["title"],
-            content=m["content"],
-            type=m["type"],
-            updated_at=m["updated_at"]
+            id=m.source_id,
+            title=m.title,
+            content=m.content,
+            type="insight",
+            updated_at=m.updated_at
         )
-        for m in approved_mems[:3]
+        for m in mem_items[:3]
     ]
 
-    # 4. Today Calendar Commitments
-    cal_events, _ = await calendar_service.list_events(db, workspace_id, timeframe="next_7_days")
+    # 4. Today Calendar Commitments from ContextEngine
+    cal_items = [it for it in ctx_res.items if it.source_type == SourceType.CALENDAR]
     today_calendar_events = [
         CalendarCommitmentItem(
-            id=ev["id"],
-            title=ev["title"],
-            start_at=ev["start_at"],
-            end_at=ev["end_at"],
-            location=ev.get("location")
+            id=c.source_id,
+            title=c.title,
+            start_at=c.created_at,
+            end_at=c.updated_at,
+            location="Virtual"
         )
-        for ev in cal_events[:3]
+        for c in cal_items[:3]
     ]
 
     # 5. Recent Activity Aggregation
