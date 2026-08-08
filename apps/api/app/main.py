@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home
+from app.api.routers import health, auth, workspace, home, missions
 
 setup_logging()
 
@@ -40,6 +40,7 @@ app.include_router(health.router, prefix=settings.API_V1_STR, tags=["Health"])
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Auth"])
 app.include_router(workspace.router, prefix=settings.API_V1_STR, tags=["Workspace"])
 app.include_router(home.router, prefix=settings.API_V1_STR, tags=["Home"])
+app.include_router(missions.router, prefix=settings.API_V1_STR, tags=["Missions"])
 
 @app.get("/")
 async def root():
