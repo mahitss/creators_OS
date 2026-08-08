@@ -23,10 +23,16 @@ import {
   MissionStep,
   MissionExecution,
 } from '../../../lib/api/missions';
+import {
+  fetchMissionDeliverableSuggestions,
+  analyzeMissionDeliverables,
+  DeliverableSuggestion,
+} from '../../../lib/api/deliverables';
 import { ActivityTimeline } from '../../../components/missions/ActivityTimeline';
 import { MissionPlanView } from '../../../components/missions/MissionPlanView';
 import { ExecutionControlBar } from '../../../components/missions/ExecutionControlBar';
 import { MissionStepsList } from '../../../components/missions/MissionStepsList';
+import { DeliverableSuggestionsSection } from '../../../components/missions/DeliverableSuggestionsSection';
 import { Typography, Card, Badge, Button, Spinner, ErrorState, Dialog, Input, Textarea, Select } from '@vapor/ui';
 import { formatDate } from '@vapor/utils';
 
@@ -38,6 +44,7 @@ export default function MissionDetailPage() {
   const [plan, setPlan] = useState<MissionPlan | null>(null);
   const [steps, setSteps] = useState<MissionStep[]>([]);
   const [execution, setExecution] = useState<MissionExecution | null>(null);
+  const [suggestions, setSuggestions] = useState<DeliverableSuggestion[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -69,6 +76,10 @@ export default function MissionDetailPage() {
       const stepData = await fetchMissionSteps(missionId);
       setSteps(stepData.steps);
       setExecution(stepData.execution || null);
+
+      // Load deliverable suggestions
+      const delivData = await fetchMissionDeliverableSuggestions(missionId);
+      setSuggestions(delivData.suggestions);
     } catch (err) {
       console.error('Failed to load mission detail:', err);
       setIsError(true);
@@ -177,6 +188,11 @@ export default function MissionDetailPage() {
       const payload = await completeStep(stepId);
       setSteps(payload.steps);
       setExecution(payload.execution || null);
+      
+      // Trigger deliverable analysis check
+      if (mission) {
+        await analyzeMissionDeliverables(mission.id);
+      }
       await loadMissionDetail();
     } catch (err) {
       console.error('Failed to complete step:', err);
@@ -204,6 +220,8 @@ export default function MissionDetailPage() {
     try {
       const updated = await completeMission(mission.id);
       setMission(updated);
+      await analyzeMissionDeliverables(mission.id);
+      await loadMissionDetail();
     } catch (err) {
       console.error('Failed to complete mission:', err);
     }
@@ -308,6 +326,12 @@ export default function MissionDetailPage() {
                 <span>Updated {formatDate(mission.updated_at)}</span>
               </div>
             </Card>
+
+            {/* Potential Deliverables Section */}
+            <DeliverableSuggestionsSection
+              suggestions={suggestions}
+              onRefresh={loadMissionDetail}
+            />
 
             {/* Execution Control Bar */}
             <ExecutionControlBar
