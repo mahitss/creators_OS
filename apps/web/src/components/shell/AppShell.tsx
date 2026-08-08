@@ -46,6 +46,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Attention Center', href: '/attention', icon: '🔔', badgeCount: openAttentionCount },
     { label: 'Missions', href: '/missions', icon: '⚡' },
     { label: 'Content Canvas', href: '/content', icon: '🎨' },
+    { label: 'Email Triage', href: '/gmail', icon: '✉️' },
     { label: 'Context Memory', href: '/memory', icon: '🧠' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
