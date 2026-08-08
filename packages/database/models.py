@@ -141,12 +141,12 @@ class Memory(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # preference, fact, decision, goal, insight, lesson, relationship, context
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    source_type: Mapped[str] = mapped_column(String(50), nullable=False, default="manual") # manual, mission, mission_plan, mission_execution, user_action, ai_extraction
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, default="manual")
     source_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    importance: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    importance: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
     is_archived: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -170,6 +170,27 @@ class MemoryCandidate(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected, expired
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Content(Base):
+    __tablename__ = "content_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="SET NULL"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="article", index=True) # article, script, social_post, email, report, outline
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, in_review, approved, archived
+    content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("idx_content_workspace_type", "workspace_id", "type"),
+        Index("idx_content_workspace_status", "workspace_id", "status"),
+    )
