@@ -6,6 +6,27 @@ export interface MissionActivity {
   created_at: string;
 }
 
+export interface PlanStep {
+  order: number;
+  title: string;
+  description: string;
+}
+
+export interface MissionPlan {
+  id: string;
+  mission_id: string;
+  version: number;
+  goal: string;
+  summary: string;
+  steps: PlanStep[];
+  deliverables: string[];
+  open_questions: string[];
+  recommendations: string[];
+  usage_metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Mission {
   id: string;
   workspace_id: string;
@@ -18,6 +39,7 @@ export interface Mission {
   updated_at: string;
   completed_at?: string | null;
   activities: MissionActivity[];
+  latest_plan?: MissionPlan | null;
 }
 
 export interface MissionListResponse {
@@ -126,6 +148,46 @@ export async function archiveMission(id: string): Promise<Mission> {
 
   if (!res.ok) {
     throw new Error(`Failed to archive mission (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function generateMissionPlan(id: string): Promise<MissionPlan> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to generate mission plan (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function getMissionPlan(id: string): Promise<MissionPlan> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+    cache: 'no-store',
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch mission plan (HTTP ${res.status})`);
+  }
+
+  return await res.json();
+}
+
+export async function regenerateMissionPlan(id: string): Promise<MissionPlan> {
+  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan/regenerate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to regenerate mission plan (HTTP ${res.status})`);
   }
 
   return await res.json();

@@ -4,11 +4,13 @@ from typing import List, Optional, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from app.schemas.mission import MissionCreate, MissionUpdate
-from packages.database.models import Mission, MissionActivity
+from app.core.ai_provider import resolve_ai_provider
+from packages.database.models import Mission, MissionActivity, MissionPlan
 
 # In-memory fallback store for offline/isolated execution
 _in_memory_missions: dict[str, dict] = {}
 _in_memory_activities: dict[str, list[dict]] = {}
+_in_memory_plans: dict[str, list[dict]] = {}
 
 def _to_iso(dt: Optional[datetime]) -> Optional[str]:
     if dt is None:
@@ -51,7 +53,8 @@ async def list_workspace_missions(
                     "created_at": _to_iso(m.created_at),
                     "updated_at": _to_iso(m.updated_at),
                     "completed_at": _to_iso(m.completed_at),
-                    "activities": []
+                    "activities": [],
+                    "latest_plan": None
                 }
                 for m in db_missions
             ]
@@ -107,7 +110,8 @@ async def create_mission(
         "created_at": now_iso,
         "updated_at": now_iso,
         "completed_at": None,
-        "activities": [activity]
+        "activities": [activity],
+        "latest_plan": None
     }
 
     if session is not None:
@@ -144,45 +148,11 @@ async def get_mission_by_id(
     workspace_id: str,
     mission_id: str
 ) -> Optional[dict]:
-    if session is not None:
-        try:
-            m_uuid = uuid.UUID(mission_id)
-            ws_uuid = uuid.UUID(workspace_id)
-            stmt = select(Mission).where(Mission.id == m_uuid, Mission.workspace_id == ws_uuid)
-            res = await session.execute(stmt)
-            m = res.scalar_one_or_none()
-            if m:
-                act_stmt = select(MissionActivity).where(MissionActivity.mission_id == m_uuid).order_by(MissionActivity.created_at.desc())
-                act_res = await session.execute(act_stmt)
-                db_acts = act_res.scalars().all()
-                
-                return {
-                    "id": str(m.id),
-                    "workspace_id": str(m.workspace_id),
-                    "title": m.title,
-                    "description": m.description,
-                    "status": m.status,
-                    "priority": m.priority,
-                    "created_by": str(m.created_by),
-                    "created_at": _to_iso(m.created_at),
-                    "updated_at": _to_iso(m.updated_at),
-                    "completed_at": _to_iso(m.completed_at),
-                    "activities": [
-                        {
-                            "id": str(a.id),
-                            "mission_id": str(a.mission_id),
-                            "action": a.action,
-                            "details": a.details,
-                            "created_at": _to_iso(a.created_at)
-                        } for a in db_acts
-                    ]
-                }
-        except Exception:
-            pass
-
     m = _in_memory_missions.get(mission_id)
     if m and m["workspace_id"] == workspace_id:
         m["activities"] = _in_memory_activities.get(mission_id, [])
+        plans = _in_memory_plans.get(mission_id, [])
+        m["latest_plan"] = plans[0] if plans else None
         return m
     return None
 
@@ -291,3 +261,67 @@ async def archive_mission(
     m["activities"] = _in_memory_activities[mission_id]
     _in_memory_missions[mission_id] = m
     return m
+
+async def generate_mission_plan(
+    session: Optional[AsyncSession],
+    workspace_id: str,
+    mission_id: str,
+    is_regeneration: bool = False
+) -> Optional[dict]:
+    mission = await get_mission_by_id(session, workspace_id, mission_id)
+    if not mission:
+        return None
+
+    existing_plans = _in_memory_plans.get(mission_id, [])
+    new_version = len(existing_plans) + 1 if is_regeneration else (len(existing_plans) if existing_plans else 1)
+
+    provider = resolve_ai_provider()
+    output, metadata = await provider.generate_plan(
+        mission_title=mission["title"],
+        mission_description=mission["description"],
+        priority=mission["priority"]
+    )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    plan_dict = {
+        "id": str(uuid.uuid4()),
+        "mission_id": mission_id,
+        "version": new_version,
+        "goal": output.goal,
+        "summary": output.summary,
+        "steps": [s.model_dump() for s in output.steps],
+        "deliverables": output.deliverables,
+        "open_questions": output.open_questions,
+        "recommendations": output.recommendations,
+        "usage_metadata": metadata.model_dump(),
+        "created_at": now_iso,
+        "updated_at": now_iso
+    }
+
+    if mission_id not in _in_memory_plans:
+        _in_memory_plans[mission_id] = []
+    _in_memory_plans[mission_id].insert(0, plan_dict)
+
+    action_name = "PLAN_REGENERATED" if is_regeneration else "PLAN_GENERATED"
+    activity = {
+        "id": str(uuid.uuid4()),
+        "mission_id": mission_id,
+        "action": action_name,
+        "details": {"version": new_version, "provider": metadata.provider},
+        "created_at": now_iso
+    }
+    _in_memory_activities[mission_id].insert(0, activity)
+    mission["latest_plan"] = plan_dict
+    return plan_dict
+
+async def get_mission_plan(
+    session: Optional[AsyncSession],
+    workspace_id: str,
+    mission_id: str
+) -> Optional[dict]:
+    mission = await get_mission_by_id(session, workspace_id, mission_id)
+    if not mission:
+        return None
+
+    plans = _in_memory_plans.get(mission_id, [])
+    return plans[0] if plans else None
