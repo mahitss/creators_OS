@@ -181,8 +181,8 @@ class Content(Base):
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
     mission_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="SET NULL"), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    type: Mapped[str] = mapped_column(String(50), nullable=False, default="article", index=True) # article, script, social_post, email, report, outline
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, in_review, approved, archived
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="article", index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True)
     content: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
@@ -193,4 +193,24 @@ class Content(Base):
     __table_args__ = (
         Index("idx_content_workspace_type", "workspace_id", "type"),
         Index("idx_content_workspace_status", "workspace_id", "status"),
+    )
+
+class DeliverableSuggestion(Base):
+    __tablename__ = "deliverable_suggestions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="report", index=True) # article, script, social_post, email, report, outline
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    source_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, accepted, dismissed, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_deliv_sugg_mission_status", "mission_id", "status"),
+        Index("idx_deliv_sugg_workspace_status", "workspace_id", "status"),
     )
