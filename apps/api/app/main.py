@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search
 
 setup_logging()
 
@@ -45,6 +45,7 @@ app.include_router(memories.router, prefix=settings.API_V1_STR, tags=["Memories"
 app.include_router(content.router, prefix=settings.API_V1_STR, tags=["Content"])
 app.include_router(deliverables.router, prefix=settings.API_V1_STR, tags=["Deliverables"])
 app.include_router(attention.router, prefix=settings.API_V1_STR, tags=["Attention"])
+app.include_router(search.router, prefix=settings.API_V1_STR, tags=["Search"])
 
 @app.get("/")
 async def root():

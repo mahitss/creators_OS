@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { fetchAttentionCount } from '../../lib/api/attention';
+import { CommandPalette } from '../command/CommandPalette';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ export interface AppShellProps {
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const pathname = usePathname();
   const [openAttentionCount, setOpenAttentionCount] = useState<number>(0);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -25,6 +27,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       isMounted = false;
       clearInterval(interval);
     };
+  }, []);
+
+  // Global Cmd+K / Ctrl+K keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const navItems = [
@@ -75,7 +89,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
+          {/* Global Search / Command Palette Trigger Button */}
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition-all font-mono"
+          >
+            <span>🔍 Search</span>
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 border border-slate-700">
+              ⌘K
+            </kbd>
+          </button>
+
+          <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span>ws_default_01</span>
           </div>
@@ -89,6 +114,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0D0F17] border-t border-slate-800 flex items-center justify-around px-2 z-40">
+        <button
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="flex flex-col items-center gap-0.5 text-slate-400"
+        >
+          <span className="text-base">🔍</span>
+          <span className="text-[10px]">Search</span>
+        </button>
+
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
           return (
@@ -110,6 +143,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           );
         })}
       </div>
+
+      {/* Command Palette Modal */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+      />
     </div>
   );
 };
