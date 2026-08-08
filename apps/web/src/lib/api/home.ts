@@ -6,7 +6,7 @@ export interface ActionLink {
 export interface AttentionItem {
   id: string;
   title: string;
-  context: str;
+  context: string;
   why_it_matters: string;
   primary_action: ActionLink;
   secondary_action?: ActionLink | null;
@@ -28,14 +28,32 @@ export interface QuickActionItem {
   icon: string;
 }
 
+export interface RecommendationItem {
+  id: string;
+  title: string;
+  reason: string;
+  action_label: string;
+  action_href: string;
+}
+
+export interface LearnedMemoryItem {
+  id: string;
+  title: string;
+  content: string;
+  type: string;
+  updated_at: string;
+}
+
 export interface ExecutiveBriefResponse {
   user_name: string;
   greeting: string;
   summary_statement: string;
   needs_attention: AttentionItem[];
+  primary_recommendation?: RecommendationItem | null;
+  learned_memories: LearnedMemoryItem[];
   recent_activity: ActivityItem[];
   quick_actions: QuickActionItem[];
-  is_empty_state: boolean;
+  is_quiet_state: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -56,12 +74,13 @@ export async function fetchExecutiveBrief(userName: string = 'Alex'): Promise<Ex
 
     return await res.json();
   } catch (err) {
-    // If backend connection fails or during offline test execution, fallback to local brief state gracefully
     return {
       user_name: userName,
       greeting: `Welcome, ${userName}.`,
       summary_statement: 'Vapor is observing your workspace context.',
       needs_attention: [],
+      primary_recommendation: null,
+      learned_memories: [],
       recent_activity: [],
       quick_actions: [
         { id: 'qa-missions', label: 'Missions Orchestrator', href: '/missions', icon: '⚡' },
@@ -69,7 +88,7 @@ export async function fetchExecutiveBrief(userName: string = 'Alex'): Promise<Ex
         { id: 'qa-memory', label: 'Context Vault Memory', href: '/memory', icon: '🧠' },
         { id: 'qa-settings', label: 'System Settings', href: '/settings', icon: '⚙️' },
       ],
-      is_empty_state: true,
+      is_quiet_state: true,
     };
   }
 }

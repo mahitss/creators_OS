@@ -4,10 +4,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AppShell } from '../components/shell/AppShell';
 import { fetchExecutiveBrief, ExecutiveBriefResponse } from '../lib/api/home';
 import { ExecutiveGreeting } from '../components/home/ExecutiveGreeting';
-import { TodaysBrief } from '../components/home/TodaysBrief';
+import { ExecutiveSummaryCard } from '../components/home/ExecutiveSummaryCard';
 import { NeedsAttention } from '../components/home/NeedsAttention';
+import { PrimaryRecommendation } from '../components/home/PrimaryRecommendation';
+import { LearnedMemoriesSection } from '../components/home/LearnedMemoriesSection';
 import { RecentActivity } from '../components/home/RecentActivity';
 import { QuickActions } from '../components/home/QuickActions';
+import { QuietHomeState } from '../components/home/QuietHomeState';
 import { HomeSkeleton } from '../components/home/HomeSkeleton';
 import { HomeErrorState } from '../components/home/HomeErrorState';
 
@@ -48,9 +51,23 @@ export default function Home() {
             summaryStatement={data.summary_statement}
           />
 
-          <TodaysBrief isEmptyState={data.is_empty_state} />
+          <ExecutiveSummaryCard summaryStatement={data.summary_statement} />
 
-          <NeedsAttention items={data.needs_attention} />
+          {data.needs_attention && data.needs_attention.length > 0 && (
+            <NeedsAttention items={data.needs_attention} />
+          )}
+
+          {data.primary_recommendation && (
+            <PrimaryRecommendation recommendation={data.primary_recommendation} />
+          )}
+
+          {data.is_quiet_state && (
+            <QuietHomeState />
+          )}
+
+          {data.learned_memories && data.learned_memories.length > 0 && (
+            <LearnedMemoriesSection memories={data.learned_memories} />
+          )}
 
           <RecentActivity activities={data.recent_activity} />
 
