@@ -13,6 +13,11 @@ class AgentRunResponse(BaseModel):
     goal: str
     iteration_count: int
     max_iterations: int
+    version: Optional[int] = 1
+    lease_worker_id: Optional[str] = None
+    lease_expires_at: Optional[str] = None
+    budget_state: Dict[str, Any] = {}
+    resume_at: Optional[str] = None
     started_at: Optional[str] = None
     completed_at: Optional[str] = None
 
@@ -38,3 +43,10 @@ class AgentApprovalResponse(BaseModel):
     risk_level: str
     status: str
     input_hash: Optional[str] = None
+
+class AgentCheckpointResponse(BaseModel):
+    id: str
+    agent_run_id: str
+    sequence: int
+    state: Dict[str, Any] = {}
+    created_at: str

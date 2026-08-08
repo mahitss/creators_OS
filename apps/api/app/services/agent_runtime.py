@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.tool_registry import ToolRegistry, ToolRiskLevel
 from app.services.context_engine import ContextEngine, ContextRequest, ContextPurpose, SourceType
-from app.services import mission_service, attention_service
+from app.services import mission_service, attention_service, agent_recovery
 
 _in_memory_runs: Dict[str, dict] = {}
 _in_memory_steps: Dict[str, List[dict]] = {}
@@ -44,6 +44,11 @@ async def create_agent_run(
         "current_step_id": None,
         "iteration_count": 0,
         "max_iterations": min(max_iterations, MAX_DEFAULT_ITERATIONS),
+        "version": 1,
+        "lease_worker_id": "worker_01",
+        "lease_expires_at": (datetime.now(timezone.utc) + timedelta(seconds=30)).isoformat(),
+        "budget_state": {"iteration_count": 0, "max_iterations": max_iterations, "estimated_cost": 0.0},
+        "resume_at": None,
         "started_at": now_iso,
         "completed_at": None,
         "created_at": now_iso,
@@ -52,6 +57,9 @@ async def create_agent_run(
 
     _in_memory_runs[run_id] = run
     _in_memory_steps[run_id] = []
+
+    # Initial Checkpoint
+    await agent_recovery.save_checkpoint(run_id, current_step=1, completed_steps=[], budget_state=run["budget_state"])
 
     # Execute Initial Agent Step Loop
     await step_agent_run(session, workspace_id, run_id, requested_tool=initial_tool, tool_input=initial_input)
@@ -83,11 +91,17 @@ async def step_agent_run(
     workspace_id: str,
     run_id: str,
     requested_tool: Optional[str] = None,
-    tool_input: Optional[dict] = None
+    tool_input: Optional[dict] = None,
+    worker_id: str = "worker_01"
 ) -> dict:
     run = await get_agent_run(session, workspace_id, run_id)
     if not run:
         raise ValueError("Agent run not found.")
+
+    # Claim worker lease
+    claimed = await agent_recovery.claim_run_lease(run, worker_id)
+    if not claimed:
+        raise PermissionError("Worker lease held by another active worker process.")
 
     # Allow step execution if requested_tool is explicitly provided even if status was completed
     if requested_tool:
@@ -99,9 +113,11 @@ async def step_agent_run(
         run["status"] = "failed"
         run["completed_at"] = datetime.now(timezone.utc).isoformat()
         _record_step(run_id, "failure", "Max iteration limit reached.", error_code="MAX_ITERATIONS_EXCEEDED")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"]+1)), budget_state=run["budget_state"])
         return run
 
     run["iteration_count"] += 1
+    run["budget_state"]["iteration_count"] = run["iteration_count"]
     now_iso = datetime.now(timezone.utc).isoformat()
 
     # 1. Retrieve Bounded Context via Unified Context Engine
@@ -123,13 +139,14 @@ async def step_agent_run(
         run["status"] = "failed"
         run["completed_at"] = now_iso
         _record_step(run_id, "failure", f"Requested tool '{target_tool_name}' does not exist.", error_code="INVALID_TOOL")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"]+1)), budget_state=run["budget_state"])
         return run
 
     input_hash = _compute_input_hash(target_tool_input)
+    step_id = f"step_{len(_in_memory_steps.get(run_id, []))+1}_{run_id}"
 
     # 3. Check Risk Policy Matrix
     if tool.risk_level in [ToolRiskLevel.WRITE, ToolRiskLevel.EXTERNAL_SIDE_EFFECT]:
-        # Check if an approval already exists and is approved for this exact input_hash
         existing_app = None
         for app in _in_memory_approvals.values():
             if app["agent_run_id"] == run_id and app["tool_name"] == tool.name and app["input_hash"] == input_hash:
@@ -137,7 +154,6 @@ async def step_agent_run(
                 break
 
         if not existing_app or existing_app["status"] != "approved":
-            # Require User Approval Gate
             app_id = f"app_{uuid.uuid4().hex[:8]}"
             app_req = {
                 "id": app_id,
@@ -156,7 +172,6 @@ async def step_agent_run(
             _in_memory_approvals[app_id] = app_req
             run["status"] = "waiting_for_approval"
 
-            # Create Attention Item
             await attention_service._upsert_attention_item(
                 workspace_id=workspace_id,
                 type_name="approval_required",
@@ -168,27 +183,37 @@ async def step_agent_run(
             )
 
             _record_step(run_id, "approval", f"Approval requested for tool '{tool.name}'.", tool_name=tool.name, input_data=target_tool_input)
+            await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"], pending_action=tool.name)
             return run
 
     elif tool.risk_level == ToolRiskLevel.DESTRUCTIVE:
         run["status"] = "failed"
         run["completed_at"] = now_iso
         _record_step(run_id, "failure", f"Tool '{tool.name}' is destructive and blocked by runtime policy.", error_code="DESTRUCTIVE_ACTION_BLOCKED")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"])
         return run
+
+    # Record Tool Execution Record
+    idempotency_key = f"{run_id}_{step_id}_{tool.name}"
+    texec = await agent_recovery.record_tool_execution(run_id, step_id, tool.name, idempotency_key, input_hash, status="executing")
 
     # 4. Tool Execution
     _record_step(run_id, "tool_call", f"Executing tool '{tool.name}'.", tool_name=tool.name, input_data=target_tool_input)
     exec_res = await tool.execute(session, workspace_id, target_tool_input)
 
     if exec_res.success:
+        await agent_recovery.resolve_unknown_tool_execution(texec["id"], exec_res.to_dict())
         _record_step(run_id, "result", f"Tool '{tool.name}' completed successfully.", tool_name=tool.name, result_data=exec_res.to_dict())
         run["status"] = "completed"
         run["completed_at"] = datetime.now(timezone.utc).isoformat()
         _record_step(run_id, "completion", "Agent run completed goal criteria.")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"]+1)), budget_state=run["budget_state"])
     else:
+        texec["status"] = "failed"
         run["status"] = "failed"
         run["completed_at"] = datetime.now(timezone.utc).isoformat()
         _record_step(run_id, "failure", f"Tool execution failed: {exec_res.error}", error_code=exec_res.error_code or "TOOL_EXECUTION_FAILED")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"])
 
     run["updated_at"] = datetime.now(timezone.utc).isoformat()
     _in_memory_runs[run_id] = run
@@ -228,6 +253,7 @@ async def pause_agent_run(session: Optional[AsyncSession], workspace_id: str, ru
         return None
     run["status"] = "paused"
     run["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"]+1)), budget_state=run["budget_state"])
     return run
 
 async def resume_agent_run(session: Optional[AsyncSession], workspace_id: str, run_id: str) -> Optional[dict]:
@@ -245,6 +271,7 @@ async def cancel_agent_run(session: Optional[AsyncSession], workspace_id: str, r
     run["status"] = "cancelled"
     run["completed_at"] = datetime.now(timezone.utc).isoformat()
     run["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"]+1)), budget_state=run["budget_state"])
     return run
 
 async def approve_approval_request(session: Optional[AsyncSession], workspace_id: str, run_id: str, approval_id: str) -> dict:
@@ -252,7 +279,6 @@ async def approve_approval_request(session: Optional[AsyncSession], workspace_id
     if not app_req or app_req["workspace_id"] != workspace_id:
         raise ValueError("Approval request not found.")
 
-    # Idempotency: Double approval check
     if app_req["status"] == "approved":
         return app_req
 
