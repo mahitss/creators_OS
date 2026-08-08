@@ -8,8 +8,9 @@ from app.schemas.agent_runs import (
     AgentRunResponse,
     AgentStepResponse,
     AgentApprovalResponse,
+    AgentCheckpointResponse
 )
-from app.services import agent_runtime
+from app.services import agent_runtime, agent_recovery
 
 router = APIRouter()
 
@@ -55,6 +56,18 @@ async def list_agent_steps(
 ) -> List[AgentStepResponse]:
     steps = await agent_runtime.list_agent_steps(db, workspace_id, id)
     return [AgentStepResponse(**s) for s in steps]
+
+@router.get("/agent-runs/{id}/checkpoints", response_model=List[AgentCheckpointResponse])
+async def list_agent_checkpoints(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> List[AgentCheckpointResponse]:
+    run = await agent_runtime.get_agent_run(db, workspace_id, id)
+    if not run:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent run not found.")
+    cps = agent_recovery._in_memory_checkpoints.get(id, [])
+    return [AgentCheckpointResponse(**c) for c in cps]
 
 @router.post("/agent-runs/{id}/pause", response_model=AgentRunResponse)
 async def pause_agent_run(
