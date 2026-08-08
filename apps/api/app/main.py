@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail
 
 setup_logging()
 
@@ -66,6 +66,7 @@ app.include_router(attention.router, prefix=settings.API_V1_STR, tags=["Attentio
 app.include_router(search.router, prefix=settings.API_V1_STR, tags=["Search"])
 app.include_router(integrations.router, prefix=settings.API_V1_STR, tags=["Integrations"])
 app.include_router(calendar.router, prefix=settings.API_V1_STR, tags=["Calendar"])
+app.include_router(gmail.router, prefix=settings.API_V1_STR, tags=["Gmail"])
 
 @app.get("/")
 async def root():

@@ -309,7 +309,7 @@ class CalendarEvent(Base):
     start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     timezone: Mapped[str] = mapped_column(String(100), nullable=False, default="UTC")
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed", index=True) # confirmed, tentative, cancelled
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed", index=True)
     organizer: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     attendee_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -320,4 +320,49 @@ class CalendarEvent(Base):
     __table_args__ = (
         Index("idx_events_workspace_start", "workspace_id", "start_at"),
         Index("idx_events_cal_ext", "calendar_id", "external_event_id", unique=True),
+    )
+
+class GmailThread(Base):
+    __tablename__ = "gmail_threads"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_thread_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    last_message_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    message_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    snippet: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_threads_workspace_ext", "workspace_id", "external_thread_id", unique=True),
+    )
+
+class GmailMessage(Base):
+    __tablename__ = "gmail_messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    thread_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("gmail_threads.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_message_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    sender_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    sender_email: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    snippet: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    is_unread: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    label_ids: Mapped[list] = mapped_column(JSON, default=list)
+    full_body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="informational", index=True) # needs_response, informational, important, low_priority
+    ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    external_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_messages_workspace_received", "workspace_id", "received_at"),
+        Index("idx_messages_thread_ext", "thread_id", "external_message_id", unique=True),
     )
