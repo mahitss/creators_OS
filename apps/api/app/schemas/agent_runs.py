@@ -37,3 +37,4 @@ class AgentApprovalResponse(BaseModel):
     description: str
     risk_level: str
     status: str
+    input_hash: Optional[str] = None
