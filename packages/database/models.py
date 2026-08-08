@@ -356,7 +356,7 @@ class GmailMessage(Base):
     is_unread: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     label_ids: Mapped[list] = mapped_column(JSON, default=list)
     full_body: Mapped[str | None] = mapped_column(Text, nullable=True)
-    ai_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="informational", index=True) # needs_response, informational, important, low_priority
+    ai_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="informational", index=True)
     ai_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     external_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
@@ -365,4 +365,45 @@ class GmailMessage(Base):
     __table_args__ = (
         Index("idx_messages_workspace_received", "workspace_id", "received_at"),
         Index("idx_messages_thread_ext", "thread_id", "external_message_id", unique=True),
+    )
+
+class DriveFile(Base):
+    __tablename__ = "drive_files"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_file_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False, default="application/octet-stream", index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    web_url: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    owner_name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    modified_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    trashed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    parent_external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_drive_files_workspace_modified", "workspace_id", "modified_time"),
+        Index("idx_drive_files_integ_ext", "integration_id", "external_file_id", unique=True),
+    )
+
+class MissionDocumentReference(Base):
+    __tablename__ = "mission_document_references"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
+    drive_file_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("drive_files.id", ondelete="CASCADE"), nullable=False, index=True)
+    added_by: Mapped[str] = mapped_column(String(255), nullable=False, default="usr_alex")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_mission_doc_ref_unique", "mission_id", "drive_file_id", unique=True),
     )
