@@ -11,11 +11,22 @@ import {
   archiveMission,
   generateMissionPlan,
   regenerateMissionPlan,
+  convertPlanToSteps,
+  fetchMissionSteps,
+  startExecution,
+  pauseExecution,
+  cancelExecution,
+  completeStep,
+  skipStep,
   Mission,
   MissionPlan,
+  MissionStep,
+  MissionExecution,
 } from '../../../lib/api/missions';
 import { ActivityTimeline } from '../../../components/missions/ActivityTimeline';
 import { MissionPlanView } from '../../../components/missions/MissionPlanView';
+import { ExecutionControlBar } from '../../../components/missions/ExecutionControlBar';
+import { MissionStepsList } from '../../../components/missions/MissionStepsList';
 import { Typography, Card, Badge, Button, Spinner, ErrorState, Dialog, Input, Textarea, Select } from '@vapor/ui';
 import { formatDate } from '@vapor/utils';
 
@@ -25,10 +36,14 @@ export default function MissionDetailPage() {
 
   const [mission, setMission] = useState<Mission | null>(null);
   const [plan, setPlan] = useState<MissionPlan | null>(null);
+  const [steps, setSteps] = useState<MissionStep[]>([]);
+  const [execution, setExecution] = useState<MissionExecution | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isPlanning, setIsPlanning] = useState(false);
+  const [isExecutionActionLoading, setIsExecutionActionLoading] = useState(false);
   const [planError, setPlanError] = useState('');
 
   // Edit form state
@@ -49,6 +64,11 @@ export default function MissionDetailPage() {
       setEditTitle(res.title);
       setEditDescription(res.description);
       setEditPriority(res.priority);
+
+      // Load steps & execution
+      const stepData = await fetchMissionSteps(missionId);
+      setSteps(stepData.steps);
+      setExecution(stepData.execution || null);
     } catch (err) {
       console.error('Failed to load mission detail:', err);
       setIsError(true);
@@ -88,6 +108,94 @@ export default function MissionDetailPage() {
       setPlanError(err?.message || 'Failed to regenerate mission plan.');
     } finally {
       setIsPlanning(false);
+    }
+  };
+
+  const handleConvertPlanToSteps = async () => {
+    if (!mission) return;
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await convertPlanToSteps(mission.id);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to convert plan to steps:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
+    }
+  };
+
+  const handleStartExecution = async () => {
+    if (!mission) return;
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await startExecution(mission.id);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to start execution:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
+    }
+  };
+
+  const handlePauseExecution = async () => {
+    if (!mission) return;
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await pauseExecution(mission.id);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to pause execution:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
+    }
+  };
+
+  const handleCancelExecution = async () => {
+    if (!mission) return;
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await cancelExecution(mission.id);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to cancel execution:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
+    }
+  };
+
+  const handleCompleteStepAction = async (stepId: string) => {
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await completeStep(stepId);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to complete step:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
+    }
+  };
+
+  const handleSkipStepAction = async (stepId: string) => {
+    setIsExecutionActionLoading(true);
+    try {
+      const payload = await skipStep(stepId);
+      setSteps(payload.steps);
+      setExecution(payload.execution || null);
+      await loadMissionDetail();
+    } catch (err) {
+      console.error('Failed to skip step:', err);
+    } finally {
+      setIsExecutionActionLoading(false);
     }
   };
 
@@ -200,6 +308,29 @@ export default function MissionDetailPage() {
                 <span>Updated {formatDate(mission.updated_at)}</span>
               </div>
             </Card>
+
+            {/* Execution Control Bar */}
+            <ExecutionControlBar
+              execution={execution}
+              hasPlan={!!plan}
+              hasSteps={steps.length > 0}
+              onConvertPlanToSteps={handleConvertPlanToSteps}
+              onStart={handleStartExecution}
+              onPause={handlePauseExecution}
+              onResume={handleStartExecution}
+              onCancel={handleCancelExecution}
+              isActionLoading={isExecutionActionLoading}
+            />
+
+            {/* Mission Steps List */}
+            {steps.length > 0 && (
+              <MissionStepsList
+                steps={steps}
+                onCompleteStep={handleCompleteStepAction}
+                onSkipStep={handleSkipStepAction}
+                isActionLoading={isExecutionActionLoading}
+              />
+            )}
 
             {/* AI Planning Section */}
             {plan ? (

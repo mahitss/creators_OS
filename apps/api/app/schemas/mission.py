@@ -38,6 +38,36 @@ class MissionPlanResponse(BaseModel):
     created_at: str
     updated_at: str
 
+class MissionStepResponse(BaseModel):
+    id: str
+    mission_id: str
+    plan_version_id: Optional[str] = None
+    title: str
+    description: str
+    order: int
+    status: str # pending, ready, in_progress, completed, failed, skipped
+    failure_reason: Optional[str] = None
+    output: Optional[Dict[str, Any]] = None
+    created_at: str
+    updated_at: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+class MissionExecutionResponse(BaseModel):
+    id: str
+    mission_id: str
+    status: str # idle, running, paused, completed, failed, cancelled
+    completed_steps_count: int
+    total_steps_count: int
+    created_at: str
+    updated_at: str
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+class MissionStepsPayload(BaseModel):
+    execution: Optional[MissionExecutionResponse] = None
+    steps: List[MissionStepResponse] = []
+
 class MissionResponse(BaseModel):
     id: str
     workspace_id: str
@@ -51,6 +81,7 @@ class MissionResponse(BaseModel):
     completed_at: Optional[str] = None
     activities: List[MissionActivityResponse] = []
     latest_plan: Optional[MissionPlanResponse] = None
+    execution_status: Optional[str] = "idle"
 
 class MissionListResponse(BaseModel):
     missions: List[MissionResponse]
