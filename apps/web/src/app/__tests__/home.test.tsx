@@ -11,28 +11,27 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-describe('Home / Executive Brief View', () => {
+describe('Executive Intelligence Home View', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('renders executive brief with user greeting and available quick actions', async () => {
+  it('renders executive summary statement and quick actions', async () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Alex/i)).toBeInTheDocument();
-      expect(screen.getByText(/Today's Brief/i)).toBeInTheDocument();
+      expect(screen.getByText(/Executive Summary/i)).toBeInTheDocument();
       expect(screen.getByText(/Missions Orchestrator/i)).toBeInTheDocument();
     });
   });
 
-  it('displays empty state messaging when workspace is empty without fake metrics', async () => {
+  it('displays quiet home state when workspace is clear of active/failed tasks', async () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Vapor hasn't completed any background missions yet/i)).toBeInTheDocument();
+      expect(screen.getByText(/You're all caught up/i)).toBeInTheDocument();
       expect(screen.queryByText(/0%/i)).not.toBeInTheDocument();
-      expect(screen.queryByText(/0 missions/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/0 tasks/i)).not.toBeInTheDocument();
     });
   });
 });
