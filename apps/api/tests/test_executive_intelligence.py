@@ -49,7 +49,8 @@ def test_executive_intelligence_brief_rules():
     assert len(data2["needs_attention"]) > 0
     assert "Execution Paused" in data2["needs_attention"][0]["title"]
     assert data2["primary_recommendation"] is not None
-    assert "Resume" in data2["primary_recommendation"]["title"]
+    assert "Execution Paused" in data2["primary_recommendation"]["title"]
+    assert "Resume" in data2["primary_recommendation"]["action_label"]
 
     # 5. Cross-workspace Isolation: Workspace B should remain Quiet
     res_b = client.get("/api/v1/home/brief?user_name=Bob", headers=headers_b)

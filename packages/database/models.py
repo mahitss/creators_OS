@@ -201,16 +201,40 @@ class DeliverableSuggestion(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
     mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
-    type: Mapped[str] = mapped_column(String(50), nullable=False, default="report", index=True) # article, script, social_post, email, report, outline
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="report", index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     source_data: Mapped[dict] = mapped_column(JSON, default=dict)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, accepted, dismissed, expired
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         Index("idx_deliv_sugg_mission_status", "mission_id", "status"),
         Index("idx_deliv_sugg_workspace_status", "workspace_id", "status"),
+    )
+
+class AttentionItem(Base):
+    __tablename__ = "attention_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # mission_failed, mission_paused, step_failed, approval_required, memory_review, deliverable_suggestion, content_review, system_error
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # urgent, high, medium, low
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # mission, mission_execution, mission_step, memory_candidate, content, deliverable_suggestion, system_event
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, snoozed, resolved, dismissed, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    snoozed_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    metadata_dict: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    __table_args__ = (
+        Index("idx_attention_workspace_status", "workspace_id", "status"),
+        Index("idx_attention_source", "source_type", "source_id"),
     )
