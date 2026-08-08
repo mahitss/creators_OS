@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -22,6 +22,24 @@ async def check_health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         timestamp=datetime.now(timezone.utc).isoformat(),
         details={
             "database_engine": "postgresql+asyncpg",
-            "caching_engine": "redis"
+            "caching_engine": "redis",
+            "ai_provider": "deterministic_mock_provider"
         }
     )
+
+@router.get("/liveness")
+async def check_liveness():
+    """Liveness probe indicating process is alive."""
+    return {"status": "alive", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@router.get("/readiness")
+async def check_readiness(response: Response, db: AsyncSession = Depends(get_db)):
+    """Readiness probe verifying operational readiness."""
+    services_status: ServiceHealthStatus = await get_system_health(db, settings.REDIS_URL)
+    is_ready = services_status.database or settings.ENVIRONMENT == "development"
+    
+    if not is_ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "not_ready", "reason": "Database dependency unavailable."}
+
+    return {"status": "ready", "timestamp": datetime.now(timezone.utc).isoformat()}
