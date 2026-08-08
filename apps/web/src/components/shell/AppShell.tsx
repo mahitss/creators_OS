@@ -1,82 +1,115 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sidebar, NavItem } from './Sidebar';
-import { TopBar } from './TopBar';
-import { CommandPalette } from './CommandPalette';
-import { UserSession } from './UserMenu';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { fetchAttentionCount } from '../../lib/api/attention';
 
 export interface AppShellProps {
   children: React.ReactNode;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-
-  // Real authenticated user state (simulated for foundation shell context)
-  const [user, setUser] = useState<UserSession>({
-    name: 'Alex Chen',
-    email: 'alex@vaporos.io',
-    avatarUrl: null,
-  });
-
-  const navItems: NavItem[] = [
-    { id: 'nav-home', label: 'Home', href: '/', icon: <span>🏠</span>, isAvailable: true },
-    { id: 'nav-missions', label: 'Missions', href: '/missions', icon: <span>⚡</span>, isAvailable: true },
-    { id: 'nav-content', label: 'Content', href: '/content', icon: <span>🎨</span>, isAvailable: true },
-    { id: 'nav-memory', label: 'Memory', href: '/memory', icon: <span>🧠</span>, isAvailable: true },
-    { id: 'nav-settings', label: 'Settings', href: '/settings', icon: <span>⚙️</span>, isAvailable: true },
-  ];
-
-  const handleSignOut = () => {
-    // Clear session token & redirect
-    document.cookie = 'vapor_session_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    window.location.href = '/';
-  };
+  const pathname = usePathname();
+  const [openAttentionCount, setOpenAttentionCount] = useState<number>(0);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsCommandPaletteOpen((prev) => !prev);
-      }
+    let isMounted = true;
+    const loadCount = async () => {
+      const count = await fetchAttentionCount();
+      if (isMounted) setOpenAttentionCount(count);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    loadCount();
+    const interval = setInterval(loadCount, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
+  const navItems = [
+    { label: 'Executive Brief', href: '/', icon: '🏛️' },
+    { label: 'Attention Center', href: '/attention', icon: '🔔', badgeCount: openAttentionCount },
+    { label: 'Missions', href: '/missions', icon: '⚡' },
+    { label: 'Content Canvas', href: '/content', icon: '🎨' },
+    { label: 'Context Memory', href: '/memory', icon: '🧠' },
+    { label: 'Settings', href: '/settings', icon: '⚙️' },
+  ];
+
   return (
-    <div className="min-h-screen flex bg-[#090A0F] text-slate-100 antialiased overflow-hidden">
-      {/* Sidebar Navigation */}
-      <Sidebar
-        navItems={navItems}
-        isMobileOpen={isMobileOpen}
-        onMobileClose={() => setIsMobileOpen(false)}
-      />
+    <div className="min-h-screen bg-[#0A0C10] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+      {/* Top Application Header */}
+      <header className="h-14 border-b border-slate-800/80 bg-[#0D0F17]/90 backdrop-blur sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] group-hover:scale-110 transition-transform" />
+            <span className="font-bold tracking-widest text-sm text-slate-100 uppercase font-mono">
+              VAPOR<span className="text-emerald-400">_OS</span>
+            </span>
+          </Link>
 
-      {/* Main Viewport Column */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-60 transition-all duration-200">
-        {/* Top Header Bar */}
-        <TopBar
-          user={user}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-          onOpenMobileSidebar={() => setIsMobileOpen(true)}
-          onSignOut={handleSignOut}
-        />
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-slate-800/90 text-emerald-400 border border-slate-700/60 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                  {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold">
+                      {item.badgeCount}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-        {/* Main Content Workspace Container */}
-        <main className="flex-1 overflow-y-auto p-6 flex flex-col">
-          {children}
-        </main>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>ws_default_01</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Workspace Body */}
+      <main className="flex-1 px-4 sm:px-6 py-6 flex flex-col max-w-7xl mx-auto w-full">
+        {children}
+      </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0D0F17] border-t border-slate-800 flex items-center justify-around px-2 z-40">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-0.5 relative ${
+                isActive ? 'text-emerald-400' : 'text-slate-400'
+              }`}
+            >
+              <span className="text-base">{item.icon}</span>
+              <span className="text-[10px]">{item.label.split(' ')[0]}</span>
+              {item.badgeCount !== undefined && item.badgeCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] font-bold flex items-center justify-center">
+                  {item.badgeCount}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </div>
-
-      {/* Command Palette Modal */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-        onSignOut={handleSignOut}
-      />
     </div>
   );
 };
