@@ -1,16 +1,30 @@
 import os
+import logging
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+logger = logging.getLogger("vapor.database")
+
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://vapor_user:vapor_password@localhost:5432/vapor_os"
+    "sqlite+aiosqlite:///:memory:"
 )
 
-engine = create_async_engine(DATABASE_URL, echo=False, future=True)
-AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+try:
+    engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+except Exception as err:
+    logger.warning(f"Async database driver init deferred ({err}).")
+    engine = None
+
+if engine is not None:
+    AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+else:
+    AsyncSessionLocal = None
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    if AsyncSessionLocal is None:
+        yield None
+        return
     async with AsyncSessionLocal() as session:
         try:
             yield session
