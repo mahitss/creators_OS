@@ -79,6 +79,7 @@ class MissionPlan(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated", index=True)
     goal: Mapped[str] = mapped_column(Text, nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     steps: Mapped[list] = mapped_column(JSON, default=list)
@@ -86,11 +87,36 @@ class MissionPlan(Base):
     open_questions: Mapped[list] = mapped_column(JSON, default=list)
     recommendations: Mapped[list] = mapped_column(JSON, default=list)
     usage_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
+    replan_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (
         Index("idx_mission_plans_version", "mission_id", "version"),
+    )
+
+class PlanNode(Base):
+    __tablename__ = "plan_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("mission_plans.id", ondelete="CASCADE"), nullable=False, index=True)
+    node_key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="tool_call", index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, ready, running, waiting_for_approval, completed, failed, blocked, cancelled, skipped
+    dependencies: Mapped[list] = mapped_column(JSON, default=list)
+    tool_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    input_schema: Mapped[dict] = mapped_column(JSON, default=dict)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="read")
+    approval_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_plan_nodes_key", "plan_id", "node_key", unique=True),
     )
 
 class MissionStep(Base):
@@ -491,7 +517,7 @@ class ToolExecution(Base):
     agent_step_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_steps.id", ondelete="CASCADE"), nullable=False, index=True)
     tool_name: Mapped[str] = mapped_column(String(100), nullable=False)
     idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, executing, completed, failed, unknown
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
     input_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     result_reference: Mapped[dict] = mapped_column(JSON, default=dict)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
