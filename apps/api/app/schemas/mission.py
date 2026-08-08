@@ -19,6 +19,25 @@ class MissionActivityResponse(BaseModel):
     details: Dict[str, Any] = {}
     created_at: str
 
+class PlanStepSchema(BaseModel):
+    order: int
+    title: str
+    description: str
+
+class MissionPlanResponse(BaseModel):
+    id: str
+    mission_id: str
+    version: int
+    goal: str
+    summary: str
+    steps: List[PlanStepSchema] = []
+    deliverables: List[str] = []
+    open_questions: List[str] = []
+    recommendations: List[str] = []
+    usage_metadata: Dict[str, Any] = {}
+    created_at: str
+    updated_at: str
+
 class MissionResponse(BaseModel):
     id: str
     workspace_id: str
@@ -31,6 +50,7 @@ class MissionResponse(BaseModel):
     updated_at: str
     completed_at: Optional[str] = None
     activities: List[MissionActivityResponse] = []
+    latest_plan: Optional[MissionPlanResponse] = None
 
 class MissionListResponse(BaseModel):
     missions: List[MissionResponse]

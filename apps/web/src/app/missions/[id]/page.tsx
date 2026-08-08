@@ -2,22 +2,34 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { AppShell } from '../../../components/shell/AppShell';
-import { getMission, updateMission, completeMission, archiveMission, Mission } from '../../../lib/api/missions';
+import {
+  getMission,
+  updateMission,
+  completeMission,
+  archiveMission,
+  generateMissionPlan,
+  regenerateMissionPlan,
+  Mission,
+  MissionPlan,
+} from '../../../lib/api/missions';
 import { ActivityTimeline } from '../../../components/missions/ActivityTimeline';
+import { MissionPlanView } from '../../../components/missions/MissionPlanView';
 import { Typography, Card, Badge, Button, Spinner, ErrorState, Dialog, Input, Textarea, Select } from '@vapor/ui';
 import { formatDate } from '@vapor/utils';
 
 export default function MissionDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const missionId = params.id as string;
 
   const [mission, setMission] = useState<Mission | null>(null);
+  const [plan, setPlan] = useState<MissionPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isPlanning, setIsPlanning] = useState(false);
+  const [planError, setPlanError] = useState('');
 
   // Edit form state
   const [editTitle, setEditTitle] = useState('');
@@ -31,6 +43,9 @@ export default function MissionDetailPage() {
     try {
       const res = await getMission(missionId);
       setMission(res);
+      if (res.latest_plan) {
+        setPlan(res.latest_plan);
+      }
       setEditTitle(res.title);
       setEditDescription(res.description);
       setEditPriority(res.priority);
@@ -45,6 +60,36 @@ export default function MissionDetailPage() {
   useEffect(() => {
     if (missionId) loadMissionDetail();
   }, [missionId, loadMissionDetail]);
+
+  const handlePlanWithVapor = async () => {
+    if (!mission) return;
+    setIsPlanning(true);
+    setPlanError('');
+    try {
+      const newPlan = await generateMissionPlan(mission.id);
+      setPlan(newPlan);
+      await loadMissionDetail();
+    } catch (err: any) {
+      setPlanError(err?.message || 'Failed to generate mission plan.');
+    } finally {
+      setIsPlanning(false);
+    }
+  };
+
+  const handleRegeneratePlan = async () => {
+    if (!mission) return;
+    setIsPlanning(true);
+    setPlanError('');
+    try {
+      const newPlan = await regenerateMissionPlan(mission.id);
+      setPlan(newPlan);
+      await loadMissionDetail();
+    } catch (err: any) {
+      setPlanError(err?.message || 'Failed to regenerate mission plan.');
+    } finally {
+      setIsPlanning(false);
+    }
+  };
 
   const handleComplete = async () => {
     if (!mission) return;
@@ -89,7 +134,6 @@ export default function MissionDetailPage() {
   return (
     <AppShell>
       <div className="max-w-4xl mx-auto w-full flex flex-col gap-6 py-2">
-        {/* Navigation Back Link */}
         <Link href="/missions" className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-emerald-400 transition-colors">
           ← Back to Missions
         </Link>
@@ -157,18 +201,41 @@ export default function MissionDetailPage() {
               </div>
             </Card>
 
-            {/* Honest AI Area */}
-            <Card variant="panel" className="flex flex-col gap-3 p-5 border-slate-800/80 bg-[#12141C]">
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <Typography variant="h3" className="text-sm font-semibold">
-                  Executive AI Execution
+            {/* AI Planning Section */}
+            {plan ? (
+              <MissionPlanView
+                plan={plan}
+                onRegenerate={handleRegeneratePlan}
+                isRegenerating={isPlanning}
+              />
+            ) : (
+              <Card variant="panel" className="flex flex-col gap-3 p-5 border-slate-800/80 bg-[#12141C]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <Typography variant="h3" className="text-sm font-semibold">
+                      Executive AI Planning
+                    </Typography>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handlePlanWithVapor}
+                    isLoading={isPlanning}
+                  >
+                    ⚡ Plan with Vapor
+                  </Button>
+                </div>
+                <Typography variant="caption" className="text-slate-400 leading-relaxed">
+                  Ask Executive AI to analyze this mission goal, formulate ordered execution steps, deliverables, and recommendations.
                 </Typography>
-              </div>
-              <Typography variant="caption" className="text-slate-400 leading-relaxed">
-                Vapor hasn't started automated background execution on this mission yet. Execution agents will be connected in Sprint 6.
-              </Typography>
-            </Card>
+                {planError && (
+                  <Typography variant="caption" className="text-xs text-rose-400 font-semibold">
+                    {planError}
+                  </Typography>
+                )}
+              </Card>
+            )}
 
             {/* Activity Timeline */}
             <ActivityTimeline activities={mission.activities} />

@@ -8,6 +8,7 @@ from app.schemas.mission import (
     MissionUpdate,
     MissionResponse,
     MissionListResponse,
+    MissionPlanResponse,
 )
 from app.services import mission_service
 
@@ -104,3 +105,45 @@ async def archive_mission(
             detail="Mission not found in active workspace."
         )
     return MissionResponse(**m)
+
+@router.post("/missions/{id}/plan", response_model=MissionPlanResponse)
+async def generate_mission_plan(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionPlanResponse:
+    plan = await mission_service.generate_mission_plan(db, workspace_id, id, is_regeneration=False)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mission not found in active workspace."
+        )
+    return MissionPlanResponse(**plan)
+
+@router.get("/missions/{id}/plan", response_model=MissionPlanResponse)
+async def get_mission_plan(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionPlanResponse:
+    plan = await mission_service.get_mission_plan(db, workspace_id, id)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No plan generated for this mission yet."
+        )
+    return MissionPlanResponse(**plan)
+
+@router.post("/missions/{id}/plan/regenerate", response_model=MissionPlanResponse)
+async def regenerate_mission_plan(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionPlanResponse:
+    plan = await mission_service.generate_mission_plan(db, workspace_id, id, is_regeneration=True)
+    if not plan:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mission not found in active workspace."
+        )
+    return MissionPlanResponse(**plan)
