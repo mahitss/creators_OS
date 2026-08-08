@@ -220,13 +220,13 @@ class AttentionItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # mission_failed, mission_paused, step_failed, approval_required, memory_review, deliverable_suggestion, content_review, system_error
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # urgent, high, medium, low
-    source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # mission, mission_execution, mission_step, memory_candidate, content, deliverable_suggestion, system_event
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, snoozed, resolved, dismissed, expired
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -238,3 +238,41 @@ class AttentionItem(Base):
         Index("idx_attention_workspace_status", "workspace_id", "status"),
         Index("idx_attention_source", "source_type", "source_id"),
     )
+
+class IntegrationConnection(Base):
+    __tablename__ = "integration_connections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # google, github, youtube, slack, notion
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="disconnected", index=True) # connected, expired, revoked, error, disconnected
+    scopes: Mapped[list] = mapped_column(JSON, default=list)
+    external_account_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    external_account_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    encrypted_access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    encrypted_refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_dict: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_integration_workspace_provider", "workspace_id", "provider", unique=True),
+        Index("idx_integration_workspace_status", "workspace_id", "status"),
+    )
+
+class IntegrationSyncJob(Base):
+    __tablename__ = "integration_sync_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True) # queued, running, completed, failed, cancelled
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempt: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
