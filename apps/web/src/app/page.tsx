@@ -1,25 +1,62 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppShell } from '../components/shell/AppShell';
-import { Card, Typography, TerminalIcon } from '@vapor/ui';
+import { fetchExecutiveBrief, ExecutiveBriefResponse } from '../lib/api/home';
+import { ExecutiveGreeting } from '../components/home/ExecutiveGreeting';
+import { TodaysBrief } from '../components/home/TodaysBrief';
+import { NeedsAttention } from '../components/home/NeedsAttention';
+import { RecentActivity } from '../components/home/RecentActivity';
+import { QuickActions } from '../components/home/QuickActions';
+import { HomeSkeleton } from '../components/home/HomeSkeleton';
+import { HomeErrorState } from '../components/home/HomeErrorState';
 
 export default function Home() {
+  const [data, setData] = useState<ExecutiveBriefResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const loadBrief = useCallback(async () => {
+    setIsLoading(true);
+    setIsError(false);
+    try {
+      const result = await fetchExecutiveBrief('Alex');
+      setData(result);
+    } catch (err: any) {
+      setIsError(true);
+      setErrorMessage(err?.message || 'Something went wrong loading your brief.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBrief();
+  }, [loadBrief]);
+
   return (
     <AppShell>
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <Card variant="panel" className="max-w-md w-full flex flex-col items-center text-center gap-4 border border-slate-800/80">
-          <div className="flex items-center gap-2 text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <Typography variant="code">VAPOR_OS // SHELL_READY</Typography>
-          </div>
-          <div className="flex items-center gap-2 text-slate-300">
-            <TerminalIcon size={20} />
-            <Typography variant="h2">Authenticated Application Shell</Typography>
-          </div>
-          <Typography variant="caption" className="text-slate-400 max-w-sm leading-relaxed">
-            The visual design tokens, atomic UI primitives, responsive sidebar, top bar, user menu, theme switcher, and command palette (<kbd className="font-mono bg-slate-950 px-1 rounded border border-slate-800">⌘K</kbd>) are active.
-          </Typography>
-        </Card>
-      </div>
+      {isLoading ? (
+        <HomeSkeleton />
+      ) : isError || !data ? (
+        <HomeErrorState message={errorMessage} onRetry={loadBrief} />
+      ) : (
+        <div className="max-w-3xl mx-auto w-full flex flex-col gap-6 py-2 animate-in fade-in duration-200">
+          <ExecutiveGreeting
+            greeting={data.greeting}
+            summaryStatement={data.summary_statement}
+          />
+
+          <TodaysBrief isEmptyState={data.is_empty_state} />
+
+          <NeedsAttention items={data.needs_attention} />
+
+          <RecentActivity activities={data.recent_activity} />
+
+          <QuickActions actions={data.quick_actions} />
+        </div>
+      )}
     </AppShell>
   );
 }
