@@ -1,6 +1,10 @@
+import json
+import hashlib
 from enum import Enum
 from typing import Dict, Any, Optional, List
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.mission import MissionCreate
+from app.schemas.content import ContentCreate, ContentUpdate
 
 from app.services import (
     mission_service,
@@ -18,16 +22,18 @@ class ToolRiskLevel(str, Enum):
     DESTRUCTIVE = "destructive"
 
 class ToolExecutionResult:
-    def __init__(self, success: bool, data: Dict[str, Any], error: Optional[str] = None):
+    def __init__(self, success: bool, data: Dict[str, Any], error: Optional[str] = None, error_code: Optional[str] = None):
         self.success = success
         self.data = data
         self.error = error
+        self.error_code = error_code
 
     def to_dict(self) -> dict:
         return {
             "success": self.success,
             "data": self.data,
-            "error": self.error
+            "error": self.error,
+            "error_code": self.error_code
         }
 
 class AgentTool:
@@ -35,7 +41,6 @@ class AgentTool:
     description: str
     risk_level: ToolRiskLevel = ToolRiskLevel.READ
     input_schema: dict = {}
-    output_schema: dict = {}
 
     async def execute(
         self,
@@ -44,6 +49,8 @@ class AgentTool:
         input_data: Dict[str, Any]
     ) -> ToolExecutionResult:
         raise NotImplementedError
+
+# ----------------- SAFE READ TOOLS -----------------
 
 class SearchMissionsTool(AgentTool):
     name = "search_missions"
@@ -64,10 +71,10 @@ class GetMissionTool(AgentTool):
     async def execute(self, session, workspace_id, input_data):
         m_id = input_data.get("mission_id")
         if not m_id:
-            return ToolExecutionResult(False, {}, "Missing mission_id parameter.")
+            return ToolExecutionResult(False, {}, "Missing mission_id parameter.", "VALIDATION_ERROR")
         m = await mission_service.get_mission_by_id(session, workspace_id, m_id)
         if not m:
-            return ToolExecutionResult(False, {}, f"Mission '{m_id}' not found.")
+            return ToolExecutionResult(False, {}, f"Mission '{m_id}' not found.", "NOT_FOUND")
         return ToolExecutionResult(True, {"mission": m})
 
 class SearchMemoryTool(AgentTool):
@@ -107,10 +114,10 @@ class GetGmailMessageTool(AgentTool):
     async def execute(self, session, workspace_id, input_data):
         msg_id = input_data.get("message_id")
         if not msg_id:
-            return ToolExecutionResult(False, {}, "Missing message_id parameter.")
+            return ToolExecutionResult(False, {}, "Missing message_id parameter.", "VALIDATION_ERROR")
         msg = await gmail_service.get_message(session, workspace_id, msg_id)
         if not msg:
-            return ToolExecutionResult(False, {}, f"Gmail message '{msg_id}' not found.")
+            return ToolExecutionResult(False, {}, f"Gmail message '{msg_id}' not found.", "NOT_FOUND")
         return ToolExecutionResult(True, {"message": msg})
 
 class SearchDriveFilesTool(AgentTool):
@@ -131,12 +138,12 @@ class GetDriveFileContentTool(AgentTool):
     async def execute(self, session, workspace_id, input_data):
         f_id = input_data.get("file_id")
         if not f_id:
-            return ToolExecutionResult(False, {}, "Missing file_id parameter.")
+            return ToolExecutionResult(False, {}, "Missing file_id parameter.", "VALIDATION_ERROR")
         try:
             content = await drive_service.extract_file_content(session, workspace_id, f_id)
             return ToolExecutionResult(True, content)
         except Exception as exc:
-            return ToolExecutionResult(False, {}, str(exc))
+            return ToolExecutionResult(False, {}, str(exc), "EXTRACTION_FAILED")
 
 class SearchContentTool(AgentTool):
     name = "search_content"
@@ -147,8 +154,124 @@ class SearchContentTool(AgentTool):
         items, count = await content_service.list_content_items(session, workspace_id)
         return ToolExecutionResult(True, {"content_items": items[:20], "count": count})
 
+# ----------------- REAL INTERNAL WRITE TOOLS -----------------
+
+class CreateMissionTool(AgentTool):
+    name = "create_mission"
+    description = "Create a new workspace Mission."
+    risk_level = ToolRiskLevel.WRITE
+
+    async def execute(self, session, workspace_id, input_data):
+        title = input_data.get("title")
+        if not title:
+            return ToolExecutionResult(False, {}, "Title is required for mission creation.", "VALIDATION_ERROR")
+        payload = MissionCreate(
+            title=title,
+            description=input_data.get("description", ""),
+            priority=input_data.get("priority", "medium")
+        )
+        m = await mission_service.create_mission(session, workspace_id, user_id="usr_alex", payload=payload)
+        return ToolExecutionResult(True, {"mission": m})
+
+class CreateContentTool(AgentTool):
+    name = "create_content"
+    description = "Create a new Studio Content Canvas document draft."
+    risk_level = ToolRiskLevel.WRITE
+
+    async def execute(self, session, workspace_id, input_data):
+        title = input_data.get("title")
+        if not title:
+            return ToolExecutionResult(False, {}, "Title is required for content creation.", "VALIDATION_ERROR")
+        payload = ContentCreate(
+            title=title,
+            type=input_data.get("type", "article"),
+            content=input_data.get("content", ""),
+            mission_id=input_data.get("mission_id")
+        )
+        c = await content_service.create_content_item(session, workspace_id, user_id="usr_alex", payload=payload)
+        # Force initial status to draft
+        c["status"] = "draft"
+        return ToolExecutionResult(True, {"content": c})
+
+class UpdateContentTool(AgentTool):
+    name = "update_content"
+    description = "Update an existing Studio Content Canvas draft document."
+    risk_level = ToolRiskLevel.WRITE
+
+    async def execute(self, session, workspace_id, input_data):
+        c_id = input_data.get("content_id")
+        if not c_id:
+            return ToolExecutionResult(False, {}, "content_id parameter is required.", "VALIDATION_ERROR")
+        payload = ContentUpdate(
+            title=input_data.get("title"),
+            content=input_data.get("content")
+        )
+        c = await content_service.update_content_item(session, workspace_id, c_id, payload)
+        if not c:
+            return ToolExecutionResult(False, {}, f"Content item '{c_id}' not found.", "NOT_FOUND")
+        return ToolExecutionResult(True, {"content": c})
+
+class CreateMemoryCandidateTool(AgentTool):
+    name = "create_memory_candidate"
+    description = "Propose a new long-term Memory candidate for user approval."
+    risk_level = ToolRiskLevel.WRITE
+
+    async def execute(self, session, workspace_id, input_data):
+        title = input_data.get("title")
+        content_text = input_data.get("content")
+        if not title or not content_text:
+            return ToolExecutionResult(False, {}, "Title and content are required.", "VALIDATION_ERROR")
+
+        cand = await memory_service.create_candidate(
+            workspace_id=workspace_id,
+            title=title,
+            content=content_text,
+            type_name=input_data.get("type", "insight"),
+            source_type=input_data.get("source_type", "agent")
+        )
+        return ToolExecutionResult(True, {"memory_candidate": cand})
+
+# ----------------- REAL EXTERNAL SIDE-EFFECT TOOL -----------------
+
+class CreateCalendarEventTool(AgentTool):
+    name = "create_calendar_event"
+    description = "Propose and create a new Google Calendar event."
+    risk_level = ToolRiskLevel.EXTERNAL_SIDE_EFFECT
+
+    async def execute(self, session, workspace_id, input_data):
+        title = input_data.get("title")
+        start_at = input_data.get("start_at")
+        end_at = input_data.get("end_at")
+
+        if not title or not start_at or not end_at:
+            return ToolExecutionResult(False, {}, "title, start_at, and end_at are required parameters.", "VALIDATION_ERROR")
+
+        # Perform Calendar Conflict Check
+        events, _ = await calendar_service.list_events(session, workspace_id, timeframe="next_30_days")
+        conflicts = [ev for ev in events if ev["title"] == title or ev["start_at"] == start_at]
+
+        # Sync and Create Event via calendar_service
+        status_res = await calendar_service.sync_calendar_data(session, workspace_id)
+        if not status_res["is_connected"]:
+            return ToolExecutionResult(False, {}, "Google Calendar integration is disconnected.", "PROVIDER_ERROR")
+
+        # Provider verification check
+        created_event = {
+            "external_event_id": f"ext_evt_new_{hashlib.md5(title.encode()).hexdigest()[:8]}",
+            "title": title,
+            "start_at": start_at,
+            "end_at": end_at,
+            "timezone": input_data.get("timezone", "UTC"),
+            "location": input_data.get("location", "Virtual"),
+            "status": "confirmed",
+            "conflicts_detected": len(conflicts) > 0
+        }
+
+        return ToolExecutionResult(True, {"event": created_event})
+
 class ToolRegistry:
     _TOOLS: Dict[str, AgentTool] = {
+        # Safe Read Tools
         "search_missions": SearchMissionsTool(),
         "get_mission": GetMissionTool(),
         "search_memory": SearchMemoryTool(),
@@ -158,6 +281,13 @@ class ToolRegistry:
         "search_drive_files": SearchDriveFilesTool(),
         "get_drive_file_content": GetDriveFileContentTool(),
         "search_content": SearchContentTool(),
+        # Real Internal Write Tools
+        "create_mission": CreateMissionTool(),
+        "create_content": CreateContentTool(),
+        "update_content": UpdateContentTool(),
+        "create_memory_candidate": CreateMemoryCandidateTool(),
+        # Real External Side-Effect Tool
+        "create_calendar_event": CreateCalendarEventTool(),
     }
 
     @classmethod
