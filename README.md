@@ -1,22 +1,94 @@
-# Vapor — The AI Chief of Staff (MVP Specification)
+# Vapor OS — AI Chief of Staff (Platform Foundation)
 
 Vapor is an AI Chief of Staff designed to transform work into continuous background execution.
 
-The user spends their time making executive decisions—not organizing work or engineering prompts.
+---
+
+## Repository Structure
+
+```
+vapor/
+├── apps/
+│   ├── web/               # Next.js App Router desktop shell
+│   └── api/               # FastAPI Python core kernel backend
+├── packages/
+│   ├── ui/                # Minimal foundation primitives (Button, Input, Card, Dialog, Badge, Spinner, Skeleton)
+│   ├── database/          # PostgreSQL SQLAlchemy 2.0 async engine & session management
+│   ├── ai/                # AI provider abstractions (OpenAI, Anthropic, Gemini, OpenRouter, streaming)
+│   ├── types/             # Shared TypeScript domain interfaces
+│   ├── config/            # Shared ESLint, Prettier, TS configurations
+│   └── utils/             # Framework-independent helper functions
+├── docs/                  # Architecture, Development, Environment & Contributing guides
+├── scripts/               # Local setup & seed tooling
+├── .github/               # CI/CD GitHub Actions workflows
+├── pnpm-workspace.yaml    # pnpm workspace definition
+└── turbo.json             # Turborepo pipeline configuration
+```
 
 ---
 
-## Founding Leadership Team Specifications
+## Requirements
 
-- [MVP Product Specification](./MVP_SPECIFICATION.md)
+* **Node.js**: $\ge 18.0.0$
+* **pnpm**: $\ge 8.0.0$ (`npm i -g pnpm`)
+* **Python**: $\ge 3.11$
+* **Docker & Docker Compose**: For local PostgreSQL 16 & Redis 7.
 
 ---
 
-## Core Product Highlights
+## Local Development Setup
 
-1. **Non-Reactive Executive**: Works continuously in the background, observing repository state and generating dry-run execution proposals.
-2. **3 MVP Workspaces**:
-   - **Executive Operations Workspace**: Proactive briefing deck & 1-click authorization (`Mod + Enter`).
-   - **Studio Canvas Workspace**: Code authoring, diff inspection, and artifact rendering.
-   - **Stream Console Workspace**: Multi-pane PTY shell console & live telemetry streams.
-3. **Self-Healing Verification Loop**: Automatically runs build/test targets post-execution to guarantee working code before presenting diffs.
+1. **Install Dependencies**:
+   ```bash
+   pnpm install
+   ```
+
+2. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Start PostgreSQL 16 & Redis Services**:
+   ```bash
+   docker-compose up -d postgres redis
+   ```
+
+4. **Run Applications in Parallel**:
+   ```bash
+   pnpm dev
+   ```
+
+   * **Web Client**: [http://localhost:3000](http://localhost:3000)
+   * **FastAPI Kernel API**: [http://localhost:8000](http://localhost:8000)
+   * **API Docs**: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
+   * **Real Health Endpoint**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+
+---
+
+## Testing & Quality Commands
+
+```bash
+# Run all workspace linting
+pnpm lint
+
+# Run all TypeScript typechecks
+pnpm typecheck
+
+# Run Web Client Vitest Suite
+pnpm --filter vapor-web test
+
+# Run FastAPI Pytest Suite
+pytest apps/api/tests
+
+# Run Monorepo Build
+pnpm build
+```
+
+---
+
+## Documentation Index
+
+* 📐 [Architecture Guide](./docs/ARCHITECTURE.md)
+* 🛠️ [Development Setup](./docs/DEVELOPMENT.md)
+* 🔑 [Environment Variables](./docs/ENVIRONMENT.md)
+* 🤝 [Contributing Guidelines](./docs/CONTRIBUTING.md)
