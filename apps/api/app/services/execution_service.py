@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.services import mission_service
 
 # In-memory stores for offline execution engine
-_in_memory_steps: dict[str, list[dict]] = {} # mission_id -> steps list
-_in_memory_executions: dict[str, dict] = {} # mission_id -> execution dict
-_in_memory_step_results: dict[str, dict] = {} # step_id -> result dict
+_in_memory_steps: dict[str, list[dict]] = {}
+_in_memory_executions: dict[str, dict] = {}
+_in_memory_step_results: dict[str, dict] = {}
 
 def _to_iso(dt: Optional[datetime]) -> Optional[str]:
     if dt is None:
@@ -33,7 +33,6 @@ async def convert_plan_to_steps(
     
     for idx, ps in enumerate(plan_steps):
         step_id = str(uuid.uuid4())
-        # First step is 'ready', subsequent steps are 'pending'
         status = "ready" if idx == 0 else "pending"
         step_dict = {
             "id": step_id,
@@ -68,7 +67,6 @@ async def convert_plan_to_steps(
     }
     _in_memory_executions[mission_id] = execution_dict
 
-    # Record Activity
     await mission_service.update_mission(
         session, workspace_id, mission_id, mission_service.MissionUpdate()
     )
@@ -97,6 +95,8 @@ async def get_mission_steps_and_execution(
     execution = _in_memory_executions.get(mission_id)
     return {"execution": execution, "steps": steps}
 
+get_execution_state = get_mission_steps_and_execution
+
 async def start_execution(
     session: Optional[AsyncSession],
     workspace_id: str,
@@ -115,23 +115,21 @@ async def start_execution(
         execution["started_at"] = now_iso
     execution["updated_at"] = now_iso
 
-    # Auto-start first ready step if present
     ready_step = next((s for s in steps if s["status"] == "ready"), None)
     if ready_step:
         ready_step["status"] = "in_progress"
         ready_step["started_at"] = now_iso
-        ready_step["updated_at"] = now_iso
 
     act = {
         "id": str(uuid.uuid4()),
         "mission_id": mission_id,
         "action": "EXECUTION_STARTED",
-        "details": {"status": "running"},
+        "details": {},
         "created_at": now_iso
     }
     mission_service._in_memory_activities[mission_id].insert(0, act)
 
-    return {"execution": execution, "steps": steps}
+    return state
 
 async def pause_execution(
     session: Optional[AsyncSession],
@@ -140,12 +138,18 @@ async def pause_execution(
 ) -> dict:
     state = await get_mission_steps_and_execution(session, workspace_id, mission_id)
     execution = state["execution"]
-    if not execution:
-        raise ValueError("Execution not found.")
+    steps = state["steps"]
+
+    if not steps or not execution:
+        raise ValueError("No active execution to pause.")
 
     now_iso = datetime.now(timezone.utc).isoformat()
     execution["status"] = "paused"
     execution["updated_at"] = now_iso
+
+    in_progress = next((s for s in steps if s["status"] == "in_progress"), None)
+    if in_progress:
+        in_progress["status"] = "ready"
 
     act = {
         "id": str(uuid.uuid4()),
@@ -157,13 +161,6 @@ async def pause_execution(
     mission_service._in_memory_activities[mission_id].insert(0, act)
     return state
 
-async def resume_execution(
-    session: Optional[AsyncSession],
-    workspace_id: str,
-    mission_id: str
-) -> dict:
-    return await start_execution(session, workspace_id, mission_id)
-
 async def cancel_execution(
     session: Optional[AsyncSession],
     workspace_id: str,
@@ -171,8 +168,10 @@ async def cancel_execution(
 ) -> dict:
     state = await get_mission_steps_and_execution(session, workspace_id, mission_id)
     execution = state["execution"]
-    if not execution:
-        raise ValueError("Execution not found.")
+    steps = state["steps"]
+
+    if not steps or not execution:
+        raise ValueError("No active execution to cancel.")
 
     now_iso = datetime.now(timezone.utc).isoformat()
     execution["status"] = "cancelled"
@@ -196,7 +195,6 @@ async def complete_step(
 ) -> dict:
     now_iso = datetime.now(timezone.utc).isoformat()
     
-    # Locate step across memory
     target_step = None
     target_mission_id = None
     
@@ -224,7 +222,6 @@ async def complete_step(
     execution["completed_steps_count"] = completed_count
     execution["updated_at"] = now_iso
 
-    # Unlock next pending step
     next_pending = next((s for s in steps if s["status"] == "pending"), None)
     if next_pending:
         next_pending["status"] = "ready"
@@ -232,7 +229,6 @@ async def complete_step(
             next_pending["status"] = "in_progress"
             next_pending["started_at"] = now_iso
 
-    # Check if all steps completed
     if completed_count == len(steps):
         execution["status"] = "completed"
         execution["completed_at"] = now_iso

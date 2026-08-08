@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +11,7 @@ from app.schemas.mission import (
     MissionPlanResponse,
     MissionStepsPayload,
 )
-from app.services import mission_service, execution_service
+from app.services import mission_service, execution_service, dag_scheduler
 
 router = APIRouter()
 
@@ -108,51 +108,84 @@ async def archive_mission(
     return MissionResponse(**m)
 
 @router.post("/missions/{id}/plan", response_model=MissionPlanResponse)
-async def generate_mission_plan(
+async def generate_plan(
     id: str,
     workspace_id: str = Depends(get_current_workspace_id),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> MissionPlanResponse:
-    plan = await mission_service.generate_mission_plan(db, workspace_id, id, is_regeneration=False)
-    if not plan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Mission not found in active workspace."
-        )
-    return MissionPlanResponse(**plan)
-
-@router.get("/missions/{id}/plan", response_model=MissionPlanResponse)
-async def get_mission_plan(
-    id: str,
-    workspace_id: str = Depends(get_current_workspace_id),
-    db: Optional[AsyncSession] = Depends(get_db),
-) -> MissionPlanResponse:
-    plan = await mission_service.get_mission_plan(db, workspace_id, id)
-    if not plan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No plan generated for this mission yet."
-        )
-    return MissionPlanResponse(**plan)
+    try:
+        plan = await mission_service.generate_mission_plan(db, workspace_id, id)
+        return MissionPlanResponse(**plan)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.post("/missions/{id}/plan/regenerate", response_model=MissionPlanResponse)
-async def regenerate_mission_plan(
+async def regenerate_plan(
     id: str,
     workspace_id: str = Depends(get_current_workspace_id),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> MissionPlanResponse:
-    plan = await mission_service.generate_mission_plan(db, workspace_id, id, is_regeneration=True)
+    try:
+        plan = await mission_service.generate_mission_plan(db, workspace_id, id, is_regeneration=True)
+        return MissionPlanResponse(**plan)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.get("/missions/{id}/plan", response_model=MissionPlanResponse)
+async def get_plan(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> MissionPlanResponse:
+    plan = await mission_service.get_latest_plan(db, workspace_id, id)
     if not plan:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Mission not found in active workspace."
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found for mission.")
     return MissionPlanResponse(**plan)
 
-# --- Execution Engine Endpoints ---
+# ----------------- DAG PLAN ENDPOINTS -----------------
+
+@router.post("/missions/{id}/dag-plans", status_code=status.HTTP_201_CREATED)
+async def create_dag_plan(
+    id: str,
+    payload: Dict[str, Any],
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> dict:
+    try:
+        nodes = payload.get("nodes", [])
+        goal = payload.get("goal", "Execute DAG Mission")
+        plan = await dag_scheduler.create_dag_plan(db, workspace_id, mission_id=id, goal=goal, nodes=nodes)
+        return plan
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+@router.get("/missions/{id}/dag-plans/{plan_id}/nodes")
+async def get_dag_plan_nodes(
+    id: str,
+    plan_id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> List[dict]:
+    return await dag_scheduler.get_plan_nodes(plan_id)
+
+@router.post("/missions/{id}/dag-plans/{plan_id}/execute")
+async def execute_dag_plan(
+    id: str,
+    plan_id: str,
+    run_id: str = Query(..., description="Target AgentRun ID"),
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> dict:
+    try:
+        plan = await dag_scheduler.execute_dag_plan(db, workspace_id, run_id=run_id, plan_id=plan_id)
+        return plan
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+# ----------------- STEPS & EXECUTION ENDPOINTS -----------------
 
 @router.post("/missions/{id}/steps", response_model=MissionStepsPayload)
-async def convert_plan_to_steps(
+async def create_steps(
     id: str,
     workspace_id: str = Depends(get_current_workspace_id),
     db: Optional[AsyncSession] = Depends(get_db),
@@ -164,12 +197,12 @@ async def convert_plan_to_steps(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/missions/{id}/steps", response_model=MissionStepsPayload)
-async def get_mission_steps(
+async def list_steps(
     id: str,
     workspace_id: str = Depends(get_current_workspace_id),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> MissionStepsPayload:
-    data = await execution_service.get_mission_steps_and_execution(db, workspace_id, id)
+    data = await execution_service.get_execution_state(db, workspace_id, id)
     return MissionStepsPayload(**data)
 
 @router.post("/missions/{id}/start", response_model=MissionStepsPayload)
