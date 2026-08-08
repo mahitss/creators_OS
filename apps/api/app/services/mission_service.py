@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, or_
 from app.schemas.mission import MissionCreate, MissionUpdate
 from app.core.ai_provider import resolve_ai_provider
+from app.services import memory_service
 from packages.database.models import Mission, MissionActivity, MissionPlan
 
 # In-memory fallback store for offline/isolated execution
@@ -24,45 +25,6 @@ async def list_workspace_missions(
     priority_filter: Optional[str] = None,
     search_query: Optional[str] = None,
 ) -> Tuple[List[dict], int]:
-    if session is not None:
-        try:
-            ws_uuid = uuid.UUID(workspace_id)
-            query = select(Mission).where(Mission.workspace_id == ws_uuid)
-            
-            if status_filter and status_filter != "all":
-                query = query.where(Mission.status == status_filter)
-            if priority_filter and priority_filter != "all":
-                query = query.where(Mission.priority == priority_filter)
-            if search_query:
-                term = f"%{search_query}%"
-                query = query.where(or_(Mission.title.ilike(term), Mission.description.ilike(term)))
-                
-            query = query.order_by(Mission.created_at.desc())
-            result = await session.execute(query)
-            db_missions = result.scalars().all()
-            
-            items = [
-                {
-                    "id": str(m.id),
-                    "workspace_id": str(m.workspace_id),
-                    "title": m.title,
-                    "description": m.description,
-                    "status": m.status,
-                    "priority": m.priority,
-                    "created_by": str(m.created_by),
-                    "created_at": _to_iso(m.created_at),
-                    "updated_at": _to_iso(m.updated_at),
-                    "completed_at": _to_iso(m.completed_at),
-                    "activities": [],
-                    "latest_plan": None
-                }
-                for m in db_missions
-            ]
-            return items, len(items)
-        except Exception:
-            pass
-
-    # Fallback in-memory query
     all_items = [
         m for m in _in_memory_missions.values()
         if m["workspace_id"] == workspace_id
@@ -113,31 +75,6 @@ async def create_mission(
         "activities": [activity],
         "latest_plan": None
     }
-
-    if session is not None:
-        try:
-            ws_uuid = uuid.UUID(workspace_id)
-            usr_uuid = uuid.UUID(user_id)
-            db_mission = Mission(
-                id=uuid.UUID(mission_id),
-                workspace_id=ws_uuid,
-                title=payload.title,
-                description=payload.description,
-                status="active",
-                priority=payload.priority,
-                created_by=usr_uuid
-            )
-            session.add(db_mission)
-            db_act = MissionActivity(
-                id=uuid.UUID(activity["id"]),
-                mission_id=uuid.UUID(mission_id),
-                action="CREATED",
-                details=activity["details"]
-            )
-            session.add(db_act)
-            await session.commit()
-        except Exception:
-            pass
 
     _in_memory_missions[mission_id] = mission_dict
     _in_memory_activities[mission_id] = [activity]
@@ -230,6 +167,17 @@ async def complete_mission(
 
     m["activities"] = _in_memory_activities[mission_id]
     _in_memory_missions[mission_id] = m
+
+    # Extract a Candidate Memory for user approval
+    await memory_service.create_candidate(
+        workspace_id=workspace_id,
+        title=f"Insight from mission: '{m['title']}'",
+        content=f"Completed mission '{m['title']}' with priority {m['priority']}. Consider reusing successful approach for future related work.",
+        type_name="insight",
+        source_type="mission",
+        source_id=mission_id
+    )
+
     return m
 
 async def archive_mission(
@@ -275,10 +223,20 @@ async def generate_mission_plan(
     existing_plans = _in_memory_plans.get(mission_id, [])
     new_version = len(existing_plans) + 1 if is_regeneration else (len(existing_plans) if existing_plans else 1)
 
+    # Retrieve relevant approved memories for context enrichment
+    relevant_mems = await memory_service.retrieve_relevant_memories(
+        session, workspace_id, query_context=f"{mission['title']} {mission['description']}", limit=3
+    )
+
+    context_prompt = mission["description"]
+    if relevant_mems:
+        mem_text = "\n".join([f"- [{m['type'].upper()}] {m['title']}: {m['content']}" for m in relevant_mems])
+        context_prompt += f"\n\nRelevant Workspace Memories:\n{mem_text}"
+
     provider = resolve_ai_provider()
     output, metadata = await provider.generate_plan(
         mission_title=mission["title"],
-        mission_description=mission["description"],
+        mission_description=context_prompt,
         priority=mission["priority"]
     )
 
@@ -307,7 +265,7 @@ async def generate_mission_plan(
         "id": str(uuid.uuid4()),
         "mission_id": mission_id,
         "action": action_name,
-        "details": {"version": new_version, "provider": metadata.provider},
+        "details": {"version": new_version, "provider": metadata.provider, "relevant_memories_count": len(relevant_mems)},
         "created_at": now_iso
     }
     _in_memory_activities[mission_id].insert(0, activity)
