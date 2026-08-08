@@ -244,8 +244,8 @@ class IntegrationConnection(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # google, github, youtube, slack, notion
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="disconnected", index=True) # connected, expired, revoked, error, disconnected
+    provider: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="disconnected", index=True)
     scopes: Mapped[list] = mapped_column(JSON, default=list)
     external_account_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     external_account_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -269,10 +269,55 @@ class IntegrationSyncJob(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True) # queued, running, completed, failed, cancelled
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     attempt: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class Calendar(Base):
+    __tablename__ = "calendars"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_calendar_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    timezone: Mapped[str] = mapped_column(String(100), nullable=False, default="UTC")
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    sync_token: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_calendars_workspace_ext", "workspace_id", "external_calendar_id", unique=True),
+    )
+
+class CalendarEvent(Base):
+    __tablename__ = "calendar_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    integration_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("integration_connections.id", ondelete="CASCADE"), nullable=False, index=True)
+    calendar_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("calendars.id", ondelete="CASCADE"), nullable=False, index=True)
+    external_event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    location: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    end_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    timezone: Mapped[str] = mapped_column(String(100), nullable=False, default="UTC")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed", index=True) # confirmed, tentative, cancelled
+    organizer: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    attendee_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    is_all_day: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    external_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_events_workspace_start", "workspace_id", "start_at"),
+        Index("idx_events_cal_ext", "calendar_id", "external_event_id", unique=True),
+    )

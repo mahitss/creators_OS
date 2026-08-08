@@ -9,8 +9,9 @@ from app.schemas.home import (
     ActivityItem,
     RecommendationItem,
     LearnedMemoryItem,
+    CalendarCommitmentItem,
 )
-from app.services import mission_service, memory_service, attention_service
+from app.services import mission_service, memory_service, attention_service, calendar_service
 
 def get_time_of_day_greeting(user_name: str) -> str:
     hour = datetime.now(timezone.utc).hour
@@ -93,7 +94,20 @@ async def build_executive_brief(
         for m in approved_mems[:3]
     ]
 
-    # 4. Recent Activity Aggregation
+    # 4. Today Calendar Commitments
+    cal_events, _ = await calendar_service.list_events(db, workspace_id, timeframe="next_7_days")
+    today_calendar_events = [
+        CalendarCommitmentItem(
+            id=ev["id"],
+            title=ev["title"],
+            start_at=ev["start_at"],
+            end_at=ev["end_at"],
+            location=ev.get("location")
+        )
+        for ev in cal_events[:3]
+    ]
+
+    # 5. Recent Activity Aggregation
     recent_activity = []
     for m in all_missions[:3]:
         for act in m.get("activities", [])[:2]:
@@ -107,7 +121,7 @@ async def build_executive_brief(
                 )
             )
 
-    # 5. Summary Statement
+    # 6. Summary Statement
     if needs_attention:
         summary_statement = f"Vapor requires your decision on {len(needs_attention)} open attention items."
     elif active_missions:
@@ -125,6 +139,7 @@ async def build_executive_brief(
         needs_attention=needs_attention,
         primary_recommendation=primary_rec,
         learned_memories=learned_memories,
+        today_calendar_events=today_calendar_events,
         recent_activity=recent_activity[:5],
         quick_actions=quick_actions,
         is_quiet_state=is_quiet,

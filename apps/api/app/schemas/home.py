@@ -41,6 +41,13 @@ class LearnedMemoryItem(BaseModel):
     type: str
     updated_at: str
 
+class CalendarCommitmentItem(BaseModel):
+    id: str
+    title: str
+    start_at: str
+    end_at: str
+    location: Optional[str] = None
+
 class ExecutiveBriefResponse(BaseModel):
     user_name: str
     greeting: str
@@ -48,6 +55,7 @@ class ExecutiveBriefResponse(BaseModel):
     needs_attention: List[AttentionItem] = []
     primary_recommendation: Optional[RecommendationItem] = None
     learned_memories: List[LearnedMemoryItem] = []
+    today_calendar_events: List[CalendarCommitmentItem] = []
     recent_activity: List[ActivityItem] = []
     quick_actions: List[QuickActionItem] = []
     is_quiet_state: bool = False
