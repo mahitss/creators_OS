@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.tool_registry import ToolRegistry, ToolRiskLevel
 from app.services.context_engine import ContextEngine, ContextRequest, ContextPurpose, SourceType
-from app.services import mission_service, attention_service, agent_recovery
+from app.services import mission_service, attention_service, agent_recovery, policy_engine, workspace_service
 
 _in_memory_runs: Dict[str, dict] = {}
 _in_memory_steps: Dict[str, List[dict]] = {}
@@ -145,8 +145,33 @@ async def step_agent_run(
     input_hash = _compute_input_hash(target_tool_input)
     step_id = f"step_{len(_in_memory_steps.get(run_id, []))+1}_{run_id}"
 
-    # 3. Check Risk Policy Matrix
-    if tool.risk_level in [ToolRiskLevel.WRITE, ToolRiskLevel.EXTERNAL_SIDE_EFFECT]:
+    # Fetch user member role and status
+    init_user = run.get("initiated_by", "usr_alex")
+    mem = await workspace_service.get_workspace_member(session, workspace_id, init_user)
+
+    # 3. Central Policy Engine Evaluation
+    pol_ctx = policy_engine.PolicyContext(
+        workspace_id=workspace_id,
+        user_id=init_user,
+        agent_run_id=run_id,
+        mission_id=run.get("mission_id"),
+        tool_name=tool.name,
+        tool_input=target_tool_input,
+        risk_level=tool.risk_level.value,
+        budget_state=run.get("budget_state"),
+        user_role=mem["role"] if mem else "member",
+        user_status=mem["status"] if mem else "active"
+    )
+    pol_decision = await policy_engine.evaluate_policy(session, pol_ctx)
+
+    if pol_decision.decision == "DENY":
+        run["status"] = "failed"
+        run["completed_at"] = now_iso
+        _record_step(run_id, "failure", f"Policy DENIED tool '{tool.name}': {pol_decision.reason}", error_code="POLICY_DENIAL")
+        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"])
+        return run
+
+    if pol_decision.decision == "APPROVAL_REQUIRED":
         existing_app = None
         for app in _in_memory_approvals.values():
             if app["agent_run_id"] == run_id and app["tool_name"] == tool.name and app["input_hash"] == input_hash:
@@ -186,12 +211,6 @@ async def step_agent_run(
             await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"], pending_action=tool.name)
             return run
 
-    elif tool.risk_level == ToolRiskLevel.DESTRUCTIVE:
-        run["status"] = "failed"
-        run["completed_at"] = now_iso
-        _record_step(run_id, "failure", f"Tool '{tool.name}' is destructive and blocked by runtime policy.", error_code="DESTRUCTIVE_ACTION_BLOCKED")
-        await agent_recovery.save_checkpoint(run_id, current_step=run["iteration_count"], completed_steps=list(range(1, run["iteration_count"])), budget_state=run["budget_state"])
-        return run
 
     # Record Tool Execution Record
     idempotency_key = f"{run_id}_{step_id}_{tool.name}"
