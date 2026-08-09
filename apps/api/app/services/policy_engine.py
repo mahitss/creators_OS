@@ -23,6 +23,9 @@ class PolicyContext:
     user_role: Optional[str] = "member"  # owner, admin, member, viewer
     user_status: Optional[str] = "active"  # active, suspended, invited, removed
     resource_scope: Optional[str] = "workspace"  # personal, workspace, shared, mission
+    delegation_id: Optional[str] = None
+    agent_definition_id: Optional[str] = None
+    delegated_by: Optional[str] = None
 
 @dataclass
 class PolicyDecision:
@@ -46,6 +49,60 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
             risk_level=risk_level,
             reason=f"User '{context.user_id}' is suspended from workspace '{context.workspace_id}'."
         )
+
+    # 2. Delegation Constraint Evaluation
+    if context.delegation_id:
+        from app.services import agent_delegation_service
+        delegation = await agent_delegation_service.get_delegation(session, context.delegation_id)
+        if not delegation:
+            return PolicyDecision(
+                decision="DENY",
+                risk_level=risk_level,
+                reason=f"Delegation '{context.delegation_id}' not found."
+            )
+
+        if delegation.get("status") != "active":
+            return PolicyDecision(
+                decision="DENY",
+                risk_level=risk_level,
+                reason=f"Delegation '{context.delegation_id}' is {delegation.get('status')}."
+            )
+
+        # Expiration Check
+        exp_iso = delegation.get("expires_at")
+        if exp_iso:
+            try:
+                exp_dt = datetime.fromisoformat(exp_iso.replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) > exp_dt:
+                    delegation["status"] = "expired"
+                    return PolicyDecision(
+                        decision="DENY",
+                        risk_level=risk_level,
+                        reason=f"Delegation '{context.delegation_id}' has expired."
+                    )
+            except ValueError:
+                pass
+
+        # Delegator Active Status Check
+        delegator_id = delegation.get("delegated_by")
+        if delegator_id:
+            from app.services import workspace_service
+            del_mem = await workspace_service.get_workspace_member(session, context.workspace_id, delegator_id)
+            if del_mem and del_mem.get("status") == "suspended":
+                return PolicyDecision(
+                    decision="DENY",
+                    risk_level=risk_level,
+                    reason=f"Delegator '{delegator_id}' is suspended."
+                )
+
+        # Tool Whitelist Check
+        allowed_tools = delegation.get("allowed_tools") or []
+        if allowed_tools and tool_name not in allowed_tools:
+            return PolicyDecision(
+                decision="DENY",
+                risk_level=risk_level,
+                reason=f"Tool '{tool_name}' is not in delegation allowed tools whitelist {allowed_tools}."
+            )
 
     # 2. Destructive Tool Shielding
     if tool_name in DESTRUCTIVE_TOOLS or risk_level == "DESTRUCTIVE":

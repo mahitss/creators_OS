@@ -669,5 +669,52 @@ class MissionMember(Base):
         Index("uq_mission_member", "mission_id", "user_id", unique=True),
     )
 
+class AgentDefinition(Base):
+    __tablename__ = "agent_definitions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    visibility: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # private, workspace, mission
+    default_purpose: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class AgentDelegation(Base):
+    __tablename__ = "agent_delegations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    delegated_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="mission", index=True) # mission, workspace, resource, tool
+    permissions: Mapped[dict] = mapped_column(JSON, default=dict)
+    allowed_tools: Mapped[dict] = mapped_column(JSON, default=dict)
+    allowed_resources: Mapped[dict] = mapped_column(JSON, default=dict)
+    autonomy_level: Mapped[str] = mapped_column(String(50), nullable=False, default="FULL_AUTONOMY")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, paused, expired, revoked, completed
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class AgentHandoff(Base):
+    __tablename__ = "agent_handoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_agent_run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_agent_definition_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="mission")
+    input_reference: Mapped[dict] = mapped_column(JSON, default=dict)
+    depth: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, running, completed, failed
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 
 
