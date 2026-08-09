@@ -89,6 +89,90 @@ async def archive_memory(
         )
     return MemoryResponse(**mem)
 
+@router.post("/memories/candidates", status_code=status.HTTP_201_CREATED)
+async def propose_memory_candidate(
+    payload: dict,
+    x_user_id: Optional[str] = Header(None),
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    from app.services import knowledge_service
+    user_id = x_user_id or "usr_alex"
+    try:
+        cand = await knowledge_service.propose_memory_candidate(
+            db, workspace_id=workspace_id, owner_id=user_id, statement=payload.get("statement", ""),
+            type_name=payload.get("type_name", "fact"), scope=payload.get("scope", "workspace"),
+            source_references=payload.get("source_references", []), confidence=payload.get("confidence", 1.0),
+            reason=payload.get("reason", ""), mission_id=payload.get("mission_id")
+        )
+        return cand
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+@router.post("/memories/candidates/{id}/approve")
+async def approve_memory_candidate(
+    id: str,
+    x_user_id: Optional[str] = Header(None),
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    from app.services import knowledge_service
+    user_id = x_user_id or "usr_alex"
+    try:
+        mem = await knowledge_service.approve_memory_candidate(db, workspace_id, id, user_id)
+        return mem
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+@router.get("/memories/conflicts")
+async def list_memory_conflicts(
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    from app.services import knowledge_service
+    return await knowledge_service.list_memory_conflicts(db, workspace_id)
+
+@router.post("/memories/conflicts/{id}/resolve")
+async def resolve_memory_conflict(
+    id: str,
+    payload: dict,
+    x_user_id: Optional[str] = Header(None),
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    from app.services import knowledge_service
+    user_id = x_user_id or "usr_alex"
+    choice = payload.get("choice", "keep_a")
+    try:
+        return await knowledge_service.resolve_memory_conflict(db, workspace_id, id, choice, user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+@router.get("/memories/{id}/provenance")
+async def get_memory_provenance(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    from app.services import knowledge_service
+    try:
+        return await knowledge_service.get_memory_provenance(db, workspace_id, id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+@router.post("/memories/{id}/stale")
+async def mark_memory_stale(
+    id: str,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db)
+):
+    mem = await memory_service.get_memory_by_id(db, workspace_id, id)
+    if not mem:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory not found.")
+    mem["status"] = "stale"
+    return mem
+
+
 @router.post("/memories/{id}/restore", response_model=MemoryResponse)
 async def restore_memory(
     id: str,

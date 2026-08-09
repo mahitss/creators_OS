@@ -182,20 +182,27 @@ class ContextEngine:
         if SourceType.MEMORY in permitted_sources:
             try:
                 mems, _ = await memory_service.list_memories(session, request.workspace_id, is_archived=False)
-                for mem in mems[:5]:
-                    raw_items.append(
-                        ContextItem(
-                            id=f"ctx_mem_{mem['id']}",
-                            source_type=SourceType.MEMORY,
-                            source_id=mem["id"],
-                            title=f"Memory [{mem['type'].upper()}]: {mem['title']}",
-                            content=mem["content"],
-                            relevance_score=0.8,
-                            importance=mem["importance"],
-                            created_at=mem["created_at"],
-                            updated_at=mem["updated_at"]
-                        )
+                # Filter active/approved memories and sort by scope priority (mission > workspace > agent > personal)
+                scope_priority = {"mission": 4, "workspace": 3, "shared": 3, "agent": 2, "personal": 1}
+                valid_mems = [m for m in mems if m.get("status") in ["active", "approved"]]
+                valid_mems.sort(key=lambda m: scope_priority.get(m.get("scope", "workspace"), 2), reverse=True)
+
+                for m in valid_mems:
+                    if request.query and request.query.lower() not in m["statement"].lower() and request.query.lower() not in m.get("type", "").lower():
+                        continue
+                    c_item = ContextItem(
+                        id=f"ctx_mem_{m['id']}",
+                        source_type=SourceType.MEMORY,
+                        source_id=m["id"],
+                        title=f"Memory: {m.get('type', 'fact').upper()}",
+                        content=m["statement"],
+                        summary=f"Confidence: {m.get('confidence', 1.0)}, Scope: {m.get('scope', 'workspace')}",
+                        relevance_score=0.85,
+                        importance="high",
+                        created_at=m.get("created_at", datetime.now(timezone.utc).isoformat()),
+                        updated_at=m.get("updated_at", datetime.now(timezone.utc).isoformat())
                     )
+                    raw_items.append(c_item)
                 sources_used.add(SourceType.MEMORY)
             except Exception:
                 sources_failed.append(SourceType.MEMORY)
