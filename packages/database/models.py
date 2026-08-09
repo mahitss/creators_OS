@@ -597,3 +597,20 @@ class EvaluationResult(Base):
         Index("idx_eval_results_run_case", "run_id", "case_id"),
     )
 
+class OperatorAuditLog(Base):
+    __tablename__ = "operator_audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    operator_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_agent_run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    details: Mapped[dict] = mapped_column(JSON, default=dict)
+    policy_result: Mapped[str] = mapped_column(String(50), nullable=False, default="allowed")
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (
+        Index("idx_operator_audit_ts", "timestamp"),
+    )
+
+

@@ -11,3 +11,7 @@ The Agent Recovery Manager (`apps/api/app/services/agent_recovery.py`) enables V
 ## 3. Worker Lease & Stale Run Claiming
 - Workers hold a 30-second heartbeat lease (`lease_expires_at`).
 - When a worker dies, its lease expires. The recovery process claims stale runs by updating `lease_worker_id` and incrementing state `version`.
+
+## 4. Operational Stuck Agent Signals & Control Center (Sprint 25)
+- The Agent Control Center (`/admin/agents`) surface expired lease runs, step timeouts ($>120\text{s}$), and stale heartbeats ($>60\text{s}$) in real-time.
+- Operators can trigger `retry_safe_step` or `resume` actions safely, generating an audit entry in `OperatorAuditLog`.

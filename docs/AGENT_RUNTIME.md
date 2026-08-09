@@ -21,3 +21,7 @@ The Agent Runtime (`apps/api/app/services/agent_runtime.py`) provides a controll
 - Runtime execution is continuously benchmarked against the 30-case Golden Core Suite (`eval_golden_suite.py`).
 - Isolated synthetic workspace fixtures (`SyntheticWorkspaceFixture`) prevent real production user data contamination.
 - Release gates block deployments on hard security failures or regression drops $>5\%$.
+
+## 6. Live Operations & Control Center (Sprint 25)
+- Server-Sent Events (SSE) stream operational state changes (`agent.started`, `agent.step.completed`, `agent.approval.requested`) to `/admin/agents`.
+- Operators inspect telemetry, stuck signals, and trigger policy-governed control actions (`pause`, `resume`, `cancel`, `retry`) with full audit logging in `OperatorAuditLog`.
