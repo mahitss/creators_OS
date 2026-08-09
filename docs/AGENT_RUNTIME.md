@@ -16,3 +16,8 @@ The Agent Runtime (`apps/api/app/services/agent_runtime.py`) provides a controll
 - `max_iterations`: Bounded loop (default 20 iterations max).
 - Token Budget: Enforced per run via Sprint 19 `ContextEngine`.
 - Zero Chain-of-Thought Storage: Stores user-safe action summaries only.
+
+## 5. Evaluation & Simulation Lab Integration (Sprint 24)
+- Runtime execution is continuously benchmarked against the 30-case Golden Core Suite (`eval_golden_suite.py`).
+- Isolated synthetic workspace fixtures (`SyntheticWorkspaceFixture`) prevent real production user data contamination.
+- Release gates block deployments on hard security failures or regression drops $>5\%$.

@@ -37,7 +37,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
         logger.info(f"{log_payload}")
 
-        # 4. Attach Request Correlation Headers
+        
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Process-Time-Ms"] = f"{duration_ms:.2f}"
         return response
