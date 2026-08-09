@@ -10,7 +10,7 @@ export const QuietHomeState: React.FC = () => {
       </div>
       <div className="flex flex-col gap-1">
         <Typography variant="h2" className="text-base font-semibold text-slate-100">
-          You're all caught up.
+          You&apos;re all caught up.
         </Typography>
         <Typography variant="caption" className="text-xs text-slate-400 max-w-sm leading-relaxed">
           No urgent attention items or pending executions. Vapor is observing your workspace.

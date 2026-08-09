@@ -13,7 +13,7 @@ export const TodaysBrief: React.FC<TodaysBriefProps> = ({ isEmptyState }) => {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <Typography variant="h3" className="text-sm font-semibold text-slate-200">
-            Today's Brief
+            Today&apos;s Brief
           </Typography>
         </div>
         <Typography variant="caption" className="text-slate-500 font-mono text-[11px]">
@@ -24,7 +24,7 @@ export const TodaysBrief: React.FC<TodaysBriefProps> = ({ isEmptyState }) => {
       {isEmptyState ? (
         <div className="flex flex-col gap-3 py-2">
           <Typography variant="body" className="text-slate-300">
-            Your workspace is initialized and ready. Vapor hasn't completed any background missions yet.
+            Your workspace is initialized and ready. Vapor hasn&apos;t completed any background missions yet.
           </Typography>
           <div className="pt-2">
             <Link href="/missions">

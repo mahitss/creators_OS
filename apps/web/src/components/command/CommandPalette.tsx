@@ -161,7 +161,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             ) : !query.trim() ? (
               <div className="py-6 text-center text-xs font-mono text-slate-500">Type a query to search across Missions, Content, Memory & Attention.</div>
             ) : results.length === 0 ? (
-              <div className="py-6 text-center text-xs text-slate-400">No workspace items found matching "{query}".</div>
+              <div className="py-6 text-center text-xs text-slate-400">No workspace items found matching &quot;{query}&quot;.</div>
             ) : (
               results.map((res, idx) => (
                 <div
