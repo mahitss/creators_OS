@@ -15,7 +15,7 @@ export interface SearchListResponse {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export async function fetchSearchResults(query: string): Promise<SearchListResponse> {
-  if (!query || !query.strip ? !query.trim() : !query) {
+  if (!query || !query.trim()) {
     return { results: [], total: 0 };
   }
 

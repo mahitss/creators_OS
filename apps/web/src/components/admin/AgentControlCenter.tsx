@@ -20,14 +20,14 @@ import {
 import { AgentDetailDrawer } from './AgentDetailDrawer';
 
 interface OverviewMetrics {
-  active_agents: int;
-  waiting_approvals: int;
-  paused_agents: int;
-  failed_agents: int;
-  recovering_agents: int;
-  stuck_agents: int;
-  completed_today: int;
-  total_tokens: int;
+  active_agents: number;
+  waiting_approvals: number;
+  paused_agents: number;
+  failed_agents: number;
+  recovering_agents: number;
+  stuck_agents: number;
+  completed_today: number;
+  total_tokens: number;
   total_estimated_cost: number;
   eval_suite_status: string;
 }
@@ -111,7 +111,7 @@ export const AgentControlCenter: React.FC = () => {
   };
 
   const filteredAgents = agents.filter(a => 
-    searchQuery === '' || a.id.toLowerCase().includes(searchQuery.lower()) || a.goal.toLowerCase().includes(searchQuery.lower())
+    searchQuery === '' || a.id.toLowerCase().includes(searchQuery.toLowerCase()) || a.goal.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

@@ -3,7 +3,7 @@ import { Cpu, ShieldCheck, Plus, Play, Clock, AlertTriangle, CheckCircle2, Lock,
 
 interface AgentDefinition {
   id: string;
-  name: str;
+  name: string;
   description: string;
   created_by: string;
   visibility: string;

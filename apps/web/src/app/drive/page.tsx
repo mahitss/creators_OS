@@ -54,8 +54,8 @@ export default function DriveBrowserPage() {
   const getMimeBadge = (mime: string) => {
     if (mime.includes('document')) return <Badge variant="emerald">Google Doc</Badge>;
     if (mime.includes('pdf')) return <Badge variant="amber">PDF</Badge>;
-    if (mime.includes('markdown') || mime.includes('plain')) return <Badge variant="sky">Text</Badge>;
-    return <Badge variant="outline">Binary</Badge>;
+    if (mime.includes('markdown') || mime.includes('plain')) return <Badge variant="cyan">Text</Badge>;
+    return <Badge variant="default">Binary</Badge>;
   };
 
   return (

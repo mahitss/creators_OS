@@ -14,11 +14,8 @@ export interface AIProviderConfig {
   baseUrl?: string;
 }
 
-export interface AIStreamChunk {
-  delta: string;
-  isComplete: boolean;
-  finishReason?: string;
-}
+import type { AIStreamChunk } from './streaming';
+export type { AIStreamChunk };
 
 export interface AIProvider {
   name: AIProviderName;

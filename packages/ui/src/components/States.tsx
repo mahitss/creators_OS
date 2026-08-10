@@ -2,20 +2,32 @@ import React from 'react';
 import { Spinner } from './Spinner';
 import { AlertIcon } from './Icons';
 
+import { Button } from './Button';
+
 export interface EmptyStateProps {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
   icon?: React.ReactNode;
 }
 
-export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, action, icon }) => {
+export const EmptyState: React.FC<EmptyStateProps> = ({ title, description, action, actionLabel, onAction, icon }) => {
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center max-w-sm mx-auto gap-3">
       {icon && <div className="p-3 rounded-full bg-slate-800/60 text-slate-400">{icon}</div>}
       <h3 className="text-sm font-semibold text-slate-200">{title}</h3>
       {description && <p className="text-xs text-slate-400 leading-relaxed">{description}</p>}
-      {action && <div className="mt-2">{action}</div>}
+      {action ? (
+        <div className="mt-2">{action}</div>
+      ) : actionLabel && onAction ? (
+        <div className="mt-2">
+          <Button variant="primary" size="sm" onClick={onAction}>
+            {actionLabel}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

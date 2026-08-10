@@ -46,7 +46,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-amber-400 font-bold">⚠️ APPROVAL REQUIRED</span>
-          <Badge variant={riskLevel === 'external_side_effect' ? 'amber' : 'sky'}>
+          <Badge variant={riskLevel === 'external_side_effect' ? 'amber' : 'cyan'}>
             {riskLevel.toUpperCase().replace(/_/g, ' ')}
           </Badge>
         </div>

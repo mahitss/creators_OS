@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { AppShell } from '../../components/shell/AppShell';
 import { Card, Typography, Switch } from '@vapor/ui';
