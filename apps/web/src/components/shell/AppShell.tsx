@@ -50,6 +50,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Document Context', href: '/drive', icon: '📄' },
     { label: 'Context Memory', href: '/memory', icon: '🧠' },
     { label: 'Automations', href: '/automations', icon: '⚡' },
+    { label: 'Workflows', href: '/workflows', icon: '🌿' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 
