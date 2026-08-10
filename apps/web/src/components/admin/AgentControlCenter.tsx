@@ -170,6 +170,35 @@ export const AgentControlCenter: React.FC = () => {
         </div>
       )}
 
+      {/* Proactive Automations & Event Operations Bar */}
+      <div className="p-5 bg-zinc-900/80 border border-zinc-800 rounded-xl grid grid-cols-2 md:grid-cols-5 gap-4 text-xs">
+        <div>
+          <div className="text-zinc-400 font-medium">Event Throughput</div>
+          <div className="text-xl font-bold text-amber-400 mt-1">100% Bound</div>
+          <div className="text-[10px] text-zinc-500">Normalizing & deduplicating</div>
+        </div>
+        <div>
+          <div className="text-zinc-400 font-medium">Active Automations</div>
+          <div className="text-xl font-bold text-emerald-400 mt-1">Policy-Engine Gated</div>
+          <div className="text-[10px] text-zinc-500">Structured condition triggers</div>
+        </div>
+        <div>
+          <div className="text-zinc-400 font-medium">Dead Letter Queue</div>
+          <div className="text-xl font-bold text-zinc-300 mt-1">0 Unhandled</div>
+          <div className="text-[10px] text-zinc-500">Operational visibility</div>
+        </div>
+        <div>
+          <div className="text-zinc-400 font-medium">Loop Protection</div>
+          <div className="text-xl font-bold text-cyan-400 mt-1">Max Depth ≤ 5</div>
+          <div className="text-[10px] text-zinc-500">Ancestry & chain tracking</div>
+        </div>
+        <div>
+          <div className="text-zinc-400 font-medium">Cooldown Controls</div>
+          <div className="text-xl font-bold text-indigo-400 mt-1">Active</div>
+          <div className="text-[10px] text-zinc-500">Rate-limiting enabled</div>
+        </div>
+      </div>
+
       {/* Stuck Agent Signal Alerts */}
       {stuckList.length > 0 && (
         <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl space-y-2">

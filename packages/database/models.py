@@ -758,6 +758,112 @@ class KnowledgeRelation(Base):
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class SystemEvent(Base):
+    __tablename__ = "system_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # gmail, calendar, drive, mission, agent, approval, workspace, policy, integration, system
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    dedupe_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    metadata_dict: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    sensitivity: Mapped[str] = mapped_column(String(50), nullable=False, default="internal")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="received", index=True) # received, processing, processed, ignored, failed, dead_lettered
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentTrigger(Base):
+    __tablename__ = "agent_triggers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    conditions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False, default="create_attention")
+    agent_definition_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, paused, disabled, deleted
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # personal, workspace, mission
+    cooldown_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=7200) # 2 hours default
+    last_triggered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class Signal(Base):
+    __tablename__ = "signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # deadline_change, important_message, document_change, mission_risk, approval_risk, agent_failure, schedule_conflict, project_update
+    importance: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    reason_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Insight(Base):
+    __tablename__ = "insights"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True)
+    source_events: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    importance: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    source_references: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="new", index=True) # new, seen, dismissed, acted_on, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class AutomationExecution(Base):
+    __tablename__ = "automation_executions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trigger_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision: Mapped[str] = mapped_column(String(50), nullable=False, default="allowed", index=True) # allowed, approval_required, denied, ignored
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True) # completed, failed, retrying, loop_blocked, cooldown_blocked
+    agent_run_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    insight_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    chain_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    chain_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class DeadLetterEvent(Base):
+    __tablename__ = "dead_letter_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(String(255), nullable=False)
+    error_message: Mapped[str] = mapped_column(Text, nullable=False)
+    payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class EventDeduplication(Base):
+    __tablename__ = "event_deduplication"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dedupe_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
 
 
 
