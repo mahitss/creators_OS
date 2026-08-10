@@ -65,7 +65,7 @@ jobs:
 
       - name: Run Pytest API Suite
         env:
-          PYTHONPATH: .
+          PYTHONPATH: .:apps/api
           DATABASE_URL: postgresql+asyncpg://vapor_user:vapor_password@localhost:5432/vapor_os
         run: |
           pytest apps/api/tests
