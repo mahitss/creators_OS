@@ -3266,6 +3266,156 @@ class SkillCompatibility(Base):
     required_tool_schemas: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class Capability(Base):
+    __tablename__ = "capabilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    owner_type: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # agent, user, workspace, organization
+    owner_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False, default="productivity", index=True) # research, communication, coding, analytics, productivity, data, knowledge, automation, operations, security, finance, engineering
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="skill", index=True) # skill, tool, workflow, agent, connector, model, knowledge_source, automation
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, published, active, paused, deprecated, revoked
+    current_version_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class CapabilityVersion(Base):
+    __tablename__ = "capability_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+    definition_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    input_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    requirements: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dependencies: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityProvenance(Base):
+    __tablename__ = "capability_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    creator: Mapped[str] = mapped_column(String(255), nullable=False)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="manual")
+    skill_candidate_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    organization_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+class CapabilityCompatibility(Base):
+    __tablename__ = "capability_compatibilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_version_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    min_runtime_version: Mapped[str] = mapped_column(String(50), nullable=False, default="2.0.0")
+    required_tools: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    required_models: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class CapabilityInstallation(Base):
+    __tablename__ = "capability_installations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    installed_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="installed", index=True) # available, requested, approved, installed, disabled, removed
+    installed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityHealth(Base):
+    __tablename__ = "capability_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    availability_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.999)
+    latency_p95_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=210)
+    error_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.001)
+    security_state: Mapped[str] = mapped_column(String(50), nullable=False, default="passed")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # healthy, degraded, unavailable, blocked, deprecated
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityPolicy(Base):
+    __tablename__ = "capability_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    allowed_agents: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    allowed_workflows: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low") # low, medium, high, critical
+    requires_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityRequest(Base):
+    __tablename__ = "capability_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    requested_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected
+    reviewed_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityDependency(Base):
+    __tablename__ = "capability_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_type: Mapped[str] = mapped_column(String(50), nullable=False) # tool, model, knowledge, skill, workflow, connector
+    dependency_target_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityPackage(Base):
+    __tablename__ = "capability_packages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    contained_capability_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityPackageVersion(Base):
+    __tablename__ = "capability_package_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    package_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False)
+    capability_versions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityFeedback(Base):
+    __tablename__ = "capability_feedbacks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    feedback_type: Mapped[str] = mapped_column(String(50), nullable=False) # useful, broken, unsafe, outdated, too_expensive, too_slow
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CapabilityAudit(Base):
+    __tablename__ = "capability_audits"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
