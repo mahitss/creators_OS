@@ -2629,6 +2629,137 @@ class KnowledgeGovernanceEvent(Base):
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class EnterpriseEvaluationRun(Base):
+    __tablename__ = "ent_eval_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evaluation_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # offline, online, regression, benchmark, human_review, simulation, production_sample
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # response, agent, mission, workflow, retrieval, decision, recommendation, tool_call, memory
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    model_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    prompt_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    context_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True) # running, completed, failed
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class EvaluationDataset(Base):
+    __tablename__ = "evaluation_datasets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="workspace")
+    is_golden: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EvaluationDatasetVersion(Base):
+    __tablename__ = "evaluation_dataset_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dataset_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False)
+    changes_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EnterpriseEvaluationCase(Base):
+    __tablename__ = "ent_eval_cases"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    dataset_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    input_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_output_reference: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    expected_evidence_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal")
+
+class EnterpriseEvaluationResult(Base):
+    __tablename__ = "ent_eval_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evaluation_run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # correctness, relevance, groundedness, citation_accuracy, completeness, instruction_following, tool_correctness, policy_compliance, safety, latency, cost
+    score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pass") # pass, fail, warning
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EvaluationMetric(Base):
+    __tablename__ = "evaluation_metrics"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    dimension: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    metric_type: Mapped[str] = mapped_column(String(50), nullable=False, default="continuous") # binary, continuous
+    min_value: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    max_value: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+
+class HumanEvaluation(Base):
+    __tablename__ = "human_evaluations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evaluator_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evaluation_run_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    criteria: Mapped[str] = mapped_column(String(100), nullable=False)
+    rating: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EvaluationExperiment(Base):
+    __tablename__ = "evaluation_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    candidate_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EvaluationRegression(Base):
+    __tablename__ = "evaluation_regressions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    baseline_run_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    candidate_run_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    delta: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="detected", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class EvaluationReport(Base):
+    __tablename__ = "evaluation_reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evaluation_run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    metrics_breakdown: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    regressions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    recommendation: Mapped[str] = mapped_column(String(50), nullable=False, default="promote") # promote, hold, rollback, investigate
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AIQualityAlert(Base):
+    __tablename__ = "ai_quality_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    alert_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    current_value: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold_value: Mapped[float] = mapped_column(Float, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
