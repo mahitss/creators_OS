@@ -6126,6 +6126,257 @@ class AIResilienceProfile(Base):
     human_escalation_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
 
+class Crisis(Base):
+    __tablename__ = "crises_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="declared", index=True) # detected, assessing, declared, active, stabilizing, recovering, resolved, closed, cancelled
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="SEV1", index=True) # SEV4, SEV3, SEV2, SEV1, CRITICAL
+    declared_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    declared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    commander_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CrisisDeclaration(Base):
+    __tablename__ = "crisis_declarations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    criteria: Mapped[Text] = mapped_column(Text, nullable=False)
+    authorized_actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CrisisSignal(Base):
+    __tablename__ = "crisis_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False) # service_failure, security_event, vendor_outage, data_issue, capacity_failure, financial_event, operational_failure, dependency_failure, reputational_event, regulatory_event, external_event
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low, unknown
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    source_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+
+class CrisisImpactAssessment(Base):
+    __tablename__ = "crisis_impact_assessments_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capabilities_impact_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    services_impact_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    customers_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    operations_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    financials_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    data_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    security_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    regulatory_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reputation_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    impact_status: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed") # unknown, suspected, confirmed, resolved
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class CrisisCascade(Base):
+    __tablename__ = "crisis_cascades"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_node: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_node: Mapped[str] = mapped_column(String(255), nullable=False)
+    relationship: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class CrisisCommand(Base):
+    __tablename__ = "crisis_commands_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    incident_commander: Mapped[str] = mapped_column(String(255), nullable=False)
+    operations_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+    technical_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+    security_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+    communications_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+    business_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+    recovery_lead: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class CrisisCommandAssignment(Base):
+    __tablename__ = "crisis_command_assignments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    command_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(100), nullable=False) # incident_commander, operations_lead, technical_lead, security_lead, communications_lead, business_lead, recovery_lead
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    assigned_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class CrisisResponsePlan(Base):
+    __tablename__ = "crisis_response_plans_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objectives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    owners_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decision_points_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    communications_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    rollback_plan_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class CrisisResponseOption(Base):
+    __tablename__ = "crisis_response_options_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    expected_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    recovery_time_min: Mapped[int] = mapped_column(Integer, nullable=False, default=45)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class CrisisCommunication(Base):
+    __tablename__ = "crisis_communications_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    audience: Mapped[str] = mapped_column(String(100), nullable=False) # internal, customer, vendor, executive, regulatory, public
+    message: Mapped[Text] = mapped_column(Text, nullable=False)
+    channel: Mapped[str] = mapped_column(String(100), nullable=False)
+    sender: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # draft, pending_approval, approved, sent, failed, cancelled
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CrisisTimelineEvent(Base):
+    __tablename__ = "crisis_timeline_events_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class StabilizationAssessment(Base):
+    __tablename__ = "stabilization_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    is_contained: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    new_damage_occurring: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    capabilities_recovering: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    assessment_details: Mapped[Text] = mapped_column(Text, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CrisisResolution(Base):
+    __tablename__ = "crisis_resolutions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resolution_criteria: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    authorized_resolver: Mapped[str] = mapped_column(String(255), nullable=False)
+    resolved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AfterActionReview(Base):
+    __tablename__ = "after_action_reviews_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    what_happened: Mapped[Text] = mapped_column(Text, nullable=False)
+    what_worked: Mapped[Text] = mapped_column(Text, nullable=False)
+    what_failed: Mapped[Text] = mapped_column(Text, nullable=False)
+    unexpected_behavior: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    lessons_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    improvements_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class CrisisLesson(Base):
+    __tablename__ = "crisis_lessons_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    outcome: Mapped[str] = mapped_column(String(100), nullable=False)
+    resilience_gap_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class CrisisImprovement(Base):
+    __tablename__ = "crisis_improvements_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    control_loop_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    resilience_improvement_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="in_progress", index=True) # planned, in_progress, completed, verified
+
+class CrisisDrill(Base):
+    __tablename__ = "crisis_drills_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    participants_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    objectives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    results_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    gaps_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="passed") # passed, partial, failed, inconclusive
+    next_due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class CrisisReadinessAssessment(Base):
+    __tablename__ = "crisis_readiness_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    command_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    plans_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    communications_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    recovery_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    readiness_status: Mapped[str] = mapped_column(String(50), nullable=False, default="ready") # ready, partially_ready, not_ready, unknown
+
+class CrisisEscalation(Base):
+    __tablename__ = "crisis_escalations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    previous_severity: Mapped[str] = mapped_column(String(50), nullable=False)
+    new_severity: Mapped[str] = mapped_column(String(50), nullable=False)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    authorized_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CrisisRelationship(Base):
+    __tablename__ = "crisis_relationships"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    primary_crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    related_crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relationship_type: Mapped[str] = mapped_column(String(50), nullable=False) # duplicate, related, caused_by, escalation_of, dependency_of
+
+class CrisisMetrics(Base):
+    __tablename__ = "crisis_metrics_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    time_to_detect_min: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
+    time_to_declare_min: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    time_to_stabilize_min: Mapped[int] = mapped_column(Integer, nullable=False, default=48)
+    time_to_recover_min: Mapped[int] = mapped_column(Integer, nullable=False, default=95)
+    time_to_verify_min: Mapped[int] = mapped_column(Integer, nullable=False, default=115)
+
+
 
 
 
