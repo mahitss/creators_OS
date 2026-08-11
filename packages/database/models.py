@@ -1896,6 +1896,153 @@ class MissionSharedState(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
+class DecisionSignal(Base):
+    __tablename__ = "decision_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # workflow_volume, workflow_failure_rate, agent_success_rate, agent_latency, model_latency, model_cost, provider_error_rate, queue_depth, incident_frequency, recovery_frequency, knowledge_freshness, retrieval_quality, security_findings, budget_usage, user_activity
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    window: Mapped[str] = mapped_column(String(50), nullable=False, default="1h")
+    quality: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, delayed, partial, stale, invalid
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SignalBaseline(Base):
+    __tablename__ = "signal_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="global")
+    window: Mapped[str] = mapped_column(String(50), nullable=False, default="7d")
+    baseline_value: Mapped[float] = mapped_column(Float, nullable=False)
+    method: Mapped[str] = mapped_column(String(50), nullable=False, default="moving_average") # moving_average, moving_median, rolling_percentile, seasonal_baseline
+    calculated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AnomalyEvent(Base):
+    __tablename__ = "anomaly_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    baseline_value: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_value: Mapped[float] = mapped_column(Float, nullable=False)
+    deviation: Mapped[float] = mapped_column(Float, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="info", index=True) # info, warning, high, critical
+    detector: Mapped[str] = mapped_column(String(100), nullable=False, default="std_dev_threshold")
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class Forecast(Base):
+    __tablename__ = "forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="7d")
+    predicted_value: Mapped[float] = mapped_column(Float, nullable=False)
+    predicted_range: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    method: Mapped[str] = mapped_column(String(50), nullable=False, default="moving_average") # moving_average, exponential_smoothing, trend_extrapolation, seasonal_baseline
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+class ForecastEvaluation(Base):
+    __tablename__ = "forecast_evaluations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    predicted: Mapped[float] = mapped_column(Float, nullable=False)
+    actual: Mapped[float] = mapped_column(Float, nullable=False)
+    error: Mapped[float] = mapped_column(Float, nullable=False)
+    mape: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mae: Mapped[float] = mapped_column(Float, nullable=False)
+    rmse: Mapped[float] = mapped_column(Float, nullable=False)
+    evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Recommendation(Base):
+    __tablename__ = "recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # capacity_adjustment, provider_routing, workflow_optimization, cost_optimization, reliability_improvement, knowledge_refresh, agent_routing, human_review
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    expected_impact: Mapped[str] = mapped_column(Text, nullable=False)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # low, medium, high, critical
+    confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="new", index=True) # new, reviewing, accepted, rejected, executing, completed, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class DecisionRecord(Base):
+    __tablename__ = "decision_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    recommendation_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    decision: Mapped[str] = mapped_column(String(255), nullable=False)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    policy_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionScenario(Base):
+    __tablename__ = "decision_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    assumptions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    inputs: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    outputs: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ScenarioResult(Base):
+    __tablename__ = "scenario_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    scenario_output: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    delta: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assumptions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+    run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionOutcome(Base):
+    __tablename__ = "decision_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_impact: Mapped[str] = mapped_column(Text, nullable=False)
+    actual_impact: Mapped[str] = mapped_column(Text, nullable=False)
+    error: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    unintended_effects: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionFeedback(Base):
+    __tablename__ = "decision_feedbacks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recommendation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    feedback: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # useful, not_useful, incorrect, unsafe, missing_context
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SignalCorrelation(Base):
+    __tablename__ = "signal_correlations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signals: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    time_window: Mapped[str] = mapped_column(String(50), nullable=False, default="24h")
+    relationship: Mapped[str] = mapped_column(String(100), nullable=False, default="correlated_with")
+    strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.8)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
