@@ -53,6 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Workflows', href: '/workflows', icon: '🌿' },
     { label: 'FinOps & Infra', href: '/finops', icon: '💰' },
     { label: 'Enterprise Governance', href: '/admin/governance', icon: '🏛️' },
+    { label: 'Enterprise Identity & SSO', href: '/admin/identity', icon: '🔑' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 
