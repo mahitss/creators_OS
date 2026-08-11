@@ -82,6 +82,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Transformation Intelligence', href: '/transformation-intelligence', icon: '🕸️' },
     { label: 'Transformation Foresight', href: '/transformation-foresight', icon: '🔮' },
     { label: 'Transformation Decisions', href: '/transformation-decisions', icon: '⚖️' },
+    { label: 'Decision Learning 2.0', href: '/transformation-decision-learning', icon: '🧠' },
     { label: 'Enterprise Knowledge', href: '/knowledge', icon: '📚' },
     { label: 'AI Agent Mesh', href: '/agents/mesh', icon: '🕸️' },
     { label: 'Agent Skill Fabric', href: '/agents/skills', icon: '⚡' },

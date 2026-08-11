@@ -8722,6 +8722,179 @@ class TransformationDecisionDrift(Base):
     implemented_decision_summary: Mapped[Text] = mapped_column(Text, nullable=False)
     drift_severity: Mapped[str] = mapped_column(String(50), nullable=False, default="minor", index=True)
 
+class TransformationDecisionLifecycle(Base):
+    __tablename__ = "transformation_decision_lifecycles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    current_stage: Mapped[str] = mapped_column(String(50), nullable=False, default="learning", index=True) # question, evidence, analysis, recommendation, decision, approval, execution, verification, learning, closed, reopened
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_transition_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class TransformationDecisionStageTransition(Base):
+    __tablename__ = "transformation_decision_stage_transitions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lifecycle_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    to_stage: Mapped[str] = mapped_column(String(50), nullable=False)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    decision_packet_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+
+class TransformationDecisionBaseline(Base):
+    __tablename__ = "transformation_decision_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_benefits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_risks_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_timing_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_scenario: Mapped[str] = mapped_column(String(100), nullable=False, default="baseline")
+    expected_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationDecisionExpectedOutcome(Base):
+    __tablename__ = "transformation_decision_expected_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    target: Mapped[str] = mapped_column(String(100), nullable=False)
+    range_str: Mapped[str] = mapped_column(String(100), nullable=False, default="30-35%")
+    time_horizon: Mapped[str] = mapped_column(String(100), nullable=False, default="90 days")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class TransformationDecisionActualOutcome(Base):
+    __tablename__ = "transformation_decision_actual_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    value: Mapped[str] = mapped_column(String(100), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+
+class TransformationDecisionVariance(Base):
+    __tablename__ = "transformation_decision_variances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected: Mapped[str] = mapped_column(String(100), nullable=False)
+    actual: Mapped[str] = mapped_column(String(100), nullable=False)
+    difference: Mapped[str] = mapped_column(String(100), nullable=False)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="favorable") # favorable, unfavorable, neutral
+    materiality: Mapped[str] = mapped_column(String(50), nullable=False, default="minor", index=True) # minor, moderate, material, critical
+    variance_type: Mapped[str] = mapped_column(String(50), nullable=False, default="benefit") # benefit, cost, timing, risk, capacity, quality, adoption, dependency, strategic
+
+class TransformationDecisionAssumptionOutcome(Base):
+    __tablename__ = "transformation_decision_assumption_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assumption: Mapped[Text] = mapped_column(Text, nullable=False)
+    original_status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid")
+    actual_state: Mapped[str] = mapped_column(String(50), nullable=False, default="valid") # valid, weaker, stronger, invalidated, unknown
+    impact: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationRecommendationOutcome(Base):
+    __tablename__ = "transformation_recommendation_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision: Mapped[Text] = mapped_column(Text, nullable=False)
+    result: Mapped[Text] = mapped_column(Text, nullable=False)
+    alignment: Mapped[str] = mapped_column(String(50), nullable=False, default="aligned")
+
+class TransformationDecisionLesson(Base):
+    __tablename__ = "transformation_decision_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lesson: Mapped[Text] = mapped_column(Text, nullable=False)
+    source_decision: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # high, medium, low, emerging
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="enterprise_relevant", index=True) # decision_specific, transformation_specific, capability_specific, portfolio_specific, enterprise_relevant
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationDecisionPattern(Base):
+    __tablename__ = "transformation_decision_patterns"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    pattern: Mapped[Text] = mapped_column(Text, nullable=False)
+    sample_size: Mapped[int] = mapped_column(Integer, nullable=False, default=12, index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationDecisionLearningReview(Base):
+    __tablename__ = "transformation_decision_learning_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lesson_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # candidate, under_review, approved, rejected
+    reviewer: Mapped[str] = mapped_column(String(255), nullable=False)
+    feedback: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationDecisionCounterfactual(Base):
+    __tablename__ = "transformation_decision_counterfactuals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actual_path: Mapped[Text] = mapped_column(Text, nullable=False)
+    alternative_path: Mapped[Text] = mapped_column(Text, nullable=False)
+    assumptions: Mapped[Text] = mapped_column(Text, nullable=False)
+    uncertainty: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+
+class TransformationDecisionRegretAnalysis(Base):
+    __tablename__ = "transformation_decision_regret_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    missed_benefit: Mapped[Text] = mapped_column(Text, nullable=False)
+    avoidable_risk: Mapped[Text] = mapped_column(Text, nullable=False)
+    timing_loss: Mapped[Text] = mapped_column(Text, nullable=False)
+    optionality_loss: Mapped[Text] = mapped_column(Text, nullable=False)
+    uncertainty: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+
+class TransformationDecisionSuccessCondition(Base):
+    __tablename__ = "transformation_decision_success_conditions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    condition_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    metric_target: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="verified")
+
+class TransformationDecisionFailureAnalysis(Base):
+    __tablename__ = "transformation_decision_failure_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    execution_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    assumption_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    external_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationDecisionQualityReview(Base):
+    __tablename__ = "transformation_decision_quality_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_case_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="post_transformation")
+    evidence_quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    forecast_accuracy: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    outcome_variance: Mapped[str] = mapped_column(String(50), nullable=False, default="favorable")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
