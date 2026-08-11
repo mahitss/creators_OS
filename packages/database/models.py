@@ -9427,6 +9427,231 @@ class TransformationSituationSummary(Base):
     recommended_review: Mapped[Text] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class TransformationRecoveryDomain(Base):
+    __tablename__ = "transformation_recovery_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise") # enterprise, portfolio, transformation, program, wave, business_unit
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="prepared", index=True) # prepared, monitoring, degraded, recovery_active, stabilizing, recovering, verified, closed, review
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationDisruption(Base):
+    __tablename__ = "transformation_disruptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    disruption_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # dependency_failure, capacity_loss, technology_failure, vendor_failure, data_issue, governance_failure, execution_failure, benefit_failure, risk_event, scenario_shock, external_event
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed", index=True) # observed, suspected, confirmed, resolved
+
+class TransformationRecoveryImpact(Base):
+    __tablename__ = "transformation_recovery_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    disruption_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_transformations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_benefits_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    strategic_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationRecoveryCriticality(Base):
+    __tablename__ = "transformation_recovery_criticalities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    strategic_importance: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    dependency_centrality: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    benefit_exposure: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    recovery_urgency: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    reversibility: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+
+class TransformationRecoveryPriority(Base):
+    __tablename__ = "transformation_recovery_priorities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    priority_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.94, index=True)
+    evidence_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    criteria_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationProtectionTarget(Base):
+    __tablename__ = "transformation_protection_targets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(100), nullable=False) # critical_capability, critical_dependency, critical_milestone, critical_benefit, critical_outcome
+    target_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    protection_level: Mapped[str] = mapped_column(String(50), nullable=False, default="maximum")
+
+class TransformationRecoveryObjective(Base):
+    __tablename__ = "transformation_recovery_objectives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_recovery_time_hours: Mapped[float] = mapped_column(Float, nullable=False, default=72.0)
+    estimated_range_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.93)
+
+class TransformationRecoveryPath(Base):
+    __tablename__ = "transformation_recovery_paths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    path_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    action_sequence_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, simulated, recommended, approved, executing, completed, rejected
+
+class TransformationRecoveryOption(Base):
+    __tablename__ = "transformation_recovery_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # restore, reroute, substitute, degrade_gracefully, pause, resequence, rollback, isolate, accelerate_recovery
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.91)
+    secondary_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="simulated", index=True)
+
+class TransformationRecoveryBottleneck(Base):
+    __tablename__ = "transformation_recovery_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    bottleneck_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # capacity, dependency, decision, approval, technology, vendor, data, execution
+    entity_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    impact_description: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationRecoveryTrajectory(Base):
+    __tablename__ = "transformation_recovery_trajectories"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    trajectory_data_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class TransformationRecoveryComparison(Base):
+    __tablename__ = "transformation_recovery_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    compared_path_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    time_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.08)
+    cost_score: Mapped[float] = mapped_column(Float, nullable=False, default=120000.0)
+    reversibility_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class TransformationRecoveryCheckpoint(Base):
+    __tablename__ = "transformation_recovery_checkpoints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    checkpoint_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    expected_state: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_state: Mapped[Text] = mapped_column(Text, nullable=False)
+    next_decision_point: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+
+class TransformationRecoveryGate(Base):
+    __tablename__ = "transformation_recovery_gates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gate_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    criteria_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, verified, passed, failed
+
+class TransformationReturnToNormalPlan(Base):
+    __tablename__ = "transformation_return_to_normal_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    criteria_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    action_sequence_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, approved, active, verified, closed
+
+class TransformationRecoveryDrift(Base):
+    __tablename__ = "transformation_recovery_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    path_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_action: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_action: Mapped[Text] = mapped_column(Text, nullable=False)
+    drift_severity: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+
+class TransformationRecoveryEscalation(Base):
+    __tablename__ = "transformation_recovery_escalations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    escalation_path: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="escalated", index=True)
+
+class TransformationRecoveryCommunication(Base):
+    __tablename__ = "transformation_recovery_communications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    audience: Mapped[str] = mapped_column(String(255), nullable=False)
+    message_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft")
+
+class TransformationResilienceGap(Base):
+    __tablename__ = "transformation_resilience_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gap_type: Mapped[str] = mapped_column(String(100), nullable=False) # missing_redundancy, single_point_dependency, insufficient_capacity, weak_recovery_path, unclear_ownership, governance_bottleneck
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationResilienceImprovement(Base):
+    __tablename__ = "transformation_resilience_improvements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    improvement_type: Mapped[str] = mapped_column(String(100), nullable=False) # redundancy, substitution, capacity_buffer, dependency_diversification, process_change, governance_change, technology_change, training, simulation
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommendation_only: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class TransformationRecoveryReadiness(Base):
+    __tablename__ = "transformation_recovery_readinesses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    readiness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    dimension_scores_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationRecoveryDrill(Base):
+    __tablename__ = "transformation_recovery_drills"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drill_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    results_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    no_production_mutation: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
