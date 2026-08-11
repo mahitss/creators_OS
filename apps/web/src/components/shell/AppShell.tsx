@@ -65,6 +65,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Semantic Graph', href: '/knowledge/graph', icon: '🕸️' },
     { label: 'Intelligence Governance', href: '/knowledge/governance', icon: '🛡️' },
     { label: 'Enterprise AI Evaluation', href: '/ai/evaluation', icon: '📊' },
+    { label: 'AI Model Gateway', href: '/ai/models', icon: '🤖' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 

@@ -2759,6 +2759,136 @@ class AIQualityAlert(Base):
     threshold_value: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class ModelRegistry(Base):
+    __tablename__ = "model_registries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    capabilities: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    context_window: Mapped[int] = mapped_column(Integer, nullable=False, default=128000)
+    supported_inputs: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    supported_outputs: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="available", index=True) # available, degraded, unavailable, disabled, deprecated
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelProvider(Base):
+    __tablename__ = "model_providers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider_key: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # healthy, degraded, outage
+    region: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    capabilities: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelVersion(Base):
+    __tablename__ = "model_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider_key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False)
+    release_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelCapability(Base):
+    __tablename__ = "model_capabilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_key: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True) # text_generation, reasoning, tool_calling, structured_output, vision, long_context, code_generation, embedding, reranking
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+class ModelRequirements(Base):
+    __tablename__ = "model_requirements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability: Mapped[str] = mapped_column(String(100), nullable=False)
+    minimum_quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.8)
+    maximum_latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    maximum_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    data_policy: Mapped[str] = mapped_column(String(100), nullable=False, default="internal")
+    required_context_window: Mapped[int] = mapped_column(Integer, nullable=False, default=4096)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="normal")
+
+class ModelRoutingRule(Base):
+    __tablename__ = "model_routing_rules"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="global", index=True)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    conditions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    requirements: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    preferred_models: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    fallback_models: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelRoutingDecision(Base):
+    __tablename__ = "model_routing_decisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    selected_provider: Mapped[str] = mapped_column(String(100), nullable=False)
+    selected_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    candidates: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    rejected_candidates: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    reason_codes: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    policy_result: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    routing_policy_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ModelHealth(Base):
+    __tablename__ = "model_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider_key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    latency_p95_ms: Mapped[float] = mapped_column(Float, nullable=False, default=150.0)
+    error_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    availability: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    last_updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelExperiment(Base):
+    __tablename__ = "model_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    candidate_model: Mapped[str] = mapped_column(String(255), nullable=False)
+    traffic_percentage: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelUsage(Base):
+    __tablename__ = "model_usages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider_key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ModelBudget(Base):
+    __tablename__ = "model_budgets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    monthly_limit: Mapped[float] = mapped_column(Float, nullable=False, default=500.0)
+    current_spend: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, warning, exceeded
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
