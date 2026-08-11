@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp
 
 setup_logging()
 
@@ -85,6 +85,7 @@ app.include_router(reliability.router, prefix=settings.API_V1_STR, tags=["Reliab
 app.include_router(governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Governance & Compliance"])
 app.include_router(identity.router, prefix=settings.API_V1_STR, tags=["Enterprise Identity & SSO"])
 app.include_router(scim.router, tags=["SCIM 2.0 Provisioning"])
+app.include_router(dlp.router, prefix=settings.API_V1_STR, tags=["Data Security & DLP"])
 
 @app.get("/")
 async def root():

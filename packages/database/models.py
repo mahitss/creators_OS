@@ -1442,6 +1442,142 @@ class IdentitySecuritySignal(Base):
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class DataAsset(Base):
+    __tablename__ = "data_assets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # gmail, drive, calendar, workflow, agent, memory, document, user_input, tool_output, generated_output
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal", index=True) # public, internal, confidential, restricted, secret
+    owner_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class DataClassificationRecord(Base):
+    __tablename__ = "data_classification_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    asset_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="deterministic") # user_label, source_metadata, deterministic, ai_suggestion, policy_rule
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SensitiveDataFinding(Base):
+    __tablename__ = "sensitive_data_findings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    asset_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    detector: Mapped[str] = mapped_column(String(100), nullable=False) # email, phone, credit_card, api_key, jwt_token, private_key, password
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, default="redact") # allow, redact, block, quarantine
+    resource: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class DLPPolicy(Base):
+    __tablename__ = "dlp_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    source_scope: Mapped[str] = mapped_column(String(100), nullable=False, default="all")
+    destination_scope: Mapped[str] = mapped_column(String(100), nullable=False, default="external")
+    allowed_action: Mapped[str] = mapped_column(String(50), nullable=False, default="redact") # allow, redact, block, require_approval, quarantine
+    approval_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DLPDecision(Base):
+    __tablename__ = "dlp_decisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # allow, redact, block, require_approval, quarantine
+    reason_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    detectors: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    policy_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    redactions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class DataAccessEvent(Base):
+    __tablename__ = "data_access_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource: Mapped[str] = mapped_column(String(255), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    action: Mapped[str] = mapped_column(String(100), nullable=False)
+    destination: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    result: Mapped[str] = mapped_column(String(50), nullable=False, default="SUCCESS")
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class DataLineageNode(Base):
+    __tablename__ = "data_lineage_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(100), nullable=False) # source, agent, model, output, destination
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DataLineageEdge(Base):
+    __tablename__ = "data_lineage_edges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    destination_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation: Mapped[str] = mapped_column(String(100), nullable=False)
+    policy_decision_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class QuarantineRecord(Base):
+    __tablename__ = "quarantine_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    quarantined_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="quarantined", index=True) # quarantined, released, rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ModelDataPolicy(Base):
+    __tablename__ = "model_data_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # openai, anthropic, google, local
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    requires_approval: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    effective_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class DataProcessingRecord(Base):
+    __tablename__ = "data_processing_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False)
+    decision: Mapped[str] = mapped_column(String(50), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
