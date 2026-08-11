@@ -5386,6 +5386,166 @@ class KPIReplacement(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     replaced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class Forecast(Base):
+    __tablename__ = "forecasts_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    entity_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # kpi, benefit, initiative, milestone, portfolio, capacity, cost, risk, outcome, mission
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="medium_term") # short_term, medium_term, long_term, custom
+    method: Mapped[str] = mapped_column(String(100), nullable=False, default="ensemble_timeseries")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, completed, superseded, invalidated
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ForecastPoint(Base):
+    __tablename__ = "forecast_points"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    lower_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    upper_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+
+class ForecastInput(Base):
+    __tablename__ = "forecast_inputs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    input_type: Mapped[str] = mapped_column(String(50), nullable=False) # historical_series, current_state, external_signal, business_event, dependency, assumption, scenario
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    quality: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, estimated, stale, missing, conflicted
+
+class ForecastDriver(Base):
+    __tablename__ = "forecast_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    factor_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False) # positive, negative, neutral
+    magnitude: Mapped[float] = mapped_column(Float, nullable=False)
+    evidence: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=85.0)
+    association_type: Mapped[str] = mapped_column(String(50), nullable=False, default="correlated") # correlated, inferred
+
+class ForecastVersion(Base):
+    __tablename__ = "forecast_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    previous_forecast_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    revision_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ForecastAccuracy(Base):
+    __tablename__ = "forecast_accuracies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actual_value: Mapped[float] = mapped_column(Float, nullable=False)
+    absolute_error: Mapped[float] = mapped_column(Float, nullable=False)
+    percentage_error: Mapped[float] = mapped_column(Float, nullable=False)
+    interval_coverage: Mapped[float] = mapped_column(Float, nullable=False, default=95.0)
+    calibration: Mapped[float] = mapped_column(Float, nullable=False, default=92.0)
+
+class ForecastModelDrift(Base):
+    __tablename__ = "forecast_model_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_accuracy: Mapped[float] = mapped_column(Float, nullable=False)
+    current_accuracy: Mapped[float] = mapped_column(Float, nullable=False)
+    drift_magnitude: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+
+class ForecastBacktest(Base):
+    __tablename__ = "forecast_backtests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mae: Mapped[float] = mapped_column(Float, nullable=False)
+    rmse: Mapped[float] = mapped_column(Float, nullable=False)
+    mape: Mapped[float] = mapped_column(Float, nullable=False)
+    interval_coverage: Mapped[float] = mapped_column(Float, nullable=False)
+    bias: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    calibration: Mapped[float] = mapped_column(Float, nullable=False)
+
+class PredictiveAlert(Base):
+    __tablename__ = "predictive_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False) # target_miss, deadline_miss, capacity_shortage, cost_overrun, risk_escalation, benefit_shortfall, anomaly, dependency_failure
+    predicted_window: Mapped[str] = mapped_column(String(100), nullable=False) # e.g., "Likely within 14-21 days"
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low, unknown
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class PredictiveRiskSignal(Base):
+    __tablename__ = "predictive_risk_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    probability_range: Mapped[str] = mapped_column(String(50), nullable=False) # e.g. "60-75%"
+    impact: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # low, medium, high, critical
+    evidence: Mapped[str] = mapped_column(Text, nullable=False)
+
+class PredictiveRecommendation(Base):
+    __tablename__ = "predictive_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_effect: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=88.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="advisory")
+
+class CapacityForecast(Base):
+    __tablename__ = "capacity_forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capacity_type: Mapped[str] = mapped_column(String(50), nullable=False) # human, agent, compute, model, integration
+    demand_value: Mapped[float] = mapped_column(Float, nullable=False)
+    capacity_value: Mapped[float] = mapped_column(Float, nullable=False)
+    gap: Mapped[float] = mapped_column(Float, nullable=False)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False)
+
+class DemandForecast(Base):
+    __tablename__ = "demand_forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    demand_type: Mapped[str] = mapped_column(String(50), nullable=False) # work, mission, agent, compute
+    forecast_demand: Mapped[float] = mapped_column(Float, nullable=False)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False)
+
+class ForecastScenario(Base):
+    __tablename__ = "forecast_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scenario_name: Mapped[str] = mapped_column(String(50), nullable=False) # baseline, upside, downside, stress
+    scenario_params_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_distribution_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class ForecastRevision(Base):
+    __tablename__ = "forecast_revisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    new_inputs_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
