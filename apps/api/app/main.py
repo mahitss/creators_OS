@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops, resilience, finops_v2, collaboration_v2, operating_graph, strategic_planning, portfolio_intelligence, execution_governance, performance_intelligence, predictive_operations, prescriptive_intelligence, adaptive_decision_governance, continuity_intelligence, crisis_intelligence, threat_intelligence, foresight_intelligence, adaptive_strategy, execution_intelligence, operating_model, transformation
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops, resilience, finops_v2, collaboration_v2, operating_graph, strategic_planning, portfolio_intelligence, execution_governance, performance_intelligence, predictive_operations, prescriptive_intelligence, adaptive_decision_governance, continuity_intelligence, crisis_intelligence, threat_intelligence, foresight_intelligence, adaptive_strategy, execution_intelligence, operating_model, transformation, transformation_portfolio
 
 setup_logging()
 
@@ -115,6 +115,7 @@ app.include_router(predictive_operations.router, prefix=settings.API_V1_STR, tag
 app.include_router(execution_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Strategic Execution Intelligence 2.0"])
 app.include_router(operating_model.router, prefix=settings.API_V1_STR, tags=["Enterprise Organizational Operating Intelligence 2.0"])
 app.include_router(transformation.router, prefix=settings.API_V1_STR, tags=["Enterprise Operating Model Transformation 2.0"])
+app.include_router(transformation_portfolio.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Portfolio Intelligence 2.0"])
 
 @app.get("/")
 async def root():

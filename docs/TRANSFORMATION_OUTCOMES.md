@@ -1,5 +1,5 @@
-# Transformation Outcomes & Benefits Realization
+# Portfolio Outcomes & Benefits Verification
 
-`TransformationOutcome` tracks verified outcomes across 7 categories (`strategic`, `operational`, `financial`, `risk`, `resilience`, `customer`, `capability`).
+`TransformationPortfolioOutcome` and `TransformationSequenceDrift` track verified portfolio outcomes against expected benefits.
 
-Integrates with Benefits Realization to compare expected vs actual outcomes and compute variances.
+Detects sequence drift between approved sequencing plans and actual execution velocity.

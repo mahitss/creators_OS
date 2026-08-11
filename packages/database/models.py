@@ -7810,6 +7810,208 @@ class TransformationChangeProposal(Base):
     expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
 
+class TransformationPortfolio(Base):
+    __tablename__ = "transformation_portfolios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="3_year")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # draft, proposed, under_review, approved, executing, stable, rebalancing, completed, retired
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationCandidate(Base):
+    __tablename__ = "transformation_candidates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    strategic_value_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    urgency: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.15, index=True)
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False, default=150000.0)
+    capacity_demand_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    optional_value: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationDependencyGraph(Base):
+    __tablename__ = "transformation_dependency_graphs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_matrix_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    critical_path_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    parallel_groups_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    cycles_detected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    blocked_candidates_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationSequence(Base):
+    __tablename__ = "transformation_sequences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    sequence_type: Mapped[str] = mapped_column(String(100), nullable=False) # fast, risk_first, capability_first, cost_first, resilience_first, balanced, custom
+    phases_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    order_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    parallel_groups_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decision_gates_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationSequenceComparison(Base):
+    __tablename__ = "transformation_sequence_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    sequence_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    sequence_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    time_diff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.35)
+    cost_diff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.10)
+    risk_diff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.40)
+    capacity_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    benefit_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.25)
+    optionality_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.30)
+    robustness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class TransformationPortfolioBottleneck(Base):
+    __tablename__ = "transformation_portfolio_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    bottleneck_type: Mapped[str] = mapped_column(String(100), nullable=False) # capacity, dependency, decision, technology, capability, vendor, regulatory
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationCapacityPlan(Base):
+    __tablename__ = "transformation_capacity_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    time_window: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    required_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=85.0)
+    available_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    committed_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=70.0)
+    buffer_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=15.0)
+
+class TransformationCapitalConstraint(Base):
+    __tablename__ = "transformation_capital_constraints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    budget_envelope: Mapped[float] = mapped_column(Float, nullable=False, default=1000000.0)
+    committed_amount: Mapped[float] = mapped_column(Float, nullable=False, default=450000.0)
+    remaining_flexibility: Mapped[float] = mapped_column(Float, nullable=False, default=550000.0)
+    timing_constraints: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationCapacityConstraint(Base):
+    __tablename__ = "transformation_capacity_constraints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    fixed_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=50.0)
+    flexible_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=30.0)
+    shared_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=15.0)
+    external_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+
+class TransformationLockInRisk(Base):
+    __tablename__ = "transformation_lock_in_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_type: Mapped[str] = mapped_column(String(100), nullable=False) # technology, vendor, architecture, process, organizational, financial
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low, irreversible
+
+class TransformationPortfolioOutcome(Base):
+    __tablename__ = "transformation_portfolio_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_benefits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    actual_benefits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    variance: Mapped[float] = mapped_column(Float, nullable=False, default=0.04)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationBenefitOverlap(Base):
+    __tablename__ = "transformation_benefit_overlaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    candidate_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    candidate_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    claimed_benefit: Mapped[Text] = mapped_column(Text, nullable=False)
+    overlap_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.35)
+
+class TransformationConflict(Base):
+    __tablename__ = "transformation_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    conflict_type: Mapped[str] = mapped_column(String(100), nullable=False) # strategic, technical, capacity, organizational, dependency, timing
+    affected_candidates_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class MinimumTransformationSet(Base):
+    __tablename__ = "minimum_transformation_sets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_objective: Mapped[Text] = mapped_column(Text, nullable=False)
+    required_candidate_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    total_cost: Mapped[float] = mapped_column(Float, nullable=False, default=250000.0)
+    total_time: Mapped[str] = mapped_column(String(50), nullable=False, default="6_months")
+
+class TransformationWave(Base):
+    __tablename__ = "transformation_waves"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    wave_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    wave_type: Mapped[str] = mapped_column(String(100), nullable=False) # foundation, pilot, scale, optimization, stabilization
+    candidate_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    exit_criteria_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="executing", index=True)
+
+class TransformationContingencyPlan(Base):
+    __tablename__ = "transformation_contingency_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_condition: Mapped[Text] = mapped_column(Text, nullable=False)
+    fallback_action: Mapped[Text] = mapped_column(Text, nullable=False)
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+
+class TransformationPortfolioRebalance(Base):
+    __tablename__ = "transformation_portfolio_rebalances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    rebalance_reason: Mapped[str] = mapped_column(String(100), nullable=False) # capacity_change, risk_change, scenario_shift, benefit_change, dependency_failure, strategy_change
+    proposed_sequence_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+class TransformationSequenceDrift(Base):
+    __tablename__ = "transformation_sequence_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approved_sequence_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_execution_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    drift_reasons_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+
 
 
 
