@@ -4909,6 +4909,154 @@ class StrategicResourceConstraint(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     affected_initiatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
+class Portfolio(Base):
+    __tablename__ = "portfolios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, under_review, paused, completed, archived
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PortfolioVersion(Base):
+    __tablename__ = "portfolio_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Program(Base):
+    __tablename__ = "programs_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # proposed, approved, active, at_risk, paused, completed, cancelled
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    target_outcome: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class PortfolioDependency(Base):
+    __tablename__ = "portfolio_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    dependency_type: Mapped[str] = mapped_column(String(50), nullable=False) # technical, organizational, financial, capacity, knowledge, security, regulatory
+    health: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy") # healthy, watch, at_risk, blocked, unknown
+
+class PortfolioResourceAllocation(Base):
+    __tablename__ = "portfolio_resource_allocations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False) # budget, human_capacity, agent_capacity, compute, model_capacity, integration_capacity, workspace_capacity
+    allocated_amount: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    used_amount: Mapped[float] = mapped_column(Float, nullable=False, default=65.0)
+    requested_amount: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+
+class PortfolioResourceConflict(Base):
+    __tablename__ = "portfolio_resource_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    competing_initiatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    time_window: Mapped[str] = mapped_column(String(100), nullable=False, default="Q3 2026")
+    capacity_gap_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolved
+
+class PortfolioOverlap(Base):
+    __tablename__ = "portfolio_overlaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    overlap_type: Mapped[str] = mapped_column(String(50), nullable=False) # objective, deliverable, capability, workflow
+    similarity_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, dismissed
+
+class PortfolioOutcomeVariance(Base):
+    __tablename__ = "portfolio_outcome_variances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variance_type: Mapped[str] = mapped_column(String(50), nullable=False, default="on_track", index=True) # ahead, on_track, behind, unknown
+    expected_outcome: Mapped[str] = mapped_column(Text, nullable=False)
+    measured_outcome: Mapped[str] = mapped_column(Text, nullable=False)
+    delta_summary: Mapped[str] = mapped_column(Text, nullable=False)
+
+class InvestmentOption(Base):
+    __tablename__ = "investment_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_type: Mapped[str] = mapped_column(String(50), nullable=False) # increase, maintain, reduce, pause, accelerate, sequence_change
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    benefit_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    estimated_cost_delta: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    risk_delta: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+
+class PortfolioRecommendation(Base):
+    __tablename__ = "portfolio_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommendation: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    alternatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    tradeoffs_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="reversible") # reversible, partially_reversible, irreversible
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=92.0)
+
+class PortfolioReview(Base):
+    __tablename__ = "portfolio_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="quarterly") # weekly, monthly, quarterly, custom
+    progress_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    cost_variance_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    schedule_variance_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_exposure_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PortfolioDrift(Base):
+    __tablename__ = "portfolio_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(50), nullable=False) # cost, schedule, outcome, risk, strategic, capacity
+    signal_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PortfolioAlert(Base):
+    __tablename__ = "portfolio_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False) # budget_pressure, capacity_pressure, dependency_failure, outcome_deterioration, risk_escalation
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
