@@ -1745,6 +1745,158 @@ class KnowledgeEvaluationRun(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="passed", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class AgentCapability(Base):
+    __tablename__ = "agent_capabilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # research, analysis, retrieval, coding, planning, writing, data_processing, validation, communication, scheduling
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    input_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low", index=True)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentRegistry(Base):
+    __tablename__ = "agent_registry"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    specialization: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # Researcher, Data Analyst, Engineering Agent, Finance Analyst, Writer, Reviewer, Planner, Security Analyst
+    capabilities: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="available", index=True) # available, busy, paused, disabled, degraded
+    availability: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    max_delegation_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    max_concurrent_tasks: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    budget_limit: Mapped[float] = mapped_column(Float, nullable=False, default=10.0)
+    data_classification_ceiling: Mapped[str] = mapped_column(String(50), nullable=False, default="restricted")
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class DelegationRequest(Base):
+    __tablename__ = "delegation_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    parent_agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    child_agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="read_only")
+    input_references: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    required_output: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="requested", index=True) # requested, approved, queued, running, completed, failed, cancelled, rejected, timed_out
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DelegationContextToken(Base):
+    __tablename__ = "delegation_context_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    delegation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    parent_agent_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    child_agent_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False)
+    expiration: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    capabilities: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    policy_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentGraphNode(Base):
+    __tablename__ = "agent_graph_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    node_type: Mapped[str] = mapped_column(String(50), nullable=False, default="parallel", index=True) # sequential, parallel, conditional, review, fallback, synthesis
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentTaskEdge(Base):
+    __tablename__ = "agent_task_edges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_type: Mapped[str] = mapped_column(String(50), nullable=False, default="success_required")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentArtifact(Base):
+    __tablename__ = "agent_artifacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # research_report, dataset, analysis, code_patch, document, recommendation, validation_report, decision
+    schema_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    reference_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal")
+    validation_status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True) # valid, invalid, needs_revision
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentMessage(Base):
+    __tablename__ = "agent_messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    receiver_agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="structured_handoff")
+    payload_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class AgentDisagreement(Base):
+    __tablename__ = "agent_disagreements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agents: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    positions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    resolution: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved", index=True) # verified, needs_human, insufficient_evidence, policy_blocked
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentReviewTask(Base):
+    __tablename__ = "agent_review_tasks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    task_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    artifact_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected, revision_requested, cancelled
+    assigned_to: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionSharedState(Base):
+    __tablename__ = "mission_shared_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    task_outputs: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    artifacts: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    decisions: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 
 
 

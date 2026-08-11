@@ -56,6 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Enterprise Identity & SSO', href: '/admin/identity', icon: '🔑' },
     { label: 'Enterprise Data Security', href: '/admin/data', icon: '🛡️' },
     { label: 'Enterprise Knowledge', href: '/knowledge', icon: '📚' },
+    { label: 'AI Agent Mesh', href: '/agents/mesh', icon: '🕸️' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 

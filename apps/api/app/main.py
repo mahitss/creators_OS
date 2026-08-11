@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh
 
 setup_logging()
 
@@ -74,6 +74,7 @@ app.include_router(agent_runs.router, prefix=settings.API_V1_STR, tags=["Agent R
 app.include_router(evaluations.router, prefix=settings.API_V1_STR, tags=["Evaluations"])
 app.include_router(admin_agents.router, prefix=settings.API_V1_STR, tags=["Admin Agents"])
 app.include_router(policies.router, prefix=settings.API_V1_STR, tags=["Policies"])
+app.include_router(agent_mesh.router, prefix=settings.API_V1_STR, tags=["AI Agent Mesh & Multi-Agent Orchestration"])
 app.include_router(delegations.router, prefix=settings.API_V1_STR, tags=["Delegations"])
 app.include_router(automations.router, prefix=settings.API_V1_STR, tags=["Automations"])
 app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["Insights"])
