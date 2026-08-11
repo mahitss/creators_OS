@@ -5222,6 +5222,171 @@ class BenefitAttribution(Base):
     contribution_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
     evidence_summary: Mapped[str] = mapped_column(Text, nullable=False)
 
+class KPI(Base):
+    __tablename__ = "kpis_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    definition: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, paused, retired
+    category: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # strategic, financial, operational, customer, quality, risk, capacity, delivery, security, AI, workforce, innovation
+    unit: Mapped[str] = mapped_column(String(50), nullable=False, default="USD")
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="higher_is_better") # higher_is_better, lower_is_better, target_range, binary, informational
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KPIVersion(Base):
+    __tablename__ = "kpi_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KPIDataSource(Base):
+    __tablename__ = "kpi_data_sources"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False) # database, event_stream, integration, manual_entry, external_source, derived_metric
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KPITarget(Base):
+    __tablename__ = "kpi_targets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_value: Mapped[float] = mapped_column(Float, nullable=False)
+    effective_from: Mapped[str] = mapped_column(String(50), nullable=False)
+    effective_to: Mapped[str] = mapped_column(String(50), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_reference: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+class KPITargetVersion(Base):
+    __tablename__ = "kpi_target_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class KPIMeasurement(Base):
+    __tablename__ = "kpi_measurements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    period_start: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    period_end: Mapped[str] = mapped_column(String(50), nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    quality: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, estimated, partial, stale, missing, invalid
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=95.0)
+
+class KPIVariance(Base):
+    __tablename__ = "kpi_variances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actual: Mapped[float] = mapped_column(Float, nullable=False)
+    target: Mapped[float] = mapped_column(Float, nullable=False)
+    baseline: Mapped[float] = mapped_column(Float, nullable=False)
+    delta: Mapped[float] = mapped_column(Float, nullable=False)
+    percentage_delta: Mapped[float] = mapped_column(Float, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="on_track", index=True) # on_track, watch, at_risk, off_track, unknown
+
+class KPIAlert(Base):
+    __tablename__ = "kpi_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False) # threshold, trend, anomaly, forecast, data_quality, target_miss
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KPIDriver(Base):
+    __tablename__ = "kpi_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    driver_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    driver_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    association_type: Mapped[str] = mapped_column(String(50), nullable=False, default="correlated") # correlated, inferred
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=85.0)
+    evidence_summary: Mapped[str] = mapped_column(Text, nullable=False)
+
+class KPIForecast(Base):
+    __tablename__ = "kpi_forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    forecast_value: Mapped[float] = mapped_column(Float, nullable=False)
+    lower_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    upper_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KPIScorecard(Base):
+    __tablename__ = "kpi_scorecards"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scorecard_type: Mapped[str] = mapped_column(String(50), nullable=False) # strategy, portfolio, program, team, workspace
+    kpi_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class KPIReview(Base):
+    __tablename__ = "kpi_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly") # monthly, quarterly, annual, custom
+    progress_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    quality_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed")
+
+class KPIDataQualityIssue(Base):
+    __tablename__ = "kpi_data_quality_issues"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    issue_type: Mapped[str] = mapped_column(String(50), nullable=False) # missing, stale, estimated, invalid
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="warning")
+
+class KPIReconciliation(Base):
+    __tablename__ = "kpi_reconciliations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_a: Mapped[str] = mapped_column(String(255), nullable=False)
+    value_a: Mapped[float] = mapped_column(Float, nullable=False)
+    source_b: Mapped[str] = mapped_column(String(255), nullable=False)
+    value_b: Mapped[float] = mapped_column(Float, nullable=False)
+    conflict_status: Mapped[str] = mapped_column(String(50), nullable=False, default="conflicting")
+
+class KPIReplacement(Base):
+    __tablename__ = "kpi_replacements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    old_kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    replaced_by_kpi_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    replaced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

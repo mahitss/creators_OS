@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops, resilience, finops_v2, collaboration_v2, operating_graph, strategic_planning, portfolio_intelligence, execution_governance
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops, resilience, finops_v2, collaboration_v2, operating_graph, strategic_planning, portfolio_intelligence, execution_governance, performance_intelligence
 
 setup_logging()
 
@@ -112,6 +112,7 @@ app.include_router(operating_graph.router, prefix=settings.API_V1_STR, tags=["En
 app.include_router(strategic_planning.router, prefix=settings.API_V1_STR, tags=["Enterprise Strategic Planning & Scenario Intelligence 2.0"])
 app.include_router(portfolio_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Portfolio Intelligence & Investment Optimization 2.0"])
 app.include_router(execution_governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Execution Governance & Benefits Realization 2.0"])
+app.include_router(performance_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Performance Intelligence & KPI Operating System 2.0"])
 
 @app.get("/")
 async def root():
