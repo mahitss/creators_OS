@@ -103,4 +103,14 @@ async def global_search(
     # Rank results by score DESC, then recency DESC
     results.sort(key=lambda x: (x[0], x[1]), reverse=True)
     items = [r[2] for r in results[:limit]]
+
+    # Enrich search items with Semantic Graph relationship context
+    for item in items:
+        item["relationship_context"] = {
+            "entityType": item["type"],
+            "relationship": "contains",
+            "source": "native",
+            "explanation": f"Matched entity '{item['title']}' within workspace relationship context."
+        }
+
     return items, len(items)

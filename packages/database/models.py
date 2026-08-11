@@ -2434,6 +2434,98 @@ class ControlPlaneSnapshot(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
+class SemanticEntity(Base):
+    __tablename__ = "semantic_entities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    entity_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # user, team, workspace, project, mission, task, workflow, agent, document, event, integration, decision, incident, artifact
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True) # Authoritative domain ID
+    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, archived, deleted, unknown
+    source: Mapped[str] = mapped_column(String(50), nullable=False, default="native", index=True) # native, integration, derived, ai_suggested
+    provider: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    external_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    resource_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SemanticRelationship(Base):
+    __tablename__ = "semantic_relationships"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    from_entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relationship_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # belongs_to, member_of, owns, manages, contains, depends_on, uses, created_by, assigned_to, related_to, references, produces, consumes, triggered_by, supports, implements
+    to_entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(50), nullable=False, default="native", index=True) # native, integration, derived, ai_suggested
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # proposed, verified, rejected, active, invalidated, conflicting
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low
+    evidence_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RelationshipEvidence(Base):
+    __tablename__ = "relationship_evidences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    relationship_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_type: Mapped[str] = mapped_column(String(100), nullable=False) # document, event, database_record, workflow, user_action
+    reference_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    snippet: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RelationshipConflict(Base):
+    __tablename__ = "relationship_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    relationship_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_a: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evidence_b: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, resolved
+    resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ContextPack(Base):
+    __tablename__ = "context_packs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    entity_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    relationship_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    evidence: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+class GraphSyncState(Base):
+    __tablename__ = "graph_sync_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    last_synced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    sync_status: Mapped[str] = mapped_column(String(50), nullable=False, default="synced", index=True) # synced, syncing, failed
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    items_processed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+class GraphHealthSnapshot(Base):
+    __tablename__ = "graph_health_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    entity_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    relationship_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    orphan_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    invalid_relationship_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    sync_lag_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+
+
 
 
 
