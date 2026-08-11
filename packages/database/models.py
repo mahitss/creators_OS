@@ -8011,6 +8011,166 @@ class TransformationSequenceDrift(Base):
     drift_reasons_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
 
+class TransformationControlTower(Base):
+    __tablename__ = "transformation_control_towers_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # initializing, healthy, watch, at_risk, critical, degraded, paused
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    last_evaluated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationLiveState(Base):
+    __tablename__ = "transformation_live_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    planned_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    actual_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    forecast_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    last_change: Mapped[Text] = mapped_column(Text, nullable=False)
+    last_evaluation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationControlSignal(Base):
+    __tablename__ = "transformation_control_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # schedule, capacity, dependency, risk, benefit, readiness, adoption, quality, alignment, sequence
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # info, low, medium, high, critical
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="detected", index=True) # detected, acknowledged, investigating, mitigated, resolved, dismissed
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationSituation(Base):
+    __tablename__ = "transformation_situations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signals_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_transformations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_waves_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_objectives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationRootCauseAssessment(Base):
+    __tablename__ = "transformation_root_cause_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    situation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    category: Mapped[str] = mapped_column(String(100), nullable=False) # capacity, dependency, decision, technology, process, governance, scope, risk, external_change
+    evidence_label: Mapped[str] = mapped_column(String(50), nullable=False, default="supported") # observed, supported, inferred
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationEarlyWarning(Base):
+    __tablename__ = "transformation_early_warnings_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    warning_trigger: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class TransformationWaveReadiness(Base):
+    __tablename__ = "transformation_wave_readinesses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    wave_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    technology_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    process_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    capacity_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    dependency_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    risk_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    adoption_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ready", index=True)
+
+class TransformationChangeRequest(Base):
+    __tablename__ = "transformation_change_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    request_type: Mapped[str] = mapped_column(String(100), nullable=False) # scope, sequence, timing, capacity, dependency, design, risk_mitigation, wave_transition
+    proposed_change_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    impact_analysis_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+class TransformationChangeDrift(Base):
+    __tablename__ = "transformation_change_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approved_change_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    implemented_change_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    difference_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+class TransformationIncident(Base):
+    __tablename__ = "transformation_incidents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="major", index=True) # minor, major, critical
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    response_recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationEscalation(Base):
+    __tablename__ = "transformation_escalations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    urgency: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    decision_owner_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationWeeklyReview(Base):
+    __tablename__ = "transformation_weekly_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    portfolio_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    waves_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    signals_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    risks_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    benefits_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    decisions_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationMonthlyReview(Base):
+    __tablename__ = "transformation_monthly_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alignment_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    performance_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    benefits_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    capacity_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    sequence_validity_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    lessons_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationControlLearning(Base):
+    __tablename__ = "transformation_control_learnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_tower_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    action_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+
 
 
 
