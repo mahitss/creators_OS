@@ -1,5 +1,5 @@
-# Strategic Optionality & Robustness Evaluation
+# Strategic Optionality & Flexibility Assessments
 
-`StrategicOptionality` quantifies the upside value and downside protection provided by reversible strategic options across multiple plausible futures.
+Evaluates whether strategic choices preserve, increase, reduce, or destroy strategic optionality.
 
-Strategy robustness evaluates option performance across all generated scenarios.
+Capital, Capacity, and Dependency Flexibility Assessments track committed resources vs discretionary flexibility across time horizons.

@@ -1,5 +1,5 @@
-# Strategy Drift Detection & Early Warning Fabric
+# Strategy Drift Signals & Multi-Dimensional Health
 
-`StrategicDrift` detects divergence between objectives, execution, and measured outcomes across 5 types: `execution`, `resource`, `assumption`, `outcome`, `dependency`.
+`StrategyDriftSignal` detects strategic drift across performance, assumptions, environment, risk, capabilities, and scenario support across 4 severities (`low`, `medium`, `high`, `critical`).
 
-Generates early warning signals backed by measurable evidence before objective failure occurs.
+Multi-dimensional strategy health evaluates intent alignment, assumption validity, performance, scenario robustness, risk control, execution progress, and capability readiness without single opaque scores.

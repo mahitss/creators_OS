@@ -6816,6 +6816,239 @@ class ForesightMemory(Base):
     actual_developments: Mapped[Text] = mapped_column(Text, nullable=False)
     lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
 
+class AdaptiveStrategy(Base):
+    __tablename__ = "adaptive_strategies_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    strategic_intent: Mapped[Text] = mapped_column(Text, nullable=False)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="3_year")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, under_review, adaptation_required, superseded, retired
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicIntent(Base):
+    __tablename__ = "strategic_intents_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective: Mapped[str] = mapped_column(String(255), nullable=False)
+    desired_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    constraints_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    time_horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="3_year")
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="p1")
+
+class StrategicThesis(Base):
+    __tablename__ = "strategic_theses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    belief: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="supported", index=True) # supported, questioned, weakening, invalidated, unknown
+
+class StrategyIndicator(Base):
+    __tablename__ = "strategy_indicators_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    baseline: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    target: Mapped[float] = mapped_column(Float, nullable=False, default=200.0)
+    current: Mapped[float] = mapped_column(Float, nullable=False, default=145.0)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="increasing")
+    threshold: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    source: Mapped[str] = mapped_column(String(255), nullable=False, default="internal_kpi")
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="realtime")
+    type: Mapped[str] = mapped_column(String(100), nullable=False, default="financial") # market, financial, customer, operational, technology, competitive, regulatory, risk, capability, portfolio
+
+class StrategyDriftSignal(Base):
+    __tablename__ = "strategy_drift_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    affected_strategy: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class PortfolioStrategicExposure(Base):
+    __tablename__ = "portfolio_strategic_exposures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    dependency_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    exposure_type: Mapped[str] = mapped_column(String(100), nullable=False, default="scenario_concentration")
+
+class AdaptiveInitiativeState(Base):
+    __tablename__ = "adaptive_initiative_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    performance_val: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    strategic_alignment: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    scenario_support: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    benefits_realized: Mapped[float] = mapped_column(Float, nullable=False, default=250000.0)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    recommendation: Mapped[str] = mapped_column(String(100), nullable=False, default="continue") # accelerate, continue, monitor, reassess, rescope, pause, retire
+
+class PortfolioReconfiguration(Base):
+    __tablename__ = "portfolio_reconfigurations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reconfiguration_type: Mapped[str] = mapped_column(String(100), nullable=False) # rebalance, accelerate, decelerate, pause, rescope, sequence_change, dependency_change, investment_shift, capability_shift
+    current_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    proposed_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_initiatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, verified, rejected
+
+class StrategicTradeoff(Base):
+    __tablename__ = "strategic_tradeoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reconfiguration_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_a: Mapped[str] = mapped_column(String(255), nullable=False)
+    option_b: Mapped[str] = mapped_column(String(255), nullable=False)
+    cost_diff: Mapped[float] = mapped_column(Float, nullable=False, default=50000.0)
+    benefit_diff: Mapped[Text] = mapped_column(Text, nullable=False)
+    risk_diff: Mapped[Text] = mapped_column(Text, nullable=False)
+    time_diff: Mapped[str] = mapped_column(String(100), nullable=False, default="2_months")
+    reversibility: Mapped[str] = mapped_column(String(100), nullable=False, default="highly_reversible")
+
+class StrategyAdaptationTrigger(Base):
+    __tablename__ = "strategy_adaptation_triggers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(100), nullable=False) # assumption_break, performance_decline, risk_increase, scenario_shift, capability_gap, market_shift, technology_shift, regulatory_shift
+    recommended_action: Mapped[str] = mapped_column(String(100), nullable=False, default="review", index=True) # review, simulate, re_optimize, re_scope, reallocate, pause, accelerate
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class AdaptiveStrategyReview(Base):
+    __tablename__ = "adaptive_strategy_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="quarterly") # monthly, quarterly, semiannual, annual, event_driven
+    participants_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    scenarios_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    portfolio_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decisions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True)
+
+class StrategicOutcomeObservation(Base):
+    __tablename__ = "strategic_outcome_observations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False, default=0.05)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class StrategyLearning(Base):
+    __tablename__ = "strategy_learnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    assumption_statement: Mapped[Text] = mapped_column(Text, nullable=False)
+    action_taken: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class CapitalFlexibilityAssessment(Base):
+    __tablename__ = "capital_flexibility_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    committed_capital: Mapped[float] = mapped_column(Float, nullable=False, default=2500000.0)
+    discretionary_capital: Mapped[float] = mapped_column(Float, nullable=False, default=750000.0)
+    reallocation_constraints: Mapped[Text] = mapped_column(Text, nullable=False)
+    time_to_reallocate_days: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+
+class CapacityFlexibilityAssessment(Base):
+    __tablename__ = "capacity_flexibility_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    available_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    committed_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=78.0)
+    reallocation_constraints: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class DependencyFlexibilityAssessment(Base):
+    __tablename__ = "dependency_flexibility_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    single_source_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    switching_cost: Mapped[float] = mapped_column(Float, nullable=False, default=35000.0)
+    fallback_readiness: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class StrategicBottleneck(Base):
+    __tablename__ = "strategic_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    bottleneck_type: Mapped[str] = mapped_column(String(100), nullable=False) # capital, capacity, technology, talent, vendor, data, dependency, regulatory
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    recommended_mitigation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class CapabilityInvestmentOption(Base):
+    __tablename__ = "capability_investment_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False, default=120000.0)
+    time_to_build: Mapped[str] = mapped_column(String(100), nullable=False, default="3_months")
+    strategic_value: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    scenario_coverage: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    optionality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+
+class StrategicExperiment(Base):
+    __tablename__ = "strategic_experiments_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothesis: Mapped[Text] = mapped_column(Text, nullable=False)
+    test_design: Mapped[Text] = mapped_column(Text, nullable=False)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=15000.0)
+    success_criteria: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision_threshold: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running", index=True) # designed, running, completed, cancelled
+
+class StrategicExperimentOutcome(Base):
+    __tablename__ = "strategic_experiment_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    experiment_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    outcome_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="supports") # supports, weakens, invalidates, inconclusive
+    evidence_details: Mapped[Text] = mapped_column(Text, nullable=False)
+    updated_confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+
 
 
 
