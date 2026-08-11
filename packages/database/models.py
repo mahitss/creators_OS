@@ -1197,6 +1197,135 @@ class CircuitBreakerState(Base):
     half_opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
+class OrganizationMembership(Base):
+    __tablename__ = "organization_memberships"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default="member", index=True) # owner, admin, security_admin, billing_admin, member, viewer
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, suspended, invited
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor_type: Mapped[str] = mapped_column(String(50), nullable=False, default="user") # user, agent, system
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    result: Mapped[str] = mapped_column(String(50), nullable=False, default="SUCCESS") # SUCCESS, DENIED, FAILED
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ip_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_agent_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class RetentionPolicy(Base):
+    __tablename__ = "retention_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # audit, workflow_runs, agent_runs, usage_records, events, insights, logs, traces
+    retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    legal_hold: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class LegalHold(Base):
+    __tablename__ = "legal_holds"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AccessReview(Base):
+    __tablename__ = "access_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="all_members")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, in_review, completed, expired
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class AccessReviewItem(Base):
+    __tablename__ = "access_review_items"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    review_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource: Mapped[str] = mapped_column(String(255), nullable=False)
+    principal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    permission: Mapped[str] = mapped_column(String(100), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    decision: Mapped[str] = mapped_column(String(50), nullable=False, default="retain") # retain, remove, modify, unknown
+    reviewer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ComplianceControl(Base):
+    __tablename__ = "compliance_controls"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    framework: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # SOC_2, ISO_27001, GDPR
+    control_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="supported", index=True) # not_assessed, in_progress, partially_supported, supported, not_applicable
+    owner: Mapped[str] = mapped_column(String(255), nullable=False, default="secops")
+    last_reviewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ComplianceEvidence(Base):
+    __tablename__ = "compliance_evidence"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    control_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    evidence_type: Mapped[str] = mapped_column(String(100), nullable=False) # audit_event, configuration, access_review, policy, security_test, retention_policy
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True)
+
+class SecurityFinding(Base):
+    __tablename__ = "security_findings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    category: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # excessive_permission, stale_access, missing_approval, unsafe_workflow, unrestricted_agent, sensitive_data_exposure, integration_risk, policy_conflict
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="governance_scanner")
+    resource: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, remediating, resolved, accepted_risk
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class PolicySimulation(Base):
+    __tablename__ = "policy_simulations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    policy_definition: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    affected_workflows: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    affected_agents: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    simulated_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
