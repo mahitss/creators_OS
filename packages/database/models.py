@@ -4761,6 +4761,155 @@ class GraphRelationshipSnapshot(Base):
     health_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class StrategicPlan(Base):
+    __tablename__ = "strategic_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, active, paused, completed, archived
+    start_date: Mapped[str] = mapped_column(String(50), nullable=False)
+    end_date: Mapped[str] = mapped_column(String(50), nullable=False)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicPlanVersion(Base):
+    __tablename__ = "strategic_plan_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicObjective(Base):
+    __tablename__ = "strategic_objectives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # critical, high, medium, low
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # planned, active, at_risk, blocked, achieved, cancelled
+    target: Mapped[str] = mapped_column(String(255), nullable=False)
+    current_state: Mapped[str] = mapped_column(String(255), nullable=False)
+    deadline: Mapped[str] = mapped_column(String(50), nullable=False)
+
+class StrategicInitiative(Base):
+    __tablename__ = "strategic_initiatives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # proposed, approved, active, paused, at_risk, completed, cancelled
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    expected_outcome: Mapped[str] = mapped_column(Text, nullable=False)
+    estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=100000.0)
+    estimated_duration: Mapped[str] = mapped_column(String(50), nullable=False, default="6 months")
+
+class StrategicAssumption(Base):
+    __tablename__ = "strategic_assumptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    statement: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low
+    assumption_type: Mapped[str] = mapped_column(String(50), nullable=False) # market, customer, financial, operational, technical, regulatory, capacity, competitive
+    validity: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True) # valid, uncertain, invalid, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+
+class StrategicPrioritization(Base):
+    __tablename__ = "strategic_prioritizations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alignment_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    outcome_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    cost_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.8)
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.2)
+    dependency_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.3)
+    time_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    confidence_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    explanation_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class StrategicRecommendation(Base):
+    __tablename__ = "strategic_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommendation: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    alternatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list) # Option A, Option B, Option C
+    tradeoffs_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+
+class StrategicReview(Base):
+    __tablename__ = "strategic_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="quarterly") # weekly, monthly, quarterly, custom
+    progress_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    assumptions_evaluated_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risks_evaluated_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    drift_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicDrift(Base):
+    __tablename__ = "strategic_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(50), nullable=False) # execution, resource, assumption, outcome, dependency
+    signal_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicAlert(Base):
+    __tablename__ = "strategic_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False) # objective_at_risk, assumption_invalidated, critical_dependency_failure, budget_pressure, capacity_pressure, deadline_risk
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicDecisionLink(Base):
+    __tablename__ = "strategic_decision_links"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="reversible") # reversible, partially_reversible, irreversible
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicResourceConstraint(Base):
+    __tablename__ = "strategic_resource_constraints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    constraint_type: Mapped[str] = mapped_column(String(50), nullable=False) # budget, capacity, skill, technology, time
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    affected_initiatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+
 
 
 
