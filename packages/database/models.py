@@ -1091,6 +1091,113 @@ class OperationalIncident(Base):
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     source_references: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
+class HealthSignal(Base):
+    __tablename__ = "health_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="warning", index=True) # info, warning, high, critical
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # latency_degradation, error_rate_increase, queue_backlog, worker_failure, provider_failure, workflow_failure, agent_failure, integration_failure, budget_exhaustion
+    observed_value: Mapped[float] = mapped_column(Float, nullable=False)
+    baseline_value: Mapped[float | None] = mapped_column(Float, nullable=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="telemetry")
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class IncidentDiagnosis(Base):
+    __tablename__ = "incident_diagnoses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    observed: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    correlated: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    suspected: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RecoveryPlan(Base):
+    __tablename__ = "recovery_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    steps: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low") # low, medium, high
+    estimated_impact: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    policy_requirements: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executing, completed, failed, rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RecoveryExecution(Base):
+    __tablename__ = "recovery_executions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recovery_plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recovery_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True) # Idempotency Key
+    step_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False) # retry_transient_job, restart_worker, pause_workflow, resume_workflow, requeue_dead_letter, switch_configured_fallback_model, clear_stale_lease
+    target: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="executing", index=True) # executing, verified, failed, rolled_back
+    verification_result: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class Runbook(Base):
+    __tablename__ = "runbooks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    trigger_condition: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    steps: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    verification: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    rollback: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False, default="sre")
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RunbookVersion(Base):
+    __tablename__ = "runbook_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    runbook_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    definition: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Problem(Base):
+    __tablename__ = "problems"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    signature: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    incidents: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, investigating, mitigated, resolved, accepted
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class CircuitBreakerState(Base):
+    __tablename__ = "circuit_breaker_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="closed", index=True) # closed, open, half_open
+    failure_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cooldown_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    half_opened_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
 
 
 

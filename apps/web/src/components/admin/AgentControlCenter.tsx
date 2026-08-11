@@ -18,6 +18,7 @@ import {
   Filter
 } from 'lucide-react';
 import { AgentDetailDrawer } from './AgentDetailDrawer';
+import { ReliabilityWorkspace } from './ReliabilityWorkspace';
 
 interface OverviewMetrics {
   active_agents: number;
@@ -56,6 +57,7 @@ export const AgentControlCenter: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sseConnected, setSseConnected] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'agents' | 'reliability'>('agents');
 
   useEffect(() => {
     fetchData();
@@ -134,6 +136,27 @@ export const AgentControlCenter: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Control Center Tab Switcher */}
+      <div className="flex border-b border-zinc-800 space-x-6 text-sm font-semibold">
+        <button
+          onClick={() => setActiveTab('agents')}
+          className={`pb-3 transition ${activeTab === 'agents' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-zinc-400 hover:text-zinc-200'}`}
+        >
+          Active Agent Runs & Control
+        </button>
+        <button
+          onClick={() => setActiveTab('reliability')}
+          className={`pb-3 transition ${activeTab === 'reliability' ? 'text-indigo-400 border-b-2 border-indigo-500' : 'text-zinc-400 hover:text-zinc-200'}`}
+        >
+          Reliability & Self-Healing Engine
+        </button>
+      </div>
+
+      {activeTab === 'reliability' ? (
+        <ReliabilityWorkspace />
+      ) : (
+        <>
 
       {/* Top Overview Metrics */}
       {overview && (
@@ -308,6 +331,8 @@ export const AgentControlCenter: React.FC = () => {
           if (selectedAgentId) handleOperatorAction(selectedAgentId, action);
         }}
       />
+        </>
+      )}
     </div>
   );
 };
