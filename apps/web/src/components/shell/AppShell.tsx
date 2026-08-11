@@ -67,6 +67,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Execution Governance', href: '/execution', icon: '🎯' },
     { label: 'Performance OS', href: '/performance', icon: '📈' },
     { label: 'Predictive Operations', href: '/predictions', icon: '🔮' },
+    { label: 'Prescriptive Intelligence', href: '/optimization', icon: '⚖️' },
     { label: 'Enterprise Knowledge', href: '/knowledge', icon: '📚' },
     { label: 'AI Agent Mesh', href: '/agents/mesh', icon: '🕸️' },
     { label: 'Agent Skill Fabric', href: '/agents/skills', icon: '⚡' },

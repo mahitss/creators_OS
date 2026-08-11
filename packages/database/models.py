@@ -5545,6 +5545,180 @@ class ForecastRevision(Base):
     new_inputs_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class OptimizationProblem(Base):
+    __tablename__ = "optimization_problems_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    objective_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # maximize_outcome, minimize_cost, minimize_risk, minimize_delay, maximize_capacity_efficiency, maximize_utility, custom
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="configured", index=True) # draft, configured, simulating, ready_for_review, approved, executing, completed, cancelled
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OptimizationObjective(Base):
+    __tablename__ = "optimization_objectives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="maximize") # maximize, minimize
+    weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class DecisionVariable(Base):
+    __tablename__ = "decision_variables_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    variable_type: Mapped[str] = mapped_column(String(50), nullable=False) # continuous, integer, boolean, categorical
+    minimum: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    maximum: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    allowed_values_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class OptimizationConstraint(Base):
+    __tablename__ = "optimization_constraints_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    constraint_type: Mapped[str] = mapped_column(String(50), nullable=False) # budget, capacity, policy, deadline, dependency, security, resource, technical, business
+    is_hard: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    expression: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, stale
+
+class OptimizationOption(Base):
+    __tablename__ = "optimization_options_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variables_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    constraints_satisfied: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    expected_outcome: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+
+class OptimizationScenario(Base):
+    __tablename__ = "optimization_scenarios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    option_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    outcome: Mapped[float] = mapped_column(Float, nullable=False)
+    cost: Mapped[float] = mapped_column(Float, nullable=False)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False)
+    capacity: Mapped[float] = mapped_column(Float, nullable=False)
+    timeline: Mapped[str] = mapped_column(String(50), nullable=False)
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=10.0)
+
+class RobustnessAnalysis(Base):
+    __tablename__ = "robustness_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    option_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    demand_change: Mapped[str] = mapped_column(String(100), nullable=False)
+    cost_change: Mapped[str] = mapped_column(String(100), nullable=False)
+    capacity_change: Mapped[str] = mapped_column(String(100), nullable=False)
+    dependency_failure_impact: Mapped[str] = mapped_column(Text, nullable=False)
+    robustness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class SensitivityAnalysis(Base):
+    __tablename__ = "sensitivity_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    option_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variable_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    impact_direction: Mapped[str] = mapped_column(String(50), nullable=False) # positive, negative
+    estimated_magnitude: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=88.0)
+
+class OptimizationTradeoff(Base):
+    __tablename__ = "optimization_tradeoffs_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    option_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    comparison_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    pareto_frontier_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class PrescriptiveRecommendation(Base):
+    __tablename__ = "prescriptive_recommendations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    alternatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    objective_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    constraints_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    expected_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=92.0)
+    robustness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ready_for_review", index=True) # draft, ready_for_review, approved, rejected, superseded, expired
+
+class OptimizationActionPlan(Base):
+    __tablename__ = "optimization_action_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recommendation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    milestones_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    rollback_plan: Mapped[Text] = mapped_column(Text, nullable=False)
+    execution_mode: Mapped[str] = mapped_column(String(50), nullable=False, default="approval_gated") # advisory, approval_gated, policy_authorized
+
+class OptimizationAction(Base):
+    __tablename__ = "optimization_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    target_system: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+
+class OptimizationPerformance(Base):
+    __tablename__ = "optimization_performances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recommendation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_outcome: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_outcome: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    benefit_accuracy: Mapped[float] = mapped_column(Float, nullable=False, default=94.0)
+    cost_accuracy: Mapped[float] = mapped_column(Float, nullable=False, default=96.0)
+    forecast_error: Mapped[float] = mapped_column(Float, nullable=False, default=4.5)
+
+class OptimizationAlert(Base):
+    __tablename__ = "optimization_alerts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alert_type: Mapped[str] = mapped_column(String(50), nullable=False) # recommendation_invalidated, constraint_changed, better_option_found, risk_increased, expected_benefit_changed, cost_changed
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
+
+class OptimizationVersion(Base):
+    __tablename__ = "optimization_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    problem_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

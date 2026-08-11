@@ -7,5 +7,5 @@ Vapor OS Enterprise Predictive Operations 2.0 provides an uncertainty-aware, evi
 HISTORICAL DATA -> CURRENT STATE -> SIGNALS -> FORECAST -> RISK -> SCENARIO -> RECOMMENDATION -> HUMAN DECISION -> OUTCOME -> FORECAST ACCURACY
 ```
 
-## Critical Principle
-A prediction is NOT a fact. Every forecast distinguishes `observed`, `estimated`, `predicted`, `scenario-based`, `unknown`. Vapor provides decision support; humans retain authority over consequential actions.
+## Prescriptive Intelligence 2.0 Integration
+Integrates in Sprint 67 with Enterprise Prescriptive Intelligence & Decision Optimization 2.0 (`OptimizationProblem`, `OptimizationOption`, `PrescriptiveRecommendation`, `OptimizationActionPlan`). Connects probabilistic forecasts to constraint-aware optimization, Pareto trade-off analysis, robustness testing, and human-governed action plans.
