@@ -1,6 +1,10 @@
-# Service Circuit Breakers
+# Circuit Breaker Architecture
 
-## State Machine
-- **CLOSED**: Normal operation.
-- **OPEN**: Triggered when failure count reaches threshold (e.g. 3 failures). Stops traffic and initiates fallback.
-- **HALF_OPEN**: Cooldown period (60s) expires. Tests single trial request. Transition back to CLOSED on success, or OPEN on failure.
+Prevents cascade failures across external APIs, model providers, and database endpoints.
+
+## State Transitions
+`closed -> open -> half_open`
+
+- **Closed**: Normal request flow.
+- **Open**: Requests fail fast without hitting failing external dependencies.
+- **Half-Open**: Probes dependency with limited test traffic to verify recovery.

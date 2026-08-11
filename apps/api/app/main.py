@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration, decision_engine, governance_v2, security, secops, resilience
 
 setup_logging()
 
@@ -105,6 +105,7 @@ app.include_router(decision_engine.router, prefix=settings.API_V1_STR, tags=["En
 app.include_router(governance_v2.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Governance & Policy Intelligence 2.0"])
 app.include_router(security.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Security & Threat Intelligence Fabric"])
 app.include_router(secops.router, prefix=settings.API_V1_STR, tags=["Enterprise AI Security Operations & Controlled Incident Response"])
+app.include_router(resilience.router, prefix=settings.API_V1_STR, tags=["Enterprise AI Resilience & Business Continuity Fabric"])
 
 @app.get("/")
 async def root():

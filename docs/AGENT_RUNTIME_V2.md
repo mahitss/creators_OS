@@ -2,6 +2,9 @@
 
 Vapor OS Agent Runtime 2.0 provides durable, resumable, observable, and policy-governed cognitive execution for long-running autonomous agents.
 
+## Resilience & Business Continuity Integration
+Integrates with Enterprise AI Resilience (Sprint 58) for durable checkpoint recovery, split-brain lease protection (`StateLease`), circuit breakers, and graceful degradation.
+
 ## Architecture Pipeline
 
 ```
