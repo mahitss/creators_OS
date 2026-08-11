@@ -9098,6 +9098,167 @@ class TransformationGovernancePattern(Base):
     sample_size: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
     confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
 
+class TransformationDigitalTwin(Base):
+    __tablename__ = "transformation_digital_twins"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise") # enterprise, portfolio, transformation, program, business_unit, capability
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    baseline_snapshot_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, simulating, review, archived
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationTwinBaseline(Base):
+    __tablename__ = "transformation_twin_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    strategy_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    operating_model_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    portfolio_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    governance_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    dependencies_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risks_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    benefits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    kpis_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationTwinSnapshot(Base):
+    __tablename__ = "transformation_twin_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    source_versions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    included_systems_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    data_freshness_minutes: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+
+class TransformationTwinState(Base):
+    __tablename__ = "transformation_twin_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    state_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # current, proposed, alternative, stress
+    state_data_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationSimulationChangeSet(Base):
+    __tablename__ = "transformation_simulation_change_sets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    changes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated", index=True)
+
+class TransformationSimulationRun(Base):
+    __tablename__ = "transformation_simulation_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_state_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    proposed_state_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario: Mapped[str] = mapped_column(String(100), nullable=False, default="baseline") # baseline, optimistic, stress, disruptive, custom
+    model_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True) # queued, running, completed, failed, cancelled, stale
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    hash_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False, default="hash_sim_01")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationSimulationModel(Base):
+    __tablename__ = "transformation_simulation_models"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # dependency_propagation, capacity, timeline, risk, benefit, governance, scenario, portfolio, operating_model, combined
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    assumptions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    parameters_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evaluation_status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated")
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationSimulationInput(Base):
+    __tablename__ = "transformation_simulation_inputs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    entity: Mapped[str] = mapped_column(String(255), nullable=False)
+    value: Mapped[Text] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    assumption: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationSimulationOutput(Base):
+    __tablename__ = "transformation_simulation_outputs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    low_value: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_value: Mapped[float] = mapped_column(Float, nullable=False)
+    high_value: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    time_horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="Q4 2026", index=True)
+    scenario: Mapped[str] = mapped_column(String(100), nullable=False, default="baseline")
+
+class TransformationMultiScenarioRun(Base):
+    __tablename__ = "transformation_multi_scenario_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    twin_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_set_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenarios_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    robustness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationSimulationComparison(Base):
+    __tablename__ = "transformation_simulation_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    current_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    proposed_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    alternative_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    comparison_dimensions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationSimulationTradeoff(Base):
+    __tablename__ = "transformation_simulation_tradeoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    benefit_gained: Mapped[Text] = mapped_column(Text, nullable=False)
+    risk_gained: Mapped[Text] = mapped_column(Text, nullable=False)
+    cost_impact: Mapped[float] = mapped_column(Float, nullable=False, default=150000.0)
+    delay_days: Mapped[float] = mapped_column(Float, nullable=False, default=14.0)
+    optionality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+
+class TransformationSensitivityAnalysis(Base):
+    __tablename__ = "transformation_sensitivity_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variable_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    low_value: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_value: Mapped[float] = mapped_column(Float, nullable=False)
+    high_value: Mapped[float] = mapped_column(Float, nullable=False)
+    impact_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationSimulationReview(Base):
+    __tablename__ = "transformation_simulation_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    run_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
