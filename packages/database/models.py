@@ -924,6 +924,72 @@ class WorkflowNodeRun(Base):
     error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class WorkflowAIRequest(Base):
+    __tablename__ = "workflow_ai_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    request_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # create, modify, explain, debug, optimize, simulate, validate, summarize
+    request_text: Mapped[str] = mapped_column(Text, nullable=False)
+    context: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True) # pending, completed, failed
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class WorkflowProposal(Base):
+    __tablename__ = "workflow_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    base_version_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    proposed_definition: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    change_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    capability_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    validation_result: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, validated, needs_review, approved, rejected, applied, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class WorkflowTestCase(Base):
+    __tablename__ = "workflow_test_cases"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    input: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_path: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    expected_outcome: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkflowTestRun(Base):
+    __tablename__ = "workflow_test_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    test_case_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # passed, failed, skipped
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    node_path: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkflowOptimizationProposal(Base):
+    __tablename__ = "workflow_optimization_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    current_graph: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    proposed_graph: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    estimated_improvement: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    capability_changes: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 

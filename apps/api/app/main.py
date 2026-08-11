@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai
 
 setup_logging()
 
@@ -78,6 +78,7 @@ app.include_router(delegations.router, prefix=settings.API_V1_STR, tags=["Delega
 app.include_router(automations.router, prefix=settings.API_V1_STR, tags=["Automations"])
 app.include_router(insights.router, prefix=settings.API_V1_STR, tags=["Insights"])
 app.include_router(workflows.router, prefix=settings.API_V1_STR, tags=["Workflows"])
+app.include_router(workflow_ai.router, prefix=settings.API_V1_STR, tags=["AI Workflow Intelligence"])
 
 @app.get("/")
 async def root():

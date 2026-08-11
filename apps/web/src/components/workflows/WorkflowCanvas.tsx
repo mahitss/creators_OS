@@ -23,6 +23,10 @@ import {
   FileCode,
   Share2
 } from 'lucide-react';
+import { WorkflowCopilot } from './WorkflowCopilot';
+
+// ... interface definitions ...
+
 
 interface NodeConfig {
   tool_name?: string;
@@ -283,9 +287,9 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
       </div>
 
       {/* Main Authoring Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 overflow-hidden">
         {/* Node Palette Sidebar */}
-        <div className="lg:col-span-1 bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col space-y-4 overflow-y-auto">
+        <div className="xl:col-span-2 bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col space-y-4 overflow-y-auto">
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Node Palette</h2>
 
           <div className="space-y-2">
@@ -317,7 +321,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
         </div>
 
         {/* Visual Graph Canvas */}
-        <div className="lg:col-span-2 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col relative overflow-hidden bg-grid-pattern">
+        <div className="xl:col-span-5 bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col relative overflow-hidden bg-grid-pattern">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-4 border-b border-slate-900 pb-2">
             <span>Visual DAG Canvas ({nodes.length} Nodes, {edges.length} Edges)</span>
             <span className="text-[10px] font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800">Deterministic Cycle Prevention Active</span>
@@ -354,7 +358,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
         </div>
 
         {/* Node Configuration & Variable Picker Panel */}
-        <div className="lg:col-span-1 bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col space-y-4 overflow-y-auto">
+        <div className="xl:col-span-2 bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex flex-col space-y-4 overflow-y-auto">
           <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Node Configuration</h2>
 
           {selectedNode ? (
@@ -434,6 +438,20 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
               Select a node on the canvas to inspect and modify configuration.
             </div>
           )}
+        </div>
+
+        {/* AI Workflow Copilot Assistant Panel */}
+        <div className="xl:col-span-3 overflow-hidden flex flex-col">
+          <WorkflowCopilot
+            workflowId={workflowId}
+            selectedNodeId={selectedNodeId}
+            onApplyProposal={(newDef) => {
+              if (newDef && newDef.nodes) {
+                setNodes(newDef.nodes);
+                setEdges(newDef.edges || []);
+              }
+            }}
+          />
         </div>
       </div>
 
