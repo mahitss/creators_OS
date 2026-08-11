@@ -7257,6 +7257,266 @@ class ExecutionLesson(Base):
     outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
     lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
 
+class OperatingModel(Base):
+    __tablename__ = "operating_models_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, under_review, superseded, retired
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingPrinciple(Base):
+    __tablename__ = "operating_principles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    principle: Mapped[str] = mapped_column(String(255), nullable=False)
+    intent: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class OrganizationalUnit(Base):
+    __tablename__ = "organizational_units_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    parent_id: Mapped[str] = mapped_column(String(255), nullable=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    type: Mapped[str] = mapped_column(String(100), nullable=False) # enterprise, division, business_unit, department, team, function, program_office, shared_service, external_partner
+    purpose: Mapped[Text] = mapped_column(Text, nullable=False)
+    scope: Mapped[Text] = mapped_column(Text, nullable=False)
+    responsibilities: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingResponsibility(Base):
+    __tablename__ = "operating_responsibilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    unit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    scope: Mapped[Text] = mapped_column(Text, nullable=False)
+    responsibility_type: Mapped[str] = mapped_column(String(50), nullable=False, default="primary") # primary, supporting, consulted, informed
+
+class AccountabilityMapping(Base):
+    __tablename__ = "accountability_mappings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    outcome_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    has_gap: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    has_conflict: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class DecisionRight(Base):
+    __tablename__ = "decision_rights_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    scope: Mapped[Text] = mapped_column(Text, nullable=False, index=True)
+    authority_level: Mapped[str] = mapped_column(String(100), nullable=False)
+    constraints_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    escalation_path: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class DecisionRightsMatrix(Base):
+    __tablename__ = "decision_rights_matrices"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_right_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    unit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    role_type: Mapped[str] = mapped_column(String(50), nullable=False, default="decides") # decides, approves, recommends, consulted, informed
+
+class OperatingProcess(Base):
+    __tablename__ = "operating_processes_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    purpose: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner_unit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    inputs_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    outputs_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    systems_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, degraded, under_review, retired
+
+class ProcessStep(Base):
+    __tablename__ = "process_steps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    owner_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    input_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    output_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    dependency_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    system_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=True)
+
+class ProcessHandoff(Base):
+    __tablename__ = "process_handoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    to_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    artifact_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    wait_time_hours: Mapped[float] = mapped_column(Float, nullable=False, default=4.5)
+    failure_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.03)
+    friction_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class ProcessBottleneck(Base):
+    __tablename__ = "process_bottlenecks_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    bottleneck_type: Mapped[str] = mapped_column(String(100), nullable=False) # capacity, decision, dependency, technology, handoff, approval, data
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class CrossFunctionalFlow(Base):
+    __tablename__ = "cross_functional_flows"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    unit_a_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    unit_b_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    process_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    handoff_count: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
+    friction_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+
+class OperatingCapacityProfile(Base):
+    __tablename__ = "operating_capacity_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    demand_units: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    available_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    committed_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    buffer_capacity: Mapped[float] = mapped_column(Float, nullable=False, default=10.0)
+    capacity_type: Mapped[str] = mapped_column(String(50), nullable=False, default="fixed") # fixed, flexible, shared, external
+
+class OperatingModelGap(Base):
+    __tablename__ = "operating_model_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gap_type: Mapped[str] = mapped_column(String(100), nullable=False) # capability, accountability, decision, process, capacity, dependency, technology, governance
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+
+class OperatingModelRecommendation(Base):
+    __tablename__ = "operating_model_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommendation_type: Mapped[str] = mapped_column(String(100), nullable=False) # clarify, standardize, delegate, centralize, decentralize, automate, integrate, remove_dependency, build_capability, increase_capacity
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+class OperatingModelScenario(Base):
+    __tablename__ = "operating_model_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_type: Mapped[str] = mapped_column(String(100), nullable=False) # centralize_function, delegate_decision, merge_process, split_capability, introduce_shared_service
+    proposed_changes_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    simulated_effects_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class OperatingModelTradeoff(Base):
+    __tablename__ = "operating_model_tradeoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_a: Mapped[Text] = mapped_column(Text, nullable=False)
+    option_b: Mapped[Text] = mapped_column(Text, nullable=False)
+    cost_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    speed_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.25)
+    control_diff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.10)
+    resilience_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    complexity_diff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.15)
+
+class OperatingModelDriftSignal(Base):
+    __tablename__ = "operating_model_drift_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    documented_behavior: Mapped[Text] = mapped_column(Text, nullable=False)
+    observed_behavior: Mapped[Text] = mapped_column(Text, nullable=False)
+    difference_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+class OperatingAssumption(Base):
+    __tablename__ = "operating_assumptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    statement: Mapped[Text] = mapped_column(Text, nullable=False)
+    validity_status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid") # valid, questioned, fragile, invalidated, unknown
+
+class OperatingIndicator(Base):
+    __tablename__ = "operating_indicators"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    current_value: Mapped[float] = mapped_column(Float, nullable=False, default=4.2)
+    target_value: Mapped[float] = mapped_column(Float, nullable=False, default=2.0)
+    trend: Mapped[str] = mapped_column(String(50), nullable=False, default="improving")
+
+class OperatingModelEarlyWarning(Base):
+    __tablename__ = "operating_model_early_warnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    warning_trigger: Mapped[str] = mapped_column(String(100), nullable=False) # decision_latency_increase, handoff_degradation, capacity_overload, dependency_concentration, accountability_conflict
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class OperatingModelChangeProposal(Base):
+    __tablename__ = "operating_model_change_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    problem_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    tradeoffs_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+class OperatingModelChangeOutcome(Base):
+    __tablename__ = "operating_model_change_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False, default=0.05)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class OperatingModelLesson(Base):
+    __tablename__ = "operating_model_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+
 
 
 
