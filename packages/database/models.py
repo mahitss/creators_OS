@@ -4648,6 +4648,120 @@ class TeamWorkloadSnapshot(Base):
     workload_fairness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class Outcome(Base):
+    __tablename__ = "outcomes_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # planned, active, at_risk, blocked, achieved, cancelled
+    target: Mapped[str] = mapped_column(String(255), nullable=False)
+    current_state: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingChangeEvent(Base):
+    __tablename__ = "operating_change_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_type: Mapped[str] = mapped_column(String(50), nullable=False) # ownership_change, capability_change, workflow_change, dependency_change, mission_change, policy_change
+    target_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    impact_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class OperatingScenario(Base):
+    __tablename__ = "operating_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    assumptions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    affected_nodes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=92.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingRisk(Base):
+    __tablename__ = "operating_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dimension: Mapped[str] = mapped_column(String(50), nullable=False) # dependency, capacity, knowledge, workflow, integration, decision, security
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    source_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="identified", index=True) # identified, monitoring, mitigating, resolved, accepted
+    mitigation_recommendations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class CapabilityGap(Base):
+    __tablename__ = "capability_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    required_by_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    gap_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="missing") # missing, under_capacity, restricted, unavailable, unknown
+    impact_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, addressed
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingBottleneck(Base):
+    __tablename__ = "operating_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    blocker_type: Mapped[str] = mapped_column(String(50), nullable=False) # approval, capacity, dependency, knowledge, integration
+    root_dependency_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_work_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    duration_hours: Mapped[float] = mapped_column(Float, nullable=False, default=4.5)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OperatingDependency(Base):
+    __tablename__ = "operating_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    relationship_type: Mapped[str] = mapped_column(String(50), nullable=False) # OWNS, MEMBER_OF, ASSIGNED_TO, EXECUTES, DEPENDS_ON, BLOCKS, REQUIRES, PRODUCES, CONSUMES, REVIEWS, APPROVES, ESCALATES_TO, SUPPORTED_BY, USES, RELATED_TO, INFORMS, RESULTS_IN
+    health: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy") # healthy, degraded, blocked, unknown
+    is_critical_path: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    freshness_policy_hours: Mapped[int] = mapped_column(Integer, nullable=False, default=24)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class GraphValidationIssue(Base):
+    __tablename__ = "graph_validation_issues"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    issue_type: Mapped[str] = mapped_column(String(50), nullable=False) # orphan_node, invalid_edge, conflicting_ownership, missing_dependency, stale_relationship
+    node_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    suggested_repair: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, resolved
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class GraphRelationshipSnapshot(Base):
+    __tablename__ = "graph_relationship_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    node_count: Mapped[int] = mapped_column(Integer, nullable=False, default=450)
+    edge_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1250)
+    health_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
