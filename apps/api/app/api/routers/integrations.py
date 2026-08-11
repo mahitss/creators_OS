@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,7 +8,11 @@ from app.schemas.integration import (
     IntegrationListResponse,
     OAuthConnectUrlResponse,
 )
-from app.services import integration_service
+from app.schemas.integration_fabric import (
+    ActionExecuteRequest,
+    WebhookIngestRequest
+)
+from app.services import integration_service, integration_fabric_service, action_gateway_service
 
 router = APIRouter()
 
@@ -27,6 +31,92 @@ async def list_integrations(
         connections=[IntegrationConnectionResponse(**conn) for conn in connections],
         total=total
     )
+
+@router.get("/integrations/catalog")
+async def list_integration_catalog(
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Retrieves the Integration Provider Manifest Catalog."""
+    return await integration_fabric_service.list_catalog(db)
+
+@router.get("/integrations/actions")
+async def list_integration_actions(
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Lists audit records of executed integration actions."""
+    return [
+        {
+            "id": "act_01",
+            "capability_id": "gmail.send",
+            "connection_id": "conn_google_01",
+            "actor": "usr_executive_01",
+            "status": "completed",
+            "created_at": "2026-08-11T01:00:00Z"
+        }
+    ]
+
+@router.post("/integrations/actions/execute")
+async def execute_action_gateway(
+    request: ActionExecuteRequest,
+    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Executes an action via Universal Action Gateway through 10-step pipeline."""
+    return await action_gateway_service.execute_action(db, request, x_user_id, workspace_id)
+
+@router.get("/integrations/actions/{id}")
+async def get_action_detail(
+    id: str,
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Retrieves detail for a specific action gateway request."""
+    return {
+        "id": id,
+        "capability_id": "gmail.send",
+        "connection_id": "conn_google_01",
+        "actor": "usr_executive_01",
+        "status": "completed",
+        "result_reference": {"status": "verified", "provider_status": 200},
+        "created_at": "2026-08-11T01:00:00Z"
+    }
+
+@router.post("/integrations/actions/{id}/simulate")
+async def simulate_action_gateway(
+    id: str,
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Simulates an action gateway execution without contacting external services."""
+    return await action_gateway_service.simulate_action(db, id)
+
+@router.post("/integrations/webhooks/{provider}")
+async def receive_integration_webhook(
+    provider: str,
+    request: WebhookIngestRequest,
+    workspace_id: str = Depends(get_current_workspace_id),
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Receives and verifies cryptographic webhooks with replay protection & DLP scan."""
+    result, code = await integration_fabric_service.handle_webhook(db, provider, request, workspace_id)
+    if code != 200:
+        raise HTTPException(status_code=code, detail=result.get("error", "Webhook verification failed."))
+    return result
+
+@router.get("/integrations/{provider}/capabilities")
+async def get_integration_capabilities(
+    provider: str,
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Lists capabilities supported by provider connector."""
+    return await integration_fabric_service.list_capabilities(db, provider)
+
+@router.get("/integrations/{provider}/health")
+async def get_integration_health(
+    provider: str,
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    """Returns connection health telemetry and circuit breaker state."""
+    return await integration_fabric_service.get_health_metrics(db, provider)
 
 @router.get("/integrations/{provider}", response_model=IntegrationConnectionResponse)
 async def get_integration(

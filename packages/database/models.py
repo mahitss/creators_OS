@@ -2159,6 +2159,120 @@ class WorkflowVersionComparison(Base):
     diff_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     compared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class Integration(Base):
+    __tablename__ = "integrations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # google, github, gmail, calendar, drive, slack, notion
+    category: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # communication, productivity, storage, calendar, crm, project_management, analytics, developer_tools, finance, custom
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="available", index=True) # available, connected, degraded, disabled, error
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class FabricConnection(Base):
+    __tablename__ = "fabric_connections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    owner_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    auth_type: Mapped[str] = mapped_column(String(50), nullable=False, default="oauth2") # oauth2, api_key, service_account, basic_auth
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="connected", index=True) # connected, reauthentication_required, expired, disabled, error
+    scopes: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class IntegrationCapability(Base):
+    __tablename__ = "integration_capabilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    input_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # low, medium, high, critical
+    required_scopes: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class IntegrationAction(Base):
+    __tablename__ = "integration_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    connection_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    input_data: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, validating, authorizing, dlp_evaluating, approval_required, approved, executing, verifying, completed, failed, simulated, blocked
+    result_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class ActionResultModel(Base):
+    __tablename__ = "action_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # accepted, pending_verification, verified, failed
+    provider_status: Mapped[int] = mapped_column(Integer, nullable=False, default=200)
+    resource_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    safe_metadata: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class IntegrationSubscription(Base):
+    __tablename__ = "integration_subscriptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target: Mapped[str] = mapped_column(String(255), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class IntegrationProviderManifest(Base):
+    __tablename__ = "integration_provider_manifests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    capabilities: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    auth_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    rate_limits: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    registered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class IntegrationHealth(Base):
+    __tablename__ = "integration_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    connection_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # healthy, degraded, rate_limited, provider_error, invalid_configuration
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    error_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    circuit_breaker_state: Mapped[str] = mapped_column(String(50), nullable=False, default="closed") # closed, open, half_open
+    last_successful_call: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+class IntegrationUsage(Base):
+    __tablename__ = "integration_usages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    integration_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    connection_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
