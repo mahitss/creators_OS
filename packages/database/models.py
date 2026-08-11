@@ -2042,6 +2042,124 @@ class SignalCorrelation(Base):
     evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class WorkflowPerformanceProfile(Base):
+    __tablename__ = "workflow_performance_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    execution_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    failure_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    average_latency: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    p50_latency: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    p95_latency: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    p99_latency: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    average_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    retry_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    timeout_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    approval_wait_time: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class WorkflowNodePerformance(Base):
+    __tablename__ = "workflow_node_performances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    execution_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    latency: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    retry_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    failure_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkflowBottleneck(Base):
+    __tablename__ = "workflow_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    bottleneck_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # latency, cost, failure, retry, queue, provider, approval, sequential_dependency, data_transfer
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="warning")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AdaptiveOptimizationProposal(Base):
+    __tablename__ = "adaptive_optimization_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    changes: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[dict] = mapped_column(JSON, nullable=False, default=list)
+    expected_impact: Mapped[str] = mapped_column(Text, nullable=False)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, simulating, needs_review, approved, rejected, published, rolled_back, expired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkflowOptimizationChange(Base):
+    __tablename__ = "workflow_optimization_changes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    change_type: Mapped[str] = mapped_column(String(50), nullable=False) # parallelize, retry_adjustment, timeout_adjustment, provider_change, model_change, cache, batch, deduplicate, remove_redundant_step, reorder_safe_nodes
+    before: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    after: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    reversible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class OptimizationSimulation(Base):
+    __tablename__ = "optimization_simulations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    simulated_latency_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    simulated_cost_diff: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    safety_validation: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    simulated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OptimizationExperiment(Base):
+    __tablename__ = "optimization_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    candidate_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    traffic_split: Mapped[float] = mapped_column(Float, nullable=False, default=0.10) # 0.10 = 10% candidate, 90% baseline
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running", index=True) # running, completed, stopped, rolled_back
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    stopped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class OptimizationOutcome(Base):
+    __tablename__ = "optimization_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    proposal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    optimized_metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    delta: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    success: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkflowVersionComparison(Base):
+    __tablename__ = "workflow_version_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workflow_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version_a: Mapped[int] = mapped_column(Integer, nullable=False)
+    version_b: Mapped[int] = mapped_column(Integer, nullable=False)
+    diff_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    compared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

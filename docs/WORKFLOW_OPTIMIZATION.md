@@ -1,9 +1,7 @@
-# Workflow Optimization Engine
+# Enterprise Adaptive Workflow Optimization Architecture
 
-## Overview
-Analyzes published workflow definitions to identify cost, performance, and safety optimizations.
+## Adaptive Optimization Pipeline
+WORKFLOW TELEMETRY $\rightarrow$ PERFORMANCE ANALYSIS $\rightarrow$ BOTTLENECK DETECTION $\rightarrow$ OPTIMIZATION PROPOSAL $\rightarrow$ SIMULATION $\rightarrow$ POLICY CHECK $\rightarrow$ APPROVAL $\rightarrow$ VERSIONED WORKFLOW $\rightarrow$ EXECUTION $\rightarrow$ OUTCOME $\rightarrow$ COMPARISON.
 
-## Optimization Strategies
-- **Cost Reduction**: Replaces unnecessary agent calls with deterministic conditions, caches safe retrieval.
-- **Performance**: Parallelizes independent read branches, reduces unnecessary delays.
-- **Safety**: Recommends adding human approval gates for write actions, restricting tool scopes.
+## Critical Safeguard
+Vapor NEVER silently rewrites a published production workflow. Every optimization produces an immutable versioned publication (`WorkflowVersion`) following human/policy approval.

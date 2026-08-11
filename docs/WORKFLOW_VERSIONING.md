@@ -1,6 +1,4 @@
-# Workflow Versioning & Immutability
+# Workflow Versioning & Instant Rollback Engine
 
-## Draft vs Published Versions
-- Editing an active workflow automatically creates a new `WorkflowVersion` draft.
-- Active workflow runs reference an exact immutable `WorkflowVersion` and `compiledGraph`.
-- Running workflows never execute unvalidated draft changes.
+## Immutable Versioning & Rollback
+Published optimizations increment workflow versions (`v1 -> v2`). Previous versions remain immutable and accessible. If an optimized version degrades in production, operators or automated quality monitors can trigger an instant version rollback for future executions (`rollback_optimization`).
