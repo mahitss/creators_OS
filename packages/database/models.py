@@ -4326,6 +4326,202 @@ class StateLease(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active") # active, expired
 
+class AIUsageEvent(Base):
+    __tablename__ = "ai_usage_events_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    decision_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    model_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    provider_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    capability_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    usage_type: Mapped[str] = mapped_column(String(50), nullable=False) # model_input, model_output, embedding, retrieval, tool_call, workflow_execution, agent_execution, storage, compute, network, integration
+    units_used: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    tokens_input: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_output: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_cached: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    tokens_reasoning: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class AIPriceCatalog(Base):
+    __tablename__ = "ai_price_catalogs_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    unit: Mapped[str] = mapped_column(String(50), nullable=False) # 1k_tokens, 1k_cached, 1k_embeddings, request
+    price: Mapped[float] = mapped_column(Float, nullable=False, default=0.002)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    effective_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="provider_api")
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CostCalculation(Base):
+    __tablename__ = "cost_calculations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    usage_event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    price_version_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    units: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    actual_cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    cost_status: Mapped[str] = mapped_column(String(50), nullable=False, default="estimated", index=True) # estimated, reported, reconciled, unknown
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class AIBudget(Base):
+    __tablename__ = "ai_budgets_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    team_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="organization", index=True) # organization, workspace, team, agent, mission
+    period: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly") # daily, weekly, monthly, custom
+    limit_amount: Mapped[float] = mapped_column(Float, nullable=False, default=1000.0)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    spent_amount: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    committed_amount: Mapped[float] = mapped_column(Float, nullable=False, default=50.0)
+    forecast_amount: Mapped[float] = mapped_column(Float, nullable=False, default=450.0)
+    remaining_amount: Mapped[float] = mapped_column(Float, nullable=False, default=830.0)
+    soft_threshold_pct: Mapped[float] = mapped_column(Float, nullable=False, default=75.0)
+    hard_limit_action: Mapped[str] = mapped_column(String(50), nullable=False, default="require_approval") # block, pause, require_approval, degrade
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # healthy, warning, exceeded
+
+class CostForecast(Base):
+    __tablename__ = "cost_forecasts_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="organization")
+    current_period_expected: Mapped[float] = mapped_column(Float, nullable=False, default=450.0)
+    lower_bound: Mapped[float] = mapped_column(Float, nullable=False, default=380.0)
+    upper_bound: Mapped[float] = mapped_column(Float, nullable=False, default=520.0)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=92.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CostDriver(Base):
+    __tablename__ = "cost_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    driver_type: Mapped[str] = mapped_column(String(50), nullable=False) # high_token_mission, repeated_retries, inefficient_workflow, expensive_model, excessive_retrieval, tool_loop
+    resource_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    cost_impact: Mapped[float] = mapped_column(Float, nullable=False, default=75.0)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AIValueMetric(Base):
+    __tablename__ = "ai_value_metrics"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=4.8)
+    success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    latency_p95_ms: Mapped[float] = mapped_column(Float, nullable=False, default=180.0)
+    cost_amount: Mapped[float] = mapped_column(Float, nullable=False, default=1.25)
+    value_index: Mapped[float] = mapped_column(Float, nullable=False, default=3.84)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class OptimizationRecommendation(Base):
+    __tablename__ = "optimization_recommendations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False) # model_switch, prompt_reduction, retrieval_reduction, retry_reduction, workflow_optimization, cache_usage, batching, scheduling
+    estimated_savings: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    quality_impact: Mapped[str] = mapped_column(String(50), nullable=False, default="neutral")
+    latency_impact: Mapped[str] = mapped_column(String(50), nullable=False, default="improved")
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=95.0)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # draft, pending, approved, applied, reverted
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CostOptimizationExperiment(Base):
+    __tablename__ = "cost_optimization_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recommendation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline_config_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    optimized_config_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    baseline_cost: Mapped[float] = mapped_column(Float, nullable=False, default=15.0)
+    optimized_cost: Mapped[float] = mapped_column(Float, nullable=False, default=8.5)
+    baseline_quality: Mapped[float] = mapped_column(Float, nullable=False, default=4.8)
+    optimized_quality: Mapped[float] = mapped_column(Float, nullable=False, default=4.78)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running", index=True) # running, completed, reverted
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AICapacitySnapshot(Base):
+    __tablename__ = "ai_capacity_snapshots_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    concurrency_used: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    concurrency_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    queue_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=4)
+    provider_limits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    load_shedding_recommended: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ProviderCapacityLimit(Base):
+    __tablename__ = "provider_capacity_limits"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    rpm_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=10000)
+    tpm_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=2000000)
+    concurrency_limit: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    quota_used_pct: Mapped[float] = mapped_column(Float, nullable=False, default=24.5)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CostReconciliation(Base):
+    __tablename__ = "cost_reconciliations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    period: Mapped[str] = mapped_column(String(50), nullable=False, default="2026-08")
+    estimated_total: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    provider_reported_total: Mapped[float] = mapped_column(Float, nullable=False, default=121.5)
+    variance_amount: Mapped[float] = mapped_column(Float, nullable=False, default=1.5)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="matched", index=True) # matched, variance, unavailable
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CostAdjustment(Base):
+    __tablename__ = "cost_adjustments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cost_calculation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    original_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    adjusted_amount: Mapped[float] = mapped_column(Float, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    adjusted_by_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SpendAnomaly(Base):
+    __tablename__ = "spend_anomalies_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    spike_magnitude_pct: Mapped[float] = mapped_column(Float, nullable=False, default=145.0)
+    anomaly_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="unexpected") # normal, unexpected, investigate
+    driver_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
