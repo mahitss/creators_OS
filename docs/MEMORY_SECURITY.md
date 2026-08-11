@@ -1,9 +1,8 @@
-# Vapor OS — Memory Security & Isolation Architecture
+# Memory Security, DLP & Secret Protection
 
-## 1. Scope Isolation Rules
-- **Personal Scope (`personal`)**: Owned by user, excluded from team context, workspace agents, and other users' missions.
-- **Workspace Scope (`workspace`)**: Accessible to workspace members with valid workspace permissions.
-- **Mission Scope (`mission`)**: Bounded to the specific mission.
+All memory write operations pass through pre-storage DLP scanning and secret pattern filters.
 
-## 2. Authorization Before Retrieval
-Authorization controls candidate retrieval prior to keyword or semantic search. Embeddings and vector similarity are NEVER treated as permission or authorization systems.
+## Guardrails
+- **Secret Blocking**: API keys, OAuth tokens, passwords, and credentials are strictly rejected before memory persistence.
+- **Sensitive Personal Attribute Policy**: Health, political, religious, or sensitive personal attributes cannot be inferred or stored.
+- **Tenant Isolation**: Workspace and private scopes enforce strict authorization bounds.

@@ -48,7 +48,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Content Canvas', href: '/content', icon: '🎨' },
     { label: 'Email Triage', href: '/gmail', icon: '✉️' },
     { label: 'Document Context', href: '/drive', icon: '📄' },
-    { label: 'Context Memory', href: '/memory', icon: '🧠' },
+    { label: 'Context Memory', href: '/memory/explore', icon: '🧠' },
     { label: 'Automations', href: '/automations', icon: '⚡' },
     { label: 'Workflows', href: '/workflows', icon: '🌿' },
     { label: 'Workflow Optimization', href: '/workflows/optimization', icon: '⚡' },

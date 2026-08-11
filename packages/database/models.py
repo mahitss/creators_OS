@@ -3004,6 +3004,115 @@ class ExecutionBudget(Base):
     current_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class AgentMemory(Base):
+    __tablename__ = "agent_memories"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    owner_type: Mapped[str] = mapped_column(String(50), nullable=False, default="agent", index=True) # agent, user, workspace, organization, mission, team
+    owner_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    memory_type: Mapped[str] = mapped_column(String(50), nullable=False, default="semantic", index=True) # episodic, semantic, procedural, working, preference, execution
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # private, shared, workspace, organization
+    content_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # candidate, active, stale, conflicting, deprecated, rejected, expired
+    importance: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # high, medium, low
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+
+class MemoryVersion(Base):
+    __tablename__ = "memory_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    content_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="human_review")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MemoryProvenance(Base):
+    __tablename__ = "memory_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False, default="conversation") # conversation, execution, workflow, event, document, user_input, integration, agent, human_review, derived
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    author: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    origin: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+class AgentMemoryCandidate(Base):
+    __tablename__ = "agent_memory_candidates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    proposed_by_agent_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    memory_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    suggested_content: Mapped[dict] = mapped_column(JSON, nullable=False)
+    evidence_reference: Mapped[dict] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending_review", index=True) # pending_review, approved, rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentMemoryConflict(Base):
+    __tablename__ = "agent_memory_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    memory_id_a: Mapped[str] = mapped_column(String(255), nullable=False)
+    memory_id_b: Mapped[str] = mapped_column(String(255), nullable=False)
+    conflict_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved", index=True) # unresolved, resolved_a, resolved_b, resolved_both
+    resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolved_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MemoryVerification(Base):
+    __tablename__ = "memory_verifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    verifier_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    verification_status: Mapped[str] = mapped_column(String(50), nullable=False, default="verified")
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MemoryFeedback(Base):
+    __tablename__ = "memory_feedbacks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    memory_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    feedback_type: Mapped[str] = mapped_column(String(50), nullable=False) # correct, incorrect, outdated, irrelevant
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MemoryRetentionPolicy(Base):
+    __tablename__ = "memory_retention_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    memory_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    ttl_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
+    auto_expire: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    indefinite_allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MemoryConsolidationJob(Base):
+    __tablename__ = "memory_consolidation_jobs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    memories_scanned: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    duplicates_merged: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    conflicts_flagged: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    candidates_promoted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
