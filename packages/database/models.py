@@ -6376,6 +6376,222 @@ class CrisisMetrics(Base):
     time_to_recover_min: Mapped[int] = mapped_column(Integer, nullable=False, default=95)
     time_to_verify_min: Mapped[int] = mapped_column(Integer, nullable=False, default=115)
 
+class ThreatSignal(Base):
+    __tablename__ = "threat_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    signal_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # availability_change, capacity_change, cost_change, risk_change, dependency_change, vendor_change, security_signal, data_quality_change, policy_change, execution_anomaly, behavioral_pattern, external_signal
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    quality: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, estimated, stale, missing, conflicted, unverified
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ThreatSignalNormalization(Base):
+    __tablename__ = "threat_signal_normalizations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    normalized_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    source_provenance: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class WeakSignal(Base):
+    __tablename__ = "weak_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    novelty_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    persistence_status: Mapped[str] = mapped_column(String(50), nullable=False, default="persists") # appears_once, repeats, persists, accelerates
+    signal_velocity: Mapped[str] = mapped_column(String(50), nullable=False, default="increasing_frequency") # increasing_frequency, increasing_magnitude, increasing_severity
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class ThreatCorrelation(Base):
+    __tablename__ = "threat_correlations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    connection_type: Mapped[str] = mapped_column(String(100), nullable=False) # entity, dependency, time, causal_hypothesis, shared_source, shared_outcome
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class ThreatPattern(Base):
+    __tablename__ = "threat_patterns_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    pattern_type: Mapped[str] = mapped_column(String(100), nullable=False) # cluster, sequence, trend, cascade, recurrence, co_occurrence
+    entities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    time_window: Mapped[str] = mapped_column(String(100), nullable=False, default="24 hours")
+    strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class EmergingThreat(Base):
+    __tablename__ = "emerging_threats_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    affected_capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    probability_range: Mapped[str] = mapped_column(String(50), nullable=False, default="40-60%")
+    time_horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="days") # hours, days, weeks, months, unknown
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="emerging", index=True) # emerging, watch, escalating, contained, materialized, dismissed, expired
+
+class ThreatEvidence(Base):
+    __tablename__ = "threat_evidence_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_type: Mapped[str] = mapped_column(String(100), nullable=False) # signal, historical_pattern, dependency, forecast, incident, scenario, external_source
+    quality: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, estimated, simulated, unverified
+    details: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class ThreatDriver(Base):
+    __tablename__ = "threat_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    factor_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="increasing")
+    magnitude: Mapped[float] = mapped_column(Float, nullable=False, default=0.75)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class ThreatEscalationPath(Base):
+    __tablename__ = "threat_escalation_paths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    risk_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    crisis_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    escalation_conditions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class EarlyWarning(Base):
+    __tablename__ = "early_warnings_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    probability: Mapped[str] = mapped_column(String(50), nullable=False, default="40-60%")
+    time_horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="days")
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="new", index=True) # new, acknowledged, investigating, mitigating, resolved, expired, false_positive
+
+class PreventiveRecommendation(Base):
+    __tablename__ = "preventive_recommendations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False, default=5000.0)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class ThreatMitigation(Base):
+    __tablename__ = "threat_mitigations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    precondition: Mapped[Text] = mapped_column(Text, nullable=False)
+    authorization_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="executing", index=True) # planned, approved, executing, completed, failed, verified
+    expected_risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    actual_risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+
+class ThreatFalsePositive(Base):
+    __tablename__ = "threat_false_positives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    warning_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    reviewer: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ThreatMiss(Base):
+    __tablename__ = "threat_misses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    available_signals_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    missed_pattern: Mapped[Text] = mapped_column(Text, nullable=False)
+    detection_gap: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class ThreatDetectionPerformance(Base):
+    __tablename__ = "threat_detection_performances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    precision: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    recall: Mapped[float] = mapped_column(Float, nullable=False, default=0.91)
+    false_positive_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.06)
+    false_negative_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.09)
+    lead_time_hours: Mapped[float] = mapped_column(Float, nullable=False, default=48.5)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ThreatBlindSpot(Base):
+    __tablename__ = "threat_blind_spots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain: Mapped[str] = mapped_column(String(255), nullable=False)
+    missing_signals_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class ThreatCoverage(Base):
+    __tablename__ = "threat_coverages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    monitoring_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    has_gap: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class CompoundThreat(Base):
+    __tablename__ = "compound_threats"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threat_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    interaction_scenario: Mapped[Text] = mapped_column(Text, nullable=False)
+    combined_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class ThreatGraphSnapshot(Base):
+    __tablename__ = "threat_graph_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    nodes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    edges_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    snapshot_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ThreatSourceProfile(Base):
+    __tablename__ = "threat_source_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    license: Mapped[str] = mapped_column(String(100), nullable=False, default="commercial")
+    confidence_rating: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    last_validated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
