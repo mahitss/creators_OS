@@ -5718,6 +5718,179 @@ class OptimizationVersion(Base):
     snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class ControlLoop(Base):
+    __tablename__ = "control_loops_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    target_entity_type: Mapped[str] = mapped_column(String(100), nullable=False) # mission, kpi, capacity, cost, infrastructure, workflow
+    target_entity_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    mode: Mapped[str] = mapped_column(String(50), nullable=False, default="monitor_only") # monitor_only, recommendation, approval_gated, policy_authorized
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, paused, degraded, suspended, completed, retired
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ControlObjective(Base):
+    __tablename__ = "control_objectives_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    target: Mapped[float] = mapped_column(Float, nullable=False)
+    acceptable_range: Mapped[str] = mapped_column(String(100), nullable=False) # e.g. [90.0, 100.0]
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class ControlSignal(Base):
+    __tablename__ = "control_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_type: Mapped[str] = mapped_column(String(50), nullable=False) # kpi, forecast, risk, capacity, cost, benefit, dependency, policy, execution
+    value: Mapped[float] = mapped_column(Float, nullable=False)
+    signal_quality: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, estimated, stale, missing, conflicted
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low, unknown
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, stale
+
+class ControlStateSnapshot(Base):
+    __tablename__ = "control_state_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    current_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    target_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    constraints_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risks_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    active_decisions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    active_actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ControlStateChange(Base):
+    __tablename__ = "control_state_changes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_type: Mapped[str] = mapped_column(String(50), nullable=False) # target_changed, metric_changed, risk_changed, constraint_changed, dependency_changed, capacity_changed, cost_changed, benefit_changed, execution_changed
+    delta_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionValidityAssessment(Base):
+    __tablename__ = "decision_validity_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    validity_status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid") # valid, uncertain, degraded, invalid
+    validity_factors_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionReassessment(Base):
+    __tablename__ = "decision_reassessments_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(50), nullable=False) # periodic, threshold, event, forecast_change, risk_change, constraint_change, outcome_change
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    affected_decision_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    new_conditions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    recommended_next_step: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, in_review, resolved
+
+class ControlResponse(Base):
+    __tablename__ = "control_responses_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    response_type: Mapped[str] = mapped_column(String(50), nullable=False) # continue, monitor, reassess, escalate, simulate, recommend, pause, rollback
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected, blocked
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+
+class ControlGuardrail(Base):
+    __tablename__ = "control_guardrails_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    guardrail_type: Mapped[str] = mapped_column(String(50), nullable=False) # max_cost, max_risk, min_quality, max_delay, max_capacity, data_freshness, confidence, policy
+    threshold: Mapped[float] = mapped_column(Float, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="warning") # info, warning, high, critical
+    action: Mapped[str] = mapped_column(String(100), nullable=False) # alert, recommend, escalate, pause, require_approval
+    approval_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    policy_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class GuardrailBreach(Base):
+    __tablename__ = "guardrail_breaches_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    guardrail_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    observed_value: Mapped[float] = mapped_column(Float, nullable=False)
+    threshold: Mapped[float] = mapped_column(Float, nullable=False)
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open")
+
+class ActionOutcomeObservation(Base):
+    __tablename__ = "action_outcome_observations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_val: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_val: Mapped[float] = mapped_column(Float, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False)
+    outcome_class: Mapped[str] = mapped_column(String(50), nullable=False, default="success") # success, partial_success, no_effect, negative_effect, unknown
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionRegretAnalysis(Base):
+    __tablename__ = "decision_regret_analyses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    selected_option: Mapped[str] = mapped_column(String(255), nullable=False)
+    alternative_options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    actual_outcome: Mapped[float] = mapped_column(Float, nullable=False)
+    regret_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.05)
+    counterfactual_label: Mapped[str] = mapped_column(String(50), nullable=False, default="simulated") # simulated, estimated, unknown
+
+class ControlPerformance(Base):
+    __tablename__ = "control_performances_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    false_alerts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    missed_alerts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    successful_interventions: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    unnecessary_interventions: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    reassessment_frequency: Mapped[float] = mapped_column(Float, nullable=False, default=1.2) # reassessments / week
+    health_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.97)
+
+class ControlLoopHealth(Base):
+    __tablename__ = "control_loop_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_freshness: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    decision_validity: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    guardrail_health: Mapped[float] = mapped_column(Float, nullable=False, default=0.99)
+    action_success: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    outcome_quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.97)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy")
+
+class ControlLoopVersion(Base):
+    __tablename__ = "control_loop_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    loop_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

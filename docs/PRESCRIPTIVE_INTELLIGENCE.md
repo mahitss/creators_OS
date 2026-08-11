@@ -7,5 +7,5 @@ Vapor OS Enterprise Prescriptive Intelligence 2.0 provides a constraint-aware, e
 CURRENT STATE -> FORECAST -> CONSTRAINTS -> AVAILABLE ACTIONS -> SCENARIO EVALUATION -> OPTIMIZATION -> RECOMMENDATION -> HUMAN DECISION -> APPROVED ACTION -> OBSERVED OUTCOME -> OPTIMIZATION LEARNING
 ```
 
-## Critical Principle
-Prescriptive AI recommends; humans decide. Optimization must never become an excuse for autonomous high-impact organizational control. Every recommendation exposes objective, constraints, assumptions, options, expected outcomes, risks, trade-offs, uncertainty, and evidence.
+## Adaptive Decision Governance 2.0 Integration
+Integrates in Sprint 68 with Enterprise Adaptive Decision Governance & Closed-Loop Control 2.0 (`ControlLoop`, `ControlSignal`, `DecisionValidityAssessment`, `ControlResponse`). Connects optimization recommendations to continuous closed-loop observation, decision validity tracking, and human-supervised control responses.
