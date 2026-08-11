@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 from datetime import datetime, timezone
 from sqlalchemy import String, Text, DateTime, ForeignKey, JSON, Index, Integer, Boolean, Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -5055,6 +5056,172 @@ class PortfolioAlert(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, resolved
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Benefit(Base):
+    __tablename__ = "benefits_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    portfolio_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    program_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    initiative_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    outcome_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True) # planned, measuring, on_track, at_risk, achieved, partially_achieved, not_achieved, unknown
+    benefit_type: Mapped[str] = mapped_column(String(50), nullable=False) # financial, operational, customer, quality, risk_reduction, capacity, revenue, cost_reduction, time_saved, strategic
+    baseline: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    target: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    current_value: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    unit: Mapped[str] = mapped_column(String(50), nullable=False, default="USD")
+    measurement_method: Mapped[str] = mapped_column(Text, nullable=False)
+    target_date: Mapped[str] = mapped_column(String(50), nullable=False, default="2026-12-31", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class BenefitEvidence(Base):
+    __tablename__ = "benefit_evidences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    reference: Mapped[str] = mapped_column(Text, nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    verification_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unverified", index=True) # unverified, verified, rejected, stale
+
+class BenefitMeasurement(Base):
+    __tablename__ = "benefit_measurements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    baseline: Mapped[float] = mapped_column(Float, nullable=False)
+    current: Mapped[float] = mapped_column(Float, nullable=False)
+    target: Mapped[float] = mapped_column(Float, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False)
+    measurement_period: Mapped[str] = mapped_column(String(100), nullable=False, default="Q3 2026")
+    measured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class BenefitRealizationPlan(Base):
+    __tablename__ = "benefit_realization_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    milestones_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    measurement_method: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_date: Mapped[str] = mapped_column(String(50), nullable=False)
+
+class ExecutionMilestone(Base):
+    __tablename__ = "execution_milestones"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    due_date: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True) # planned, in_progress, completed, late, blocked, cancelled
+    completion_evidence: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class ExecutionBaseline(Base):
+    __tablename__ = "execution_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    timeline_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    budget: Mapped[float] = mapped_column(Float, nullable=False)
+    expected_outcomes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class ExecutionVariance(Base):
+    __tablename__ = "execution_variances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variance_type: Mapped[str] = mapped_column(String(50), nullable=False) # scope, schedule, cost, capacity, dependency, quality, benefit
+    baseline: Mapped[str] = mapped_column(Text, nullable=False)
+    actual: Mapped[str] = mapped_column(Text, nullable=False)
+    forecast: Mapped[str] = mapped_column(Text, nullable=False)
+    delta: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+
+class AcceptanceRecord(Base):
+    __tablename__ = "acceptance_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    deliverable_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    criteria: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence: Mapped[str] = mapped_column(Text, nullable=False)
+    reviewer: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending") # pending, accepted, rejected, conditional
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ExecutionGate(Base):
+    __tablename__ = "execution_gates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gate_type: Mapped[str] = mapped_column(String(50), nullable=False) # approval, security, quality, budget, compliance, business
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, passed, failed, waived
+    waiver_actor: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    waiver_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+class ExecutionGateEvidence(Base):
+    __tablename__ = "execution_gate_evidences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    gate_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ExecutionChangeRequest(Base):
+    __tablename__ = "execution_change_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_type: Mapped[str] = mapped_column(String(50), nullable=False) # scope, timeline, budget, resource, dependency, quality
+    requested_change: Mapped[str] = mapped_column(Text, nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    impact_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected
+    requester: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class ExecutionForecast(Base):
+    __tablename__ = "execution_forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    forecast_completion_date: Mapped[str] = mapped_column(String(50), nullable=False)
+    forecast_cost: Mapped[float] = mapped_column(Float, nullable=False)
+    forecast_benefit: Mapped[float] = mapped_column(Float, nullable=False)
+    lower_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    upper_bound: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=88.5)
+
+class BenefitRisk(Base):
+    __tablename__ = "benefit_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_type: Mapped[str] = mapped_column(String(50), nullable=False) # measurement, dependency, adoption, execution, assumption, capacity
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+
+class BenefitAttribution(Base):
+    __tablename__ = "benefit_attributions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    attribution_type: Mapped[str] = mapped_column(String(50), nullable=False, default="direct") # direct, correlated, inferred
+    contribution_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    evidence_summary: Mapped[str] = mapped_column(Text, nullable=False)
+
 
 
 
