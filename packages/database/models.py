@@ -4521,6 +4521,134 @@ class SpendAnomaly(Base):
     driver_summary: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class WorkItem(Base):
+    __tablename__ = "work_items_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    team_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    parent_work_item_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # low, medium, high, urgent
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="backlog", index=True) # backlog, ready, assigned, in_progress, blocked, awaiting_review, awaiting_approval, completed, cancelled
+    assignee_type: Mapped[str] = mapped_column(String(50), nullable=False, default="agent", index=True) # human, agent, team, hybrid
+    assignee_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    work_classification: Mapped[str] = mapped_column(String(50), nullable=False, default="agent_suitable") # automatable, agent_suitable, human_required, hybrid, restricted
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkHandoff(Base):
+    __tablename__ = "work_handoffs_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    from_type: Mapped[str] = mapped_column(String(50), nullable=False) # human, agent
+    to_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    to_type: Mapped[str] = mapped_column(String(50), nullable=False) # human, agent
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    context_references_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    expected_output: Mapped[str] = mapped_column(Text, nullable=False)
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, accepted, rejected
+
+class CollaborationSession(Base):
+    __tablename__ = "collaboration_sessions_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default="contributor") # owner, contributor, reviewer, approver, observer
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CollaborationEscalation(Base):
+    __tablename__ = "collaboration_escalations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    escalation_type: Mapped[str] = mapped_column(String(50), nullable=False) # risk, deadline, uncertainty, approval, dependency, capacity, conflict
+    target_role_or_user: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, resolved, timed_out
+
+class ExpertiseProfile(Base):
+    __tablename__ = "expertise_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    skills_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    domains_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    verified_experience_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class WorkBlocker(Base):
+    __tablename__ = "work_blockers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    blocker_type: Mapped[str] = mapped_column(String(50), nullable=False) # dependency, approval, capacity, data, policy, agent, human
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    recommended_action: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolved
+
+class WorkRoutingRecommendation(Base):
+    __tablename__ = "work_routing_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_executor_type: Mapped[str] = mapped_column(String(50), nullable=False) # human, agent, hybrid
+    recommended_executor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False, default=1.5)
+    deadline_impact: Mapped[str] = mapped_column(String(50), nullable=False, default="minimal")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CollaborationFeedback(Base):
+    __tablename__ = "collaboration_feedback_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    feedback_type: Mapped[str] = mapped_column(String(50), nullable=False) # correction, approval, rejection, suggestion, rating
+    rating_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    comment: Mapped[str] = mapped_column(Text, nullable=False)
+    author_user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class CollaborationReview(Base):
+    __tablename__ = "collaboration_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    work_item_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_type: Mapped[str] = mapped_column(String(50), nullable=False) # fact_check, quality_review, security_review, business_review, final_acceptance
+    artifact_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    reviewer_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, rejected
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TeamWorkloadSnapshot(Base):
+    __tablename__ = "team_workload_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    team_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assigned_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    active_count: Mapped[int] = mapped_column(Integer, nullable=False, default=6)
+    blocked_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    pending_review_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    workload_fairness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

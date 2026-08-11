@@ -1,6 +1,7 @@
 # Mission Intelligence 2.0 & Enterprise Agent Orchestration
 
-Vapor OS Mission Intelligence 2.0 provides a policy-governed multi-agent orchestration layer that coordinates agents, skills, capabilities, tools, workflows, knowledge sources, models, human approvals, parallel execution, dependencies, and long-running missions.
+Vapor OS Mission Intelligence 2.0 provides a policy-governed multi-agent orchestration layer that coordinates agents,## Human-AI Collaboration Integration
+Integrates with Enterprise Human-AI Collaboration 2.0 (Sprint 60) for work item decomposition (`WorkItem`), context-filtered handoffs (`WorkHandoff`), and escalation routing (`CollaborationEscalation`)., tools, workflows, knowledge sources, models, human approvals, parallel execution, dependencies, and long-running missions.
 
 ## System Architecture
 

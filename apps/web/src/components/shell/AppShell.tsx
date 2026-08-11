@@ -59,6 +59,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Agent Security Fabric', href: '/security', icon: '🛡️' },
     { label: 'SecOps Operations Center', href: '/security/operations', icon: '🚨' },
     { label: 'AI Resilience Fabric', href: '/operations/resilience', icon: '🛡️' },
+    { label: 'Work Queue', href: '/work', icon: '💼' },
+    { label: 'Collaboration Center', href: '/collaboration', icon: '👥' },
     { label: 'Enterprise Knowledge', href: '/knowledge', icon: '📚' },
     { label: 'AI Agent Mesh', href: '/agents/mesh', icon: '🕸️' },
     { label: 'Agent Skill Fabric', href: '/agents/skills', icon: '⚡' },
