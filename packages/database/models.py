@@ -2525,6 +2525,111 @@ class GraphHealthSnapshot(Base):
     invalid_relationship_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     sync_lag_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
+class KnowledgeProvenance(Base):
+    __tablename__ = "knowledge_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # user, document, email, calendar, integration, database, workflow, agent, system, external_source, generated
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    author: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    ingested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    origin: Mapped[str] = mapped_column(String(255), nullable=False, default="native")
+
+class SourceAuthority(Base):
+    __tablename__ = "source_authorities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    authority_level: Mapped[str] = mapped_column(String(50), nullable=False, default="trusted", index=True) # authoritative, trusted, normal, unverified, generated
+    context_scope: Mapped[str] = mapped_column(String(100), nullable=False, default="global")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KnowledgeClaim(Base):
+    __tablename__ = "knowledge_claims"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    predicate: Mapped[str] = mapped_column(String(255), nullable=False)
+    object_val: Mapped[str] = mapped_column(Text, nullable=False)
+    source_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unverified", index=True) # verified, trusted, unverified, stale, conflicting, deprecated, generated, rejected
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # high, medium, low
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KnowledgeConflict(Base):
+    __tablename__ = "knowledge_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    claim_a: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    claim_b: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    sources: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, investigating, resolved, accepted_a, accepted_b, superseded
+    resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class KnowledgeQualityScore(Base):
+    __tablename__ = "knowledge_quality_scores"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_quality: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    freshness_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    evidence_coverage: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    consistency_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    verification_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unverified")
+    composite_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class KnowledgeVerification(Base):
+    __tablename__ = "knowledge_verifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    verified_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    decision: Mapped[str] = mapped_column(String(50), nullable=False, default="verified") # verified, rejected, deprecated
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+class AIOutputProvenance(Base):
+    __tablename__ = "ai_output_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    output_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    model_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0")
+    prompt_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    context_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    generated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    evaluation_status: Mapped[str] = mapped_column(String(50), nullable=False, default="grounded", index=True) # evaluated, not_evaluated, grounded, partially_grounded, unsupported, failed
+
+class KnowledgeFeedback(Base):
+    __tablename__ = "knowledge_feedbacks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    output_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    feedback_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # correct, incorrect, outdated, missing_source, conflicting
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class KnowledgeGovernanceEvent(Base):
+    __tablename__ = "knowledge_governance_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
