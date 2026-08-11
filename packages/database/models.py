@@ -3557,6 +3557,188 @@ class MissionApproval(Base):
     policy_used: Mapped[str] = mapped_column(String(100), nullable=False, default="policy_standard_read_only")
     approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class Decision(Base):
+    __tablename__ = "decisions_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    decision_type: Mapped[str] = mapped_column(String(100), nullable=False, default="operational") # operational, strategic, architectural, security, financial
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="analyzing", index=True) # draft, analyzing, options_ready, awaiting_approval, approved, rejected, executing, completed, superseded, expired, cancelled
+    current_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    superseded_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionVersion(Base):
+    __tablename__ = "decision_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    options_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    evidence_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    claims_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionContextRef(Base):
+    __tablename__ = "decision_context_refs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    context_type: Mapped[str] = mapped_column(String(50), nullable=False) # mission, knowledge, memory, graph, event, constraint
+    reference_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionClaim(Base):
+    __tablename__ = "decision_claims"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    claim_type: Mapped[str] = mapped_column(String(50), nullable=False, default="fact", index=True) # fact, inference, assumption, constraint, prediction, recommendation
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    uncertainty: Mapped[str] = mapped_column(String(50), nullable=False, default="known") # known, likely, uncertain, unknown
+    time_horizon: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    source_evidence_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class DecisionEvidence(Base):
+    __tablename__ = "decision_evidences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False) # document, database, integration, event, execution, human_input, memory, knowledge_object, semantic_graph, external_source
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    claim_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    authority: Mapped[str] = mapped_column(String(50), nullable=False, default="medium") # high, medium, low
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, aging, stale
+    relevance: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="verified", index=True) # unverified, verified, stale, contradicted, rejected
+
+class EvidenceConflict(Base):
+    __tablename__ = "evidence_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    claim_a: Mapped[str] = mapped_column(Text, nullable=False)
+    claim_b: Mapped[str] = mapped_column(Text, nullable=False)
+    source_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    authority_a: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    authority_b: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    resolution_status: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved") # unresolved, resolved_newer_evidence, resolved_authoritative_source, resolved_human_review
+
+class DecisionOption(Base):
+    __tablename__ = "decision_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    generated_by: Mapped[str] = mapped_column(String(50), nullable=False, default="agent") # agent, skill, historical, workflow, human
+    is_generated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    constraints: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    requirements: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risks: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class DecisionCriterion(Base):
+    __tablename__ = "decision_criteria"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False) # cost, latency, reliability, security, quality, time, compliance
+    weight: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    min_threshold: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+class DecisionTradeoff(Base):
+    __tablename__ = "decision_tradeoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    option_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    advantage_a: Mapped[str] = mapped_column(Text, nullable=False)
+    advantage_b: Mapped[str] = mapped_column(Text, nullable=False)
+    tradeoff_summary: Mapped[str] = mapped_column(Text, nullable=False)
+
+class DecisionRisk(Base):
+    __tablename__ = "decision_risks_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    financial_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    security_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    operational_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    data_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    compliance_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    execution_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    reputational_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+
+class DecisionScenario(Base):
+    __tablename__ = "decision_scenarios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    assumptions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    variables: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    result_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionApproval(Base):
+    __tablename__ = "decision_approvals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    approver_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved") # approved, rejected, override
+    override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    policy_used: Mapped[str] = mapped_column(String(100), nullable=False, default="policy_standard_read_only")
+    approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class DecisionOutcome(Base):
+    __tablename__ = "decision_outcomes_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    expected_outcome: Mapped[str] = mapped_column(Text, nullable=False)
+    actual_outcome: Mapped[str | None] = mapped_column(Text, nullable=True)
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, successful, partial, failed, unknown
+
+class DecisionEvaluation(Base):
+    __tablename__ = "decision_evaluations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    option_coverage_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    constraint_compliance_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    risk_coverage_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    outcome_quality_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    calibration_error: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+class DecisionOverride(Base):
+    __tablename__ = "decision_overrides"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    original_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    selected_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

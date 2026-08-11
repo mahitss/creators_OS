@@ -40,3 +40,4 @@ MISSION COMPLETION
 2. **Capability & Skill Discovery**: Queries Sprint 52 Capability Registry and Sprint 51 Skill Fabric to select active, authorized, and healthy tools/skills for DAG step execution.
 3. **Immutable Versioned Replanning**: Every event-driven replan creates a new `MissionPlanVersion` snapshot without overwriting active plans. Replan count is strictly bounded by `max_replans`.
 4. **MissionValidator & Evidence Verification**: Deliverables and external actions are validated against actual artifacts or `ActionGateway` execution logs before marking steps complete. Fake progress is strictly forbidden.
+5. **Decision Engine 2.0 Integration**: Complex decision nodes within mission plans delegate option evaluation, claim classification, and trade-off matrices directly to `DecisionEngineService` (Sprint 54).
