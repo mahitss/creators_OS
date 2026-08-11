@@ -2888,6 +2888,123 @@ class ModelBudget(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, warning, exceeded
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class AgentExecution(Base):
+    __tablename__ = "agent_executions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="created", index=True) # created, queued, running, waiting, paused, awaiting_approval, recovering, completed, failed, cancelled, expired
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    current_step: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class AgentExecutionState(Base):
+    __tablename__ = "agent_execution_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    variables: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    completed_steps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    pending_steps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    active_steps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    blocked_steps: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    context_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    memory_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    last_checkpoint_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class AgentExecutionStep(Base):
+    __tablename__ = "agent_execution_steps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # model_call, tool_call, knowledge_retrieval, memory_read, memory_write, agent_delegate, human_approval, condition, parallel_group, checkpoint
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, running, waiting, completed, failed, blocked, cancelled, unknown_outcome
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    input_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_reference: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_reference: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+class ExecutionCheckpoint(Base):
+    __tablename__ = "execution_checkpoints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    execution_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    step_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    state_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    reason: Mapped[str] = mapped_column(String(100), nullable=False, default="step_completed") # step_completed, approval_requested, pause, periodic, before_external_action, recovery, compaction
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class ExecutionStepAttempt(Base):
+    __tablename__ = "execution_step_attempts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    step_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="running")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+class ExecutionContextSnapshot(Base):
+    __tablename__ = "execution_context_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    goals: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    completed_work: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    evidence_references: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    pending_work: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decisions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ExecutionFailure(Base):
+    __tablename__ = "execution_failures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    category: Mapped[str] = mapped_column(String(100), nullable=False, default="unknown") # model, tool, policy, authorization, data, dependency, timeout, provider, runtime, unknown
+    error_message: Mapped[str] = mapped_column(Text, nullable=False)
+    root_cause_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ExecutionUnknownOutcome(Base):
+    __tablename__ = "execution_unknown_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved", index=True) # unresolved, resolved_success, resolved_failure
+    resolution_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    resolved_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ExecutionBudget(Base):
+    __tablename__ = "execution_budgets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    max_duration_sec: Mapped[int] = mapped_column(Integer, nullable=False, default=3600)
+    max_steps: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    max_model_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    max_tool_calls: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    max_cost: Mapped[float] = mapped_column(Float, nullable=False, default=10.0)
+    current_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
