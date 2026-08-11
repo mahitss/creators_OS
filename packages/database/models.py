@@ -989,6 +989,109 @@ class WorkflowOptimizationProposal(Base):
     capability_changes: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class UsageRecord(Base):
+    __tablename__ = "usage_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    span_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    parent_span_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    mission_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    agent_run_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    workflow_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    workflow_run_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    node_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False, default="model") # model, tool, embedding, retrieval
+    input_units: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    output_units: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cached_units: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reasoning_units: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    pricing_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="success", index=True)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class PricingVersion(Base):
+    __tablename__ = "pricing_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    provider: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    model: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    input_price_per_1k: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    output_price_per_1k: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    cached_input_price_per_1k: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    reasoning_price_per_1k: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    effective_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    effective_to: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+
+class Budget(Base):
+    __tablename__ = "budgets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scope_type: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # workspace, user, mission, workflow, agent
+    scope_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    period: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly") # daily, monthly, total
+    limit_amount: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    used_amount: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    reserved_amount: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    currency: Mapped[str] = mapped_column(String(10), nullable=False, default="USD")
+    warning_threshold_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, warning, exhausted
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class BudgetReservation(Base):
+    __tablename__ = "budget_reservations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    budget_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    amount_reserved: Mapped[float] = mapped_column(Float, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="reserved", index=True) # reserved, released, consumed
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class UsageAnomaly(Base):
+    __tablename__ = "usage_anomalies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # cost_spike, latency_spike, failure_spike, token_spike, retry_spike
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    observed_value: Mapped[float] = mapped_column(Float, nullable=False)
+    baseline_value: Mapped[float] = mapped_column(Float, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, muted, resolved
+    explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class OperationalIncident(Base):
+    __tablename__ = "operational_incidents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    service: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="detected", index=True) # detected, investigating, mitigated, resolved, acknowledged
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    source_references: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+
 
 
 

@@ -1,20 +1,9 @@
-# Vapor OS — Observability & Telemetry Redaction
+# Observability & Tracing Architecture
 
-## 1. Redaction & Privacy Enforcement
-`redact_sensitive_content()` sanitizes all operational telemetry prior to storage and display:
-- **OAuth Credentials**: Regex replaces `ya29.*` strings with `[REDACTED_OAUTH_TOKEN]`.
-- **Bearer Tokens**: Regex replaces `Bearer .*` with `Bearer [REDACTED_TOKEN]`.
-- **API Keys**: Redacts `sk-.*` keys with `[REDACTED_API_KEY]`.
-- **Secrets & Passwords**: Filters keys containing `token`, `secret`, `password`, `bearer`.
+## Tracing Model
+Every execution span maintains a hierarchical parent/child context:
+`WorkflowRun` $\rightarrow$ `AgentRun` $\rightarrow$ `ModelCall` $\rightarrow$ `ToolCall` $\rightarrow$ `Retrieval` $\rightarrow$ `External API`.
 
-## 2. Admin Observability REST API Endpoints
-- `GET /api/v1/admin/agents/overview`
-- `GET /api/v1/admin/agents`
-- `GET /api/v1/admin/agents/events`
-- `GET /api/v1/admin/agents/stuck`
-- `GET /api/v1/admin/agents/approvals`
-- `GET /api/v1/admin/agents/failures`
-- `GET /api/v1/admin/agents/providers`
-- `GET /api/v1/admin/agents/metrics`
-- `GET /api/v1/admin/agents/{id}`
-- `POST /api/v1/admin/agents/{id}/action`
+## Security & Privacy Safeguards
+1. **Zero Raw Content Exposure**: Full email bodies, documents, OAuth tokens, API keys, passwords, system prompts, and chain-of-thought are strictly excluded from traces.
+2. **Workspace Isolation**: Usage and telemetry metrics enforce strict workspace boundary filters; cross-workspace data leakage is strictly prevented.
