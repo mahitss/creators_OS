@@ -33,6 +33,7 @@ import { MissionPlanView } from '../../../components/missions/MissionPlanView';
 import { ExecutionControlBar } from '../../../components/missions/ExecutionControlBar';
 import { MissionStepsList } from '../../../components/missions/MissionStepsList';
 import { DeliverableSuggestionsSection } from '../../../components/missions/DeliverableSuggestionsSection';
+import { MissionControlWorkspace } from '../../../components/missions/MissionControlWorkspace';
 import { Typography, Card, Badge, Button, Spinner, ErrorState, Dialog, Input, Textarea, Select } from '@vapor/ui';
 import { formatDate } from '@vapor/utils';
 
@@ -332,6 +333,9 @@ export default function MissionDetailPage() {
               suggestions={suggestions}
               onRefresh={loadMissionDetail}
             />
+
+            {/* Mission Intelligence 2.0 Orchestrator Workspace */}
+            <MissionControlWorkspace missionId={missionId} />
 
             {/* Execution Control Bar */}
             <ExecutionControlBar

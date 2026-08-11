@@ -3415,6 +3415,149 @@ class CapabilityAudit(Base):
     details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class MissionObjective(Base):
+    __tablename__ = "mission_objectives"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    goal: Mapped[str] = mapped_column(Text, nullable=False)
+    clarity: Mapped[str] = mapped_column(String(50), nullable=False, default="clear", index=True) # clear, ambiguous, underspecified, conflicting
+    constraints: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    success_criteria: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="normal", index=True) # critical, high, normal, low
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    budget_usd: Mapped[float | None] = mapped_column(Float, nullable=True)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low") # low, medium, high, critical
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionOrchestrationPlan(Base):
+    __tablename__ = "mission_orchestration_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+    objective_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="executing", index=True) # draft, proposed, approved, executing, paused, superseded, completed, failed
+    max_replans: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    replan_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionPlanVersion(Base):
+    __tablename__ = "mission_plan_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+    steps_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dependencies_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    assignments_snapshot: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionOrchestrationStep(Base):
+    __tablename__ = "mission_orchestration_steps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    plan_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    step_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    step_type: Mapped[str] = mapped_column(String(50), nullable=False, default="agent_task", index=True) # agent_task, skill_task, tool_task, workflow_task, knowledge_task, human_task, approval_task, validation_task, decision_task
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    assigned_executor_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    assigned_executor_type: Mapped[str] = mapped_column(String(50), nullable=False, default="agent") # agent, skill, tool, workflow, human
+    required_capability_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, ready, executing, completed, failed, blocked
+    input_payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_payload: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionAssignment(Base):
+    __tablename__ = "mission_assignments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    skill_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    capacity_used: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionDependency(Base):
+    __tablename__ = "mission_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    depends_on_step_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    dependency_type: Mapped[str] = mapped_column(String(50), nullable=False, default="execution_dependency") # data_dependency, execution_dependency, approval_dependency, resource_dependency
+
+class MissionDelegation(Base):
+    __tablename__ = "mission_delegations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    parent_mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    parent_step_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    child_agent_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    delegation_depth: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    subtask_contract: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class MissionRisk(Base):
+    __tablename__ = "mission_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    data_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    action_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    financial_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    security_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    execution_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    active_warnings: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class MissionValidation(Base):
+    __tablename__ = "mission_validations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    verifier_type: Mapped[str] = mapped_column(String(50), nullable=False, default="action_gateway") # artifact, action_gateway, human, validator_agent
+    passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    evidence_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    validated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionReplan(Base):
+    __tablename__ = "mission_replans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    to_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    trigger_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    diff_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class MissionCost(Base):
+    __tablename__ = "mission_costs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    estimated_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.50)
+    actual_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.12)
+    model_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.10)
+    tool_cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.02)
+    remaining_budget_usd: Mapped[float] = mapped_column(Float, nullable=False, default=10.0)
+
+class MissionApproval(Base):
+    __tablename__ = "mission_approvals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    step_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    approver_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    policy_used: Mapped[str] = mapped_column(String(100), nullable=False, default="policy_standard_read_only")
+    approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

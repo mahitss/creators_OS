@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations, graph, knowledge_governance, enterprise_evaluation, model_gateway, agent_runtime_v2, learning_fabric, skill_fabric, capability_registry, mission_orchestration
 
 setup_logging()
 
@@ -100,6 +100,7 @@ app.include_router(agent_runtime_v2.router, prefix=settings.API_V1_STR, tags=["E
 app.include_router(learning_fabric.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Memory & Learning Fabric"])
 app.include_router(skill_fabric.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Skill Fabric & Controlled Skill Evolution"])
 app.include_router(capability_registry.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Capability Registry & Skill Marketplace Foundation"])
+app.include_router(mission_orchestration.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Orchestration & Mission Intelligence 2.0"])
 
 @app.get("/")
 async def root():

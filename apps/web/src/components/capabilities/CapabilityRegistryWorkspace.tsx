@@ -28,7 +28,7 @@ interface CapabilityData {
   displayName: string;
   description: string;
   category: string;
-  type: str;
+  type: string;
   status: string;
   currentVersionId?: string;
   accessStatus: string;
