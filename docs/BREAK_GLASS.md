@@ -1,8 +1,7 @@
-# Emergency Access & Break-Glass Protocol
+# Emergency Break-Glass Access Framework
 
-## Break-Glass Emergency Controls
-In critical outage scenarios where standard 2-person approval channels are unreachable:
+Details emergency break-glass procedures in Vapor OS.
 
-1. **Time-Limited Session**: Break-glass access grants explicit temporary emergency operator rights for a max duration of 1 hour.
-2. **High-Visibility Alerting**: Triggering break-glass emits an emergency alert to all workspace owners and security administrators.
-3. **Mandatory Audit & Postmortem**: Every action performed during break-glass generates immutable `AuditEvent` entries tagged with `is_break_glass=true`.
+## Break-Glass Principles
+- Emergency access grants (`BreakGlassGrant`) require explicit rationale and authorizer.
+- Break-glass access MUST NEVER silently disable DLP, audit logging, or tenant isolation boundaries.

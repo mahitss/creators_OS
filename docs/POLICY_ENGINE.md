@@ -23,3 +23,6 @@ When `AgentRuntime` or `ContextEngine` requests evaluation, `policy_engine.evalu
 - `GET /api/v1/policies/rules`
 - `POST /api/v1/policies/rules`
 - `POST /api/v1/policies/evaluate` (dry-run evaluation)
+
+## 4. Policy Intelligence 2.0 Upgrade (Sprint 55)
+`PolicyEngine` now wraps `PolicyIntelligenceService` (Sprint 55), incorporating 7-dimension risk assessment (`data`, `financial`, `security`, `privacy`, `operational`, `compliance`, `reputational`), deterministic precedence hierarchy (`Organization > Workspace > Team > Agent > Mission > Capability`), explicit DENY wins enforcement, control chains, break-glass grants, fail-closed safeguards, and full auditability.

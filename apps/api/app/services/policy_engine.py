@@ -104,7 +104,7 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
                 reason=f"Tool '{tool_name}' is not in delegation allowed tools whitelist {allowed_tools}."
             )
 
-    # 2. Destructive Tool Shielding
+    # 3. Destructive Tool Shielding
     if tool_name in DESTRUCTIVE_TOOLS or risk_level == "DESTRUCTIVE":
         return PolicyDecision(
             decision="DENY",
@@ -112,9 +112,8 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
             reason=f"Tool '{tool_name}' is classified as DESTRUCTIVE and is strictly prohibited by system policy."
         )
 
-    # 3. Personal Data Scope Isolation Check
+    # 4. Personal Data Scope Isolation Check
     if context.resource_scope == "personal" and context.agent_run_id:
-        # Personal data sources cannot be accessed by workspace agents without explicit user scope
         if context.source_type in ["personal_gmail", "personal_drive", "personal_calendar", "personal_memory"]:
             return PolicyDecision(
                 decision="DENY",
@@ -122,7 +121,7 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
                 reason=f"Personal source '{context.source_type}' cannot be automatically accessed by workspace agent."
             )
 
-    # 4. User Role Authorization Check
+    # 5. User Role Authorization Check
     if user_role == "viewer":
         if risk_level in ["WRITE", "EXTERNAL_SIDE_EFFECT"]:
             return PolicyDecision(
@@ -131,7 +130,7 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
                 reason=f"User role 'viewer' is not authorized to execute WRITE or EXTERNAL_SIDE_EFFECT tool '{tool_name}'."
             )
 
-    # 5. Budget & Loop Limits Check
+    # 6. Budget & Loop Limits Check
     if context.budget_state:
         iters = context.budget_state.get("iteration_count", 0)
         max_iters = context.budget_state.get("max_iterations", 20)
@@ -142,7 +141,7 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
                 reason=f"Agent iteration limit ({max_iters}) reached."
             )
 
-    # 6. Autonomy Mode Enforcement
+    # 7. Autonomy Mode Enforcement
     if context.autonomy_level == "ADVISORY_ONLY" and risk_level != "READ":
         return PolicyDecision(
             decision="DENY",
@@ -150,7 +149,7 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
             reason="Agent runtime is operating in ADVISORY_ONLY mode. Side-effects and write actions are disabled."
         )
 
-    # 7. Dynamic Policy Rules (Sorted by Priority)
+    # 8. Dynamic Policy Rules (Sorted by Priority)
     rules = [r for r in _in_memory_policy_rules.values() if r.get("workspace_id") == context.workspace_id and r.get("is_active")]
     rules.sort(key=lambda r: r.get("priority", 10), reverse=True)
 
@@ -165,6 +164,49 @@ async def evaluate_policy(session: Optional[AsyncSession], context: PolicyContex
                 required_approval_type="USER_CONFIRMATION" if rule["action"] == "APPROVAL_REQUIRED" else "NONE",
                 rule_id=rule["id"]
             )
+
+    # 9. Delegate to Policy Intelligence 2.0
+    from app.services import policy_intelligence_service
+    from app.schemas.policy_intelligence import PolicyEvaluateRequest
+
+    req = PolicyEvaluateRequest(
+        actorId=context.user_id,
+        action="read" if (context.risk_level or "READ").upper() == "READ" or any(context.tool_name.startswith(p) for p in ["read", "get", "list", "search", "query"]) else "execute",
+        resourceId=context.tool_name,
+        resourceType="tool",
+        context={
+            "workspace_id": context.workspace_id,
+            "agent_run_id": context.agent_run_id,
+            "mission_id": context.mission_id,
+            "risk_level": context.risk_level,
+            "user_role": context.user_role,
+            "user_status": context.user_status,
+            "delegation_id": context.delegation_id
+        }
+    )
+
+    try:
+        res = await policy_intelligence_service.evaluate_request(session, req, workspace_id=context.workspace_id)
+        dec_str = res["decision"].upper()
+        if dec_str == "ALLOW":
+            p_dec = "ALLOW"
+        elif dec_str in ["APPROVAL_REQUIRED", "REQUIRE_APPROVAL"]:
+            p_dec = "APPROVAL_REQUIRED"
+        else:
+            p_dec = "DENY"
+
+        return PolicyDecision(
+            decision=p_dec,
+            risk_level=context.risk_level or "READ",
+            reason=res["reason"],
+            required_approval_type="USER_CONFIRMATION" if p_dec == "APPROVAL_REQUIRED" else "NONE"
+        )
+    except Exception as e:
+        return PolicyDecision(
+            decision="DENY",
+            risk_level=context.risk_level or "HIGH",
+            reason=f"Policy Intelligence Service failure: {str(e)}. Fail-closed security DENY enforced."
+        )
 
     # 8. Default Tool Risk Matrix Policy
     if risk_level == "READ":

@@ -3682,7 +3682,7 @@ class DecisionRisk(Base):
     execution_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
     reputational_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
 
-class DecisionScenario(Base):
+class DecisionScenarioV2(Base):
     __tablename__ = "decision_scenarios_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -3705,7 +3705,7 @@ class DecisionApproval(Base):
     policy_used: Mapped[str] = mapped_column(String(100), nullable=False, default="policy_standard_read_only")
     approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-class DecisionOutcome(Base):
+class DecisionOutcomeV2(Base):
     __tablename__ = "decision_outcomes_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -3737,6 +3737,156 @@ class DecisionOverride(Base):
     original_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
     selected_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class Policy(Base):
+    __tablename__ = "policies_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    policy_type: Mapped[str] = mapped_column(String(50), nullable=False, default="access") # access, data, agent, tool, model, execution, approval, risk, compliance, retention, network, integration
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, paused, deprecated, superseded
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=100, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    hierarchy_level: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace") # organization, workspace, team, agent, mission, capability
+    conditions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    actions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PolicyVersion(Base):
+    __tablename__ = "policy_versions_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    policy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    conditions: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    actions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=100)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PolicyEvaluation(Base):
+    __tablename__ = "policy_evaluations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    policy_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    decision: Mapped[str] = mapped_column(String(50), nullable=False, default="deny") # allow, deny, approval_required, review_required, restricted, escalated, simulation_required, dry_run_required
+    matched_conditions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    applied_controls: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=1.5)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class PolicyRequest(Base):
+    __tablename__ = "policy_requests_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # read, write, delete, send, execute, approve, deploy, publish, export, share
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False) # document, email, calendar, database, API, tool, workflow, agent, skill, capability, model, knowledge_object
+    context: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PolicyControl(Base):
+    __tablename__ = "policy_controls"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evaluation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    control_type: Mapped[str] = mapped_column(String(50), nullable=False) # approval, data_redaction, sandbox, rate_limit, scope_limit, time_limit, human_review, dual_approval, simulation
+    parameters: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="enforced")
+
+class RiskAssessment(Base):
+    __tablename__ = "risk_assessments_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    request_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    overall_risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low") # low, medium, high, critical
+    data_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    financial_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    security_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    privacy_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    operational_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    compliance_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    reputational_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    score: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+
+class PolicyConflict(Base):
+    __tablename__ = "policy_conflicts_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    policy_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    policy_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    conflict_description: Mapped[str] = mapped_column(Text, nullable=False)
+    precedence_applied: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="unresolved", index=True) # unresolved, resolved_hierarchy, resolved_deny_wins, resolved_admin
+
+class PolicyGap(Base):
+    __tablename__ = "policy_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    recommended_control: Mapped[str] = mapped_column(String(100), nullable=False, default="approval_required")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, drafted, resolved, ignored
+
+class PolicySimulationV2(Base):
+    __tablename__ = "policy_simulations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    candidate_policy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    test_type: Mapped[str] = mapped_column(String(50), nullable=False, default="shadow") # historical, synthetic, shadow
+    comparison_results: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class PolicyOverride(Base):
+    __tablename__ = "policy_overrides_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    policy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="single_request")
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TemporaryAccessGrant(Base):
+    __tablename__ = "temporary_access_grants"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    capability: Mapped[str] = mapped_column(String(100), nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    granted_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class BreakGlassGrant(Base):
+    __tablename__ = "break_glass_grants"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    actor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    authorized_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    audit_trail_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
 
 
 
