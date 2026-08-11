@@ -2391,6 +2391,50 @@ class EventCatalogEntry(Base):
     classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal")
     retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
 
+class OperationalHealth(Base):
+    __tablename__ = "operational_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scope: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # system, service, agent, workflow, integration, security, cost, event
+    scope_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy", index=True) # healthy, degraded, warning, critical
+    signals: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    last_updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ControlAction(Base):
+    __tablename__ = "control_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # pause_service, resume_service, disable_agent, cancel_workflow, replay_event, disable_integration, revoke_session, retry_ingestion
+    target_resource: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    requested_by: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="requested", index=True) # requested, pending_approval, approved, executing, completed, failed, cancelled, rejected, verification_failed
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True, unique=True, index=True)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class ControlActionApproval(Base):
+    __tablename__ = "control_action_approvals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approver_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # approved, rejected
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ControlPlaneSnapshot(Base):
+    __tablename__ = "control_plane_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    metrics: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+
 
 
 

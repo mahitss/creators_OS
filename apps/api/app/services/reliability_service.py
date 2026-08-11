@@ -153,6 +153,12 @@ async def correlate_health_signal_to_incident(session: Optional[AsyncSession], s
     _in_memory_incidents[inc_id] = inc_dict
     return inc_id
 
+async def list_incidents(session: Optional[AsyncSession], workspace_id: Optional[str] = None) -> List[dict]:
+    incidents = list(_in_memory_incidents.values())
+    if workspace_id:
+        incidents = [i for i in incidents if not i.get("workspace_id") or i["workspace_id"] == workspace_id]
+    return incidents
+
 async def diagnose_incident(session: Optional[AsyncSession], incident_id: str) -> dict:
     inc = _in_memory_incidents.get(incident_id)
     if not inc:

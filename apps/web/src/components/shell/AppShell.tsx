@@ -61,6 +61,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { label: 'Decision Intelligence', href: '/intelligence', icon: '📈' },
     { label: 'Integrations Fabric', href: '/integrations', icon: '🔌' },
     { label: 'Event Mesh', href: '/admin/events', icon: '⚡' },
+    { label: 'Global Operations', href: '/operations', icon: '🌐' },
     { label: 'Settings', href: '/settings', icon: '⚙️' },
   ];
 

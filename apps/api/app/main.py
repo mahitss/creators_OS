@@ -6,7 +6,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.errors import VaporException, ErrorCode
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events
+from app.api.routers import health, auth, workspace, home, missions, memories, content, deliverables, attention, search, integrations, calendar, gmail, drive, agent_runs, evaluations, admin_agents, policies, delegations, automations, insights, workflows, workflow_ai, finops, infrastructure, reliability, governance, identity, scim, dlp, knowledge, agent_mesh, decision_intelligence, workflow_optimization, events, operations
 
 setup_logging()
 
@@ -91,6 +91,7 @@ app.include_router(dlp.router, prefix=settings.API_V1_STR, tags=["Data Security 
 app.include_router(knowledge.router, prefix=settings.API_V1_STR, tags=["Knowledge Fabric & Secure AI Retrieval"])
 app.include_router(decision_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Decision Intelligence & Predictive Operations"])
 app.include_router(events.router, prefix=settings.API_V1_STR, tags=["Enterprise Event Mesh & Real-Time Intelligence Fabric"])
+app.include_router(operations.router, prefix=settings.API_V1_STR, tags=["Enterprise Control Plane & Global Operations Center"])
 
 @app.get("/")
 async def root():
