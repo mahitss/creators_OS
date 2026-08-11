@@ -9258,6 +9258,176 @@ class TransformationSimulationReview(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class TransformationWarRoom(Base):
+    __tablename__ = "transformation_war_rooms"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise") # enterprise, portfolio, transformation, program, wave, business_unit
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="monitoring", index=True) # inactive, monitoring, attention, active_response, review, closed
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationWarRoomLiveState(Base):
+    __tablename__ = "transformation_war_room_live_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    milestones_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    dependencies_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risks_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    benefits_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    governance_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    kpis_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    source_versions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    last_updated: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    staleness_status: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, lagging, stale
+
+class TransformationPlanVariance(Base):
+    __tablename__ = "transformation_plan_variances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    variance_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # schedule, scope, cost, capacity, dependency, risk, benefit, quality, governance, adoption
+    planned_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    forecast_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+class TransformationDeviation(Base):
+    __tablename__ = "transformation_deviations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    entity: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    expected_value: Mapped[float] = mapped_column(Float, nullable=False)
+    actual_value: Mapped[float] = mapped_column(Float, nullable=False)
+    variance_value: Mapped[float] = mapped_column(Float, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+
+class TransformationRootCauseHypothesis(Base):
+    __tablename__ = "transformation_root_cause_hypotheses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    deviation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothesis_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.88, index=True)
+    alternative_explanations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationLiveImpactAssessment(Base):
+    __tablename__ = "transformation_live_impact_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_transformations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_benefits_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    strategic_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationInterventionOption(Base):
+    __tablename__ = "transformation_intervention_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    intervention_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # monitor, investigate, resequence, pause, accelerate, reduce_scope, increase_capacity, change_dependency, mitigate_risk, pilot, escalate
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    reversibility_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    blast_radius_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, simulated, recommended, approved, executing, completed, rejected
+
+class TransformationInterventionRecommendation(Base):
+    __tablename__ = "transformation_intervention_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    risk_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    uncertainty_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    alternatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationWarRoomEscalation(Base):
+    __tablename__ = "transformation_war_room_escalations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    escalation_path: Mapped[str] = mapped_column(String(255), nullable=False)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="critical")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="escalated", index=True) # escalated, acknowledged, resolved
+
+class TransformationResponsePlan(Base):
+    __tablename__ = "transformation_response_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    signal_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    assessment_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    options_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, analysis, awaiting_decision, awaiting_approval, approved, executing, verified, cancelled, closed
+
+class TransformationResponseCheckpoint(Base):
+    __tablename__ = "transformation_response_checkpoints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    response_plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    checkpoint_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    expected_state: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_state: Mapped[Text] = mapped_column(Text, nullable=False)
+    next_checkpoint: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
+
+class TransformationTrajectory(Base):
+    __tablename__ = "transformation_trajectories"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(100), nullable=False)
+    trajectory_data_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    time_horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="Q4 2026")
+    scenario: Mapped[str] = mapped_column(String(100), nullable=False, default="baseline")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class TransformationEarlyWarning(Base):
+    __tablename__ = "transformation_early_warnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    signal_strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    historical_reliability: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    model_confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationSituationSummary(Base):
+    __tablename__ = "transformation_situation_summaries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    war_room_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    what_changed: Mapped[Text] = mapped_column(Text, nullable=False)
+    why_it_matters: Mapped[Text] = mapped_column(Text, nullable=False)
+    affected_areas_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    uncertainty_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommended_review: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 

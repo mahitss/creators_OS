@@ -1,14 +1,3 @@
-# Transformation Live State & Multi-Dimensional Telemetry
+# Real-Time Synchronized State & Freshness Telemetry
 
-`TransformationLiveState` tracks planned, actual, and forecast states across 9 dimensions:
-- schedule
-- capacity
-- dependencies
-- risk
-- benefits
-- readiness
-- adoption
-- quality
-- strategic alignment.
-
-Never collapses dimensions into an opaque single score.
+`TransformationWarRoomLiveState` synchronizes live transformation state from Event Mesh, Control Tower, Transformation Graph, Operating Graph, KPI systems, Risk systems, and Benefits systems with explicit staleness tracking (`fresh`, `lagging`, `stale`).

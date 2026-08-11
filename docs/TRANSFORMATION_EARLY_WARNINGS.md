@@ -1,5 +1,3 @@
-# Transformation Early Warning Signals
+# Trajectories & Early Warning Signals
 
-`TransformationEarlyWarning` flags leading indicators of schedule deterioration, capacity compression, dependency instability, benefit deterioration, readiness decline, adoption decline, or quality degradation.
-
-Feeds Attention Center to alert leadership before critical milestone failures occur.
+`TransformationTrajectory` and `TransformationEarlyWarning` track predictive metric trajectories and trigger early warning signals before deviations become critical based on signal strength, historical reliability, and model confidence.
