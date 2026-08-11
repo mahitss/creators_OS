@@ -8894,6 +8894,211 @@ class TransformationDecisionQualityReview(Base):
     outcome_variance: Mapped[str] = mapped_column(String(50), nullable=False, default="favorable")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+class TransformationGovernanceProfile(Base):
+    __tablename__ = "transformation_governance_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, under_review, proposed_change, approved_change, deprecated
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationGovernanceDomain(Base):
+    __tablename__ = "transformation_governance_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    domain_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # strategy, portfolio, program, wave, decision, risk, benefit, capacity, execution, technology, data, security, compliance
+
+class TransformationDecisionRight(Base):
+    __tablename__ = "transformation_decision_rights"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False)
+    authority_level: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    required_evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_requirement: Mapped[Text] = mapped_column(Text, nullable=False)
+    escalation_requirement: Mapped[Text] = mapped_column(Text, nullable=False)
+    delegation_allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class TransformationDecisionRightMatrix(Base):
+    __tablename__ = "transformation_decision_right_matrices"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    authority_level: Mapped[str] = mapped_column(String(100), nullable=False)
+    approval_rule: Mapped[Text] = mapped_column(Text, nullable=False)
+    escalation_rule: Mapped[Text] = mapped_column(Text, nullable=False)
+    delegation_rule: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationDecisionRightConflict(Base):
+    __tablename__ = "transformation_decision_right_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    authority_a: Mapped[str] = mapped_column(String(255), nullable=False)
+    authority_b: Mapped[str] = mapped_column(String(255), nullable=False)
+    conflict_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="surfaced", index=True)
+
+class TransformationGovernanceControl(Base):
+    __tablename__ = "transformation_governance_controls"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    control_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # approval, segregation, evidence_requirement, threshold, escalation, review, audit, simulation, reconciliation, verification
+    purpose: Mapped[Text] = mapped_column(Text, nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False)
+    trigger: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    policy_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    effectiveness_method: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class TransformationGovernanceFriction(Base):
+    __tablename__ = "transformation_governance_frictions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    friction_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    cause: Mapped[Text] = mapped_column(Text, nullable=False)
+    affected_decisions: Mapped[Text] = mapped_column(Text, nullable=False)
+    time_impact_hours: Mapped[float] = mapped_column(Float, nullable=False, default=48.0)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="moderate", index=True)
+
+class TransformationGovernanceGap(Base):
+    __tablename__ = "transformation_governance_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gap_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    risk_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationGovernanceOvercontrol(Base):
+    __tablename__ = "transformation_governance_overcontrols"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    control_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    overcontrol_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationGovernanceLoad(Base):
+    __tablename__ = "transformation_governance_loads"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decisions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=24)
+    approvals_count: Mapped[int] = mapped_column(Integer, nullable=False, default=18)
+    reviews_count: Mapped[int] = mapped_column(Integer, nullable=False, default=8)
+    escalations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    exceptions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    time_spent_hours: Mapped[float] = mapped_column(Float, nullable=False, default=36.5)
+    time_window: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly", index=True)
+
+class TransformationGovernanceBottleneck(Base):
+    __tablename__ = "transformation_governance_bottlenecks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    bottleneck_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # approval, authority, evidence, review, policy, capacity, escalation
+    cause: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="moderate")
+
+class TransformationDelegationCandidate(Base):
+    __tablename__ = "transformation_delegation_candidates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    rationale: Mapped[Text] = mapped_column(Text, nullable=False)
+    safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    policy_coverage: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="recommended", index=True)
+
+class TransformationEscalationPattern(Base):
+    __tablename__ = "transformation_escalation_patterns"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    pattern_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    impact: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationGovernanceException(Base):
+    __tablename__ = "transformation_governance_exceptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    approver: Mapped[str] = mapped_column(String(255), nullable=False)
+    risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationGovernanceChangeRequest(Base):
+    __tablename__ = "transformation_governance_change_requests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_type: Mapped[str] = mapped_column(String(100), nullable=False) # decision_right, approval, threshold, control, escalation, delegation, review, evidence_requirement
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    proposed_state: Mapped[Text] = mapped_column(Text, nullable=False)
+    simulation_results_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="under_review", index=True) # under_review, approved, rejected, executed
+
+class TransformationGovernanceDrift(Base):
+    __tablename__ = "transformation_governance_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(50), nullable=False) # process, authority, policy, approval, control, exception, execution
+    approved_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="minor", index=True)
+
+class TransformationGovernanceReview(Base):
+    __tablename__ = "transformation_governance_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="quarterly")
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="recommended", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationGovernanceLesson(Base):
+    __tablename__ = "transformation_governance_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    control_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    event: Mapped[Text] = mapped_column(Text, nullable=False)
+    outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationGovernancePattern(Base):
+    __tablename__ = "transformation_governance_patterns"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    profile_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    pattern_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    sample_size: Mapped[int] = mapped_column(Integer, nullable=False, default=10)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+
+
 
 
 
