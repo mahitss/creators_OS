@@ -2272,6 +2272,126 @@ class IntegrationUsage(Base):
     estimated_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class EventEnvelope(Base):
+    __tablename__ = "event_envelopes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    event_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    correlation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    causation_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    producer: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    schema_version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal", index=True)
+    metadata_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class EventSchema(Base):
+    __tablename__ = "event_schemas"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    schema_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    producer: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EventSubscription(Base):
+    __tablename__ = "event_subscriptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    consumer: Mapped[str] = mapped_column(String(100), nullable=False)
+    filter_config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EventDelivery(Base):
+    __tablename__ = "event_deliveries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    subscription_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True) # queued, delivered, processing, completed, failed, dead_lettered
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    next_retry_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class EventConsumerState(Base):
+    __tablename__ = "event_consumer_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    consumer_group: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    last_processed_offset: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    consumer_lag: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class EventDeadLetter(Base):
+    __tablename__ = "event_dead_letters"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    producer: Mapped[str] = mapped_column(String(100), nullable=False)
+    error: Mapped[str] = mapped_column(Text, nullable=False)
+    attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    payload_ref: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class EventReplay(Base):
+    __tablename__ = "event_replays"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    authorized_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="replayed", index=True)
+    replayed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EventOutbox(Base):
+    __tablename__ = "event_outboxes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, published, failed
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class EventHealth(Base):
+    __tablename__ = "event_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    throughput_eps: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    latency_p95: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    error_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    consumer_lag: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    dead_letter_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class EventCatalogEntry(Base):
+    __tablename__ = "event_catalog_entries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    producer: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="internal")
+    retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+
+
 
 
 

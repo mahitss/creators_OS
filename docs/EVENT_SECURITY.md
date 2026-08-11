@@ -1,8 +1,7 @@
-# Event Security & Webhook Payload Trust
+# Event Security & Data Boundary Controls
 
-## Threat Model & Constraints
-External webhooks (Gmail, Calendar, Drive, Third-Party Integrations) are treated as untrusted inputs:
-1. **Server-Side Identity Verification**: `workspace_id`, `user_id`, and permissions inside event payloads are never trusted at face value. All claims are validated against server-side session and integration records.
-2. **Payload Sanitization**: Raw email bodies, full document contents, OAuth credentials, and sensitive tokens are stripped prior to event storage. Minimal metadata is persisted in `SystemEvent.metadata_dict`.
-3. **Replay & Cross-Workspace Attacks**: Signature verification and deduplication hashing (`dedupe_key`) prevent replay attacks and cross-workspace injection.
-4. **PolicyEngine Mandatory Gate**: Every trigger action must pass `policy_engine.evaluate_policy()` prior to starting agent runs or modifying workspace resources.
+## Security Principles
+- **No Authority Escalation**: Events carry state context, never authority or permissions.
+- **Payload Sanitization**: Automatic inspection for credentials (`bearer`, `password`, `secret`, `oauth_token`, `private_key`).
+- **Restricted Event Isolation**: Security findings and restricted events require authorized subscriptions.
+- **Audit Logging**: Every subscription creation, deletion, publication, dead-letter access, and replay attempt is recorded in `AuditEvent`.
