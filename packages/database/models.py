@@ -3112,6 +3112,161 @@ class MemoryConsolidationJob(Base):
     candidates_promoted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class AgentSkill(Base):
+    __tablename__ = "agent_skills"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    owner_type: Mapped[str] = mapped_column(String(50), nullable=False, default="workspace", index=True) # agent, team, workspace, organization
+    owner_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    skill_type: Mapped[str] = mapped_column(String(50), nullable=False, default="workflow_execution", index=True) # reasoning, research, analysis, coding, communication, data_processing, workflow_execution, decision_support, tool_usage, domain_specific
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # candidate, sandbox, evaluating, approved, canary, active, paused, deprecated, rejected, failed_evaluation
+    current_version_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class AgentSkillVersion(Base):
+    __tablename__ = "agent_skill_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+    definition_reference: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    input_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    output_schema: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    side_effect_contract: Mapped[str] = mapped_column(String(50), nullable=False, default="read-only") # read-only, external_mutation, communication, data_modification, destructive
+    required_capabilities: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    required_tools: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    required_knowledge: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillProvenance(Base):
+    __tablename__ = "skill_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_executions: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    source_memories: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    source_workflows: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillCandidate(Base):
+    __tablename__ = "skill_candidates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    proposed_by_agent_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    skill_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    suggested_definition: Mapped[dict] = mapped_column(JSON, nullable=False)
+    evidence_summary: Mapped[dict] = mapped_column(JSON, nullable=False)
+    success_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, evaluating, approved, rejected
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillEvaluationRecord(Base):
+    __tablename__ = "skill_evaluations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evaluation_run_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    correctness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    grounding_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.01)
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=240)
+    passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillApproval(Base):
+    __tablename__ = "skill_approvals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approver_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    policy_used: Mapped[str] = mapped_column(String(100), nullable=False, default="policy_standard_read_only")
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillDeployment(Base):
+    __tablename__ = "skill_deployments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    mode: Mapped[str] = mapped_column(String(50), nullable=False, default="active") # sandbox, canary, active
+    traffic_percentage: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active") # deploying, active, rolled_back, paused
+    deployed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class SkillHealth(Base):
+    __tablename__ = "skill_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_version_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    reliability_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.99)
+    cost_per_1k: Mapped[float] = mapped_column(Float, nullable=False, default=0.02)
+    latency_p95_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=280)
+    safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    freshness_status: Mapped[str] = mapped_column(String(50), nullable=False, default="fresh") # fresh, needs_revalidation, stale
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillFeedback(Base):
+    __tablename__ = "skill_feedbacks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    feedback_type: Mapped[str] = mapped_column(String(50), nullable=False) # useful, incorrect, outdated, unsafe, too_expensive, too_slow
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillDependency(Base):
+    __tablename__ = "skill_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_type: Mapped[str] = mapped_column(String(50), nullable=False) # tool, model, knowledge, skill, workflow
+    dependency_target_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillPolicy(Base):
+    __tablename__ = "skill_policies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    skill_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    allowed_agents: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    allowed_tools: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low") # low, medium, high, critical
+    auto_approval_allowed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillPackage(Base):
+    __tablename__ = "skill_packages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="1.0.0")
+    contained_skill_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SkillCompatibility(Base):
+    __tablename__ = "skill_compatibilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    skill_version_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    min_runtime_version: Mapped[str] = mapped_column(String(50), nullable=False, default="2.0.0")
+    required_tool_schemas: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
