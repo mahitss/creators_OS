@@ -1,10 +1,11 @@
-# Incident Response & Evidence-Backed Diagnosis
+# Controlled Incident Response Architecture
 
-## Signal Correlation
-Health signals occurring within 5-minute windows on identical services correlate into single incidents to prevent alert spam.
+Vapor OS Incident Response coordinates triage, investigation, containment, and recovery across AI agents and infrastructure.
 
-## Evidence-Backed AI Diagnosis
-AI diagnoses separate findings into:
-1. **OBSERVED**: Hard metrics, error codes, and trace evidence.
-2. **CORRELATED**: Aggregated incident signals across services.
-3. **SUSPECTED**: Probabilistic hypotheses labeled with confidence scores. Suspected causes are never presented as fact.
+## Incident Status Lifecycle
+`open -> triaging -> confirmed -> containing -> contained -> investigating -> recovering -> resolved -> closed`
+
+## Key Capabilities
+- **Multi-Vector Correlation**: Merges duplicate alerts and correlates authentication, tool, data, and behavioral anomalies.
+- **Attack Chain Representation**: Maps entry, execution, privilege change, resource access, and containment path.
+- **Controlled Closure**: Silently closing incidents is strictly prohibited; closure requires verified recovery and audit logging.

@@ -4021,6 +4021,144 @@ class SecurityResponse(Base):
     policy_reference: Mapped[str] = mapped_column(String(255), nullable=False)
     enforced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class SecurityResponsePlan(Base):
+    __tablename__ = "security_response_plans_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="draft", index=True) # draft, simulated, approved, executing, completed, failed
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    approval_requirements: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityResponsePlanVersion(Base):
+    __tablename__ = "security_response_plan_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityResponseAction(Base):
+    __tablename__ = "security_response_actions_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action_type: Mapped[str] = mapped_column(String(50), nullable=False) # monitor, notify, restrict, rate_limit, quarantine, pause_agent, disable_capability, block_tool, revoke_session, require_approval, revalidate_decision, pause_mission, cancel_mission
+    target_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="resource")
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    authorization: Mapped[str] = mapped_column(String(255), nullable=False, default="security_policy")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, approved, executing, completed, failed, blocked, expired
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class SecurityPostIncidentReview(Base):
+    __tablename__ = "security_post_incident_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    root_cause_type: Mapped[str] = mapped_column(String(50), nullable=False, default="confirmed") # confirmed, likely, unknown
+    root_cause_summary: Mapped[str] = mapped_column(Text, nullable=False)
+    detection_quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=4.5)
+    response_quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=4.8)
+    lessons_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityDetectionRule(Base):
+    __tablename__ = "security_detection_rules_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    conditions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="global")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="shadow", index=True) # draft, simulation, shadow, active, paused, deprecated
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityDetectionRuleVersion(Base):
+    __tablename__ = "security_detection_rule_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rule_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    conditions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityAutomationRule(Base):
+    __tablename__ = "security_automation_rules_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    trigger_event_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    condition_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    response_action_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="workspace")
+    max_actions: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    cooldown_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=300)
+    approval_required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityRunbook(Base):
+    __tablename__ = "security_runbooks_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    trigger_condition: Mapped[str] = mapped_column(String(255), nullable=False)
+    investigation_steps_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    approved_responses_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    verification_steps_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityRunbookVersion(Base):
+    __tablename__ = "security_runbook_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    runbook_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    content_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityInvestigationNote(Base):
+    __tablename__ = "security_investigation_notes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    investigation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    author_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    author_type: Mapped[str] = mapped_column(String(50), nullable=False, default="human-authored") # human-authored, AI-generated
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecuritySLA(Base):
+    __tablename__ = "security_slas"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    time_to_detect_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=45.0)
+    time_to_triage_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=120.0)
+    time_to_contain_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=300.0)
+    time_to_recover_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=1800.0)
+    sla_breached: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class SecurityResponseExecution(Base):
+    __tablename__ = "security_response_executions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    execution_status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed") # completed, failed, blocked
+    result_details_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

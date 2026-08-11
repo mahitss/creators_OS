@@ -16,7 +16,8 @@ Security decisions do NOT rely on LLM self-policing. Deterministic security cont
 - Secret Redaction
 - Resource Isolation & Quarantine
 
-## Key Controls
+## SecOps Operations Integration
+Interoperates with Enterprise AI Security Operations (Sprint 57) for incident triage, versioned response plan execution, dual approval enforcement, detection rule shadow mode, and recovery verification.
 - **Prompt Injection Defense**: Separates system instructions from untrusted data context.
 - **Secret Redaction**: Strips tokens and API keys prior to telemetry logging.
 - **Agent Quarantine**: Isolates compromised agents without data corruption.
