@@ -2,6 +2,9 @@
 
 Vapor OS Policy Intelligence 2.0 provides an intelligent, centralized, explainable, policy-enforcement system for policy-governed AI operations and risk-aware policy enforcement across the enterprise.
 
+## Security Fabric Integration
+Policy Intelligence 2.0 interoperates with the Security & Threat Intelligence Fabric (Sprint 56). Threat Findings, Behavior Anomalies, and Active Quarantines automatically trigger policy enforcement actions (`DENY`, `RESTRICT`, `QUARANTINE`).
+
 ## System Architecture
 
 ```
