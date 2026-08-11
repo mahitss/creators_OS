@@ -8386,6 +8386,180 @@ class TransformationBottleneckCluster(Base):
     transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     downstream_exposure_range: Mapped[str] = mapped_column(String(100), nullable=False, default="14-30 days delay")
 
+class TransformationForesightDomain(Base):
+    __tablename__ = "transformation_foresight_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="medium_term", index=True) # near_term, medium_term, long_term, extended
+    scope: Mapped[str] = mapped_column(String(255), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationFutureDriver(Base):
+    __tablename__ = "transformation_future_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    driver_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # technology, market, customer, regulation, competition, capacity, talent, vendor, geopolitical, economic, operational, strategic
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class TransformationDriverTrend(Base):
+    __tablename__ = "transformation_driver_trends"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    driver_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="increasing", index=True) # increasing, decreasing, stable, fluctuating
+    velocity: Mapped[float] = mapped_column(Float, nullable=False, default=0.75)
+    acceleration: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    uncertainty_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.20)
+
+class TransformationWeakSignal(Base):
+    __tablename__ = "transformation_weak_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    possible_meaning: Mapped[Text] = mapped_column(Text, nullable=False)
+    alternative_interpretations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.65, index=True)
+
+class TransformationEmergingPattern(Base):
+    __tablename__ = "transformation_emerging_patterns"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    pattern_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    signals_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    frequency: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.88, index=True)
+    time_window: Mapped[str] = mapped_column(String(100), nullable=False, default="90_days")
+
+class TransformationFutureState(Base):
+    __tablename__ = "transformation_future_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    state_type: Mapped[str] = mapped_column(String(50), nullable=False, default="baseline", index=True) # baseline, alternative, stress, disruptive, opportunity
+    variables_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationScenarioImpact(Base):
+    __tablename__ = "transformation_scenario_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    impact_range_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict) # low, expected, high
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+
+class TransformationSecondOrderEffect(Base):
+    __tablename__ = "transformation_second_order_effects"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_impact_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    propagation_path_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+
+class TransformationVulnerabilityProfile(Base):
+    __tablename__ = "transformation_vulnerability_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    vulnerability_dimensions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict) # dependency, capacity, technology, assumption, risk, optionality, reversibility
+    overall_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.18)
+
+class TransformationOpportunityProfile(Base):
+    __tablename__ = "transformation_opportunity_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    opportunity_type: Mapped[str] = mapped_column(String(100), nullable=False) # new_capability, new_market, new_efficiency, new_resilience, new_strategic_option
+    potential_benefit: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.91)
+
+class TransformationNoRegretAction(Base):
+    __tablename__ = "transformation_no_regret_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    action_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    multiscenario_utility: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    downside_risk: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+
+class TransformationContingentAction(Base):
+    __tablename__ = "transformation_contingent_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trigger_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    predefined_option_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending_review", index=True)
+
+class TransformationForesightThreshold(Base):
+    __tablename__ = "transformation_foresight_thresholds"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    metric_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    threshold_value: Mapped[float] = mapped_column(Float, nullable=False, default=0.80)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="above")
+    action_recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationForesightTrigger(Base):
+    __tablename__ = "transformation_foresight_triggers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    threshold_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="inactive", index=True) # inactive, watching, triggered, resolved
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationScenarioAssumptionDrift(Base):
+    __tablename__ = "transformation_scenario_assumption_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assumption_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    drift_type: Mapped[str] = mapped_column(String(50), nullable=False, default="weakening", index=True) # strengthening, weakening, invalidating, uncertain
+
+class TransformationForecastVersion(Base):
+    __tablename__ = "transformation_forecast_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version_tag: Mapped[str] = mapped_column(String(100), nullable=False)
+    prediction_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    model_version: Mapped[str] = mapped_column(String(100), nullable=False, default="vpr_foresight_v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationForecastError(Base):
+    __tablename__ = "transformation_forecast_errors"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    forecast_version_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actual_outcome_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    error_magnitude: Mapped[float] = mapped_column(Float, nullable=False, default=0.04)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="overestimate")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationForesightReview(Base):
+    __tablename__ = "transformation_foresight_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly") # event_driven, weekly, monthly, quarterly
+    summary_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
