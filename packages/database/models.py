@@ -5890,6 +5890,243 @@ class ControlLoopVersion(Base):
     snapshot_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+class CriticalCapability(Base):
+    __tablename__ = "critical_capabilities_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    criticality: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True) # low, medium, high, critical
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, degraded, suspended, retired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class BusinessImpactProfile(Base):
+    __tablename__ = "business_impact_profiles_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    financial_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="high")
+    operational_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="critical")
+    customer_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="high")
+    regulatory_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="medium")
+    reputational_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="high")
+    strategic_impact: Mapped[str] = mapped_column(String(100), nullable=False, default="high")
+    tolerable_downtime: Mapped[str] = mapped_column(String(100), nullable=False, default="4 hours")
+    maximum_tolerable_disruption: Mapped[str] = mapped_column(String(100), nullable=False, default="12 hours")
+    recovery_objective: Mapped[str] = mapped_column(String(100), nullable=False, default="1 hour") # RTO
+    data_recovery_objective: Mapped[str] = mapped_column(String(100), nullable=False, default="15 minutes") # RPO
+
+class ResilienceDependencyRisk(Base):
+    __tablename__ = "resilience_dependency_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_type: Mapped[str] = mapped_column(String(100), nullable=False) # application, service, integration, data, person, vendor, agent, infrastructure, process
+    criticality: Mapped[str] = mapped_column(String(50), nullable=False, default="required") # required, important, optional
+    is_single_point_of_failure: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, index=True)
+    has_fallback: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    primary_fallback: Mapped[str] = mapped_column(String(255), nullable=True)
+
+class ResilienceVulnerability(Base):
+    __tablename__ = "resilience_vulnerabilities_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # low, medium, high, critical
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open")
+
+class ResilienceGap(Base):
+    __tablename__ = "resilience_gaps_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gap_type: Mapped[str] = mapped_column(String(50), nullable=False) # coverage, redundancy, capacity, recovery, testing, dependency, data, governance
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    evidence: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open")
+
+class FailureScenario(Base):
+    __tablename__ = "failure_scenarios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    scenario_type: Mapped[str] = mapped_column(String(100), nullable=False) # service_failure, dependency_failure, vendor_outage, data_loss, security_incident, capacity_exhaustion, regional_outage, agent_failure, integration_failure, human_error, process_failure
+    trigger: Mapped[str] = mapped_column(String(255), nullable=False)
+    probability_range: Mapped[str] = mapped_column(String(100), nullable=False, default="[0.05, 0.15]")
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    assumptions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    cascade_depth: Mapped[str] = mapped_column(String(50), nullable=False, default="multi-hop") # direct, indirect, multi-hop
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class ResilienceOption(Base):
+    __tablename__ = "resilience_options_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_type: Mapped[str] = mapped_column(String(100), nullable=False) # redundancy, fallback, capacity_buffer, failover, manual_process, vendor_alternative, data_replication, architecture_change, process_change
+    cost_estimate: Mapped[float] = mapped_column(Float, nullable=False)
+    recovery_time_reduction: Mapped[str] = mapped_column(String(100), nullable=False)
+    risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=75.0)
+    complexity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+
+class ContinuityPlan(Base):
+    __tablename__ = "continuity_plans_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    triggers_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    owners_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    communications_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    recovery_objectives_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    rollback_plan_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, stale, testing, validated, retired
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    last_validated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    next_due_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class RecoveryProcedure(Base):
+    __tablename__ = "recovery_procedures_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    steps_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    preconditions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_duration_min: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    verification_criteria: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class RecoveryOutcome(Base):
+    __tablename__ = "recovery_outcomes_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    procedure_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    outcome_class: Mapped[str] = mapped_column(String(50), nullable=False, default="successful") # successful, partial, failed, unknown
+    expected_duration_min: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    actual_duration_min: Mapped[int] = mapped_column(Integer, nullable=False, default=28)
+    variance_min: Mapped[int] = mapped_column(Integer, nullable=False, default=-2)
+    verification_details: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class ResilienceTest(Base):
+    __tablename__ = "resilience_tests_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    test_type: Mapped[str] = mapped_column(String(50), nullable=False) # tabletop, simulation, technical, failover, restore, recovery
+    frequency: Mapped[str] = mapped_column(String(50), nullable=False, default="quarterly") # monthly, quarterly, annual, custom
+    executed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    result: Mapped[str] = mapped_column(String(50), nullable=False, default="passed") # passed, partial, failed, inconclusive
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    next_due_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class RecoveryReadinessAssessment(Base):
+    __tablename__ = "recovery_readiness_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    readiness_status: Mapped[str] = mapped_column(String(50), nullable=False, default="ready") # ready, partially_ready, not_ready, unknown
+    assessment_factors_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assessed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class ResiliencePosture(Base):
+    __tablename__ = "resilience_postures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    recovery_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    testing_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    capacity_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    data_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    governance_dimension: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    overall_readiness: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class ResilienceLesson(Base):
+    __tablename__ = "resilience_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    observation: Mapped[Text] = mapped_column(Text, nullable=False)
+    candidate_root_cause: Mapped[Text] = mapped_column(Text, nullable=False)
+    impact_observed: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommended_improvement: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class ResilienceImprovement(Base):
+    __tablename__ = "resilience_improvements_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    gap_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    lesson_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    initiative_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="in_progress", index=True) # planned, in_progress, completed, verified
+    verified_risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=80.0)
+
+class ResilienceCommunicationPlan(Base):
+    __tablename__ = "resilience_communication_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    audience: Mapped[str] = mapped_column(String(100), nullable=False)
+    channel: Mapped[str] = mapped_column(String(100), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    trigger: Mapped[str] = mapped_column(String(255), nullable=False)
+    message_template: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class VendorResilienceProfile(Base):
+    __tablename__ = "vendor_resilience_profiles_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    vendor_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    vendor_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    criticality: Mapped[str] = mapped_column(String(50), nullable=False, default="critical")
+    concentration_risk_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    fallback_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    recovery_evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class DataResilienceProfile(Base):
+    __tablename__ = "data_resilience_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    data_asset_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    backup_status: Mapped[str] = mapped_column(String(50), nullable=False, default="healthy")
+    replication_status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    last_restore_test_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    rpo_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=15)
+    rto_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+
+class AIResilienceProfile(Base):
+    __tablename__ = "ai_resilience_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    provider_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    fallback_model_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    fallback_agent_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    human_escalation_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+
+
 
 
 
