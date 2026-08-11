@@ -1,5 +1,5 @@
-# Strategic Assumptions & Sensitivity Monitoring
+# Strategic Assumptions & Fragility Analysis
 
-`StrategicAssumption` tracks assumptions across 8 dimensions: `market`, `customer`, `financial`, `operational`, `technical`, `regulatory`, `capacity`, `competitive`.
+`StrategicAssumption` tracks strategic assumptions across 5 statuses (`valid`, `questioned`, `fragile`, `invalidated`, `unknown`), source, confidence, and expiration dates.
 
-Validity states: `valid`, `uncertain`, `invalid`, `expired`. Assumption invalidation raises alerts but does NOT silently alter production strategy without human approval.
+Assumptions becoming questioned or fragile trigger automatic warning indicators in executive views.
