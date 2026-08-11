@@ -8170,6 +8170,223 @@ class TransformationControlLearning(Base):
     outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
     lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
 
+class TransformationGraphNode(Base):
+    __tablename__ = "transformation_graph_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    entity_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # strategy, objective, capability, unit, process, transformation, portfolio, program, workstream, milestone, dependency, decision, risk, assumption, scenario, benefit, outcome, lesson
+    entity_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="realtime")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationGraphEdge(Base):
+    __tablename__ = "transformation_graph_edges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    to_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relationship_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # supports, depends_on, blocks, enables, conflicts_with, duplicates, overlaps, shares_capability, shares_dependency, shares_assumption, shares_scenario, shares_benefit, influences, supersedes, precedes, follows, constrains, mitigates, exposes
+    strength: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+
+class TransformationGraphProvenance(Base):
+    __tablename__ = "transformation_graph_provenances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    edge_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_system: Mapped[str] = mapped_column(String(255), nullable=False)
+    method: Mapped[str] = mapped_column(String(100), nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    classified_as: Mapped[str] = mapped_column(String(50), nullable=False, default="observed", index=True) # observed, declared, derived, inferred
+
+class TransformationImpactMap(Base):
+    __tablename__ = "transformation_impact_maps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    strategy_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    capability_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    process_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    unit_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    system_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    downstream_transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class CrossTransformationImpact(Base):
+    __tablename__ = "cross_transformation_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    impact_type: Mapped[str] = mapped_column(String(50), nullable=False, default="positive", index=True) # positive, negative, blocking, enabling, conditional, uncertain
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationCapabilityOverlap(Base):
+    __tablename__ = "transformation_capability_overlaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    capability_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capacity_demand_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    conflict_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class TransformationAssumptionCluster(Base):
+    __tablename__ = "transformation_assumption_clusters"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    shared_assumption: Mapped[Text] = mapped_column(Text, nullable=False)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    exposure_level: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+
+class TransformationScenarioExposure(Base):
+    __tablename__ = "transformation_scenario_exposures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    vulnerability_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.12)
+    impact_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationBenefitGraph(Base):
+    __tablename__ = "transformation_benefit_graphs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    claimed_benefit: Mapped[Text] = mapped_column(Text, nullable=False)
+    overlap_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    outcome_connection: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationConflictGraph(Base):
+    __tablename__ = "transformation_conflict_graphs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_a_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_b_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    conflict_domain: Mapped[str] = mapped_column(String(100), nullable=False) # target_operating_model, technology, process, decision_rights, capacity, timeline
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationDecisionPropagation(Base):
+    __tablename__ = "transformation_decision_propagations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    impact_mode: Mapped[str] = mapped_column(String(50), nullable=False, default="direct") # direct, indirect, conditional, downstream
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationRiskPropagation(Base):
+    __tablename__ = "transformation_risk_propagations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_risk_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    downstream_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class TransformationLessonPropagation(Base):
+    __tablename__ = "transformation_lesson_propagations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    lesson_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relevant_transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    relevance_level: Mapped[str] = mapped_column(String(50), nullable=False, default="high") # high, medium, low, unknown
+
+class TransformationPattern(Base):
+    __tablename__ = "transformation_patterns"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    pattern_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    pattern_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # dependency_failure, capacity_bottleneck, benefit_lag, decision_delay, adoption_friction, scope_drift
+    supporting_evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class TransformationAnalogy(Base):
+    __tablename__ = "transformation_analogies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    current_transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    historical_transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    similarity_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.86)
+    key_differences_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+
+class TransformationComplexityProfile(Base):
+    __tablename__ = "transformation_complexity_profiles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    transformation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_density: Mapped[float] = mapped_column(Float, nullable=False, default=0.35)
+    cross_unit_coupling: Mapped[float] = mapped_column(Float, nullable=False, default=0.40)
+    decision_density: Mapped[float] = mapped_column(Float, nullable=False, default=0.25)
+    shared_capability_count: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+    shared_dependency_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    benefit_overlap_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    scenario_exposure_count: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
+
+class TransformationComplexityHotspot(Base):
+    __tablename__ = "transformation_complexity_hotspots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    hotspot_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    converging_transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    hotspot_domain: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationKnowledgeConflict(Base):
+    __tablename__ = "transformation_knowledge_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    conflicting_claim: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="surfaced", index=True) # surfaced, investigating, resolved
+
+class TransformationGraphSnapshot(Base):
+    __tablename__ = "transformation_graph_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    snapshot_label: Mapped[str] = mapped_column(String(255), nullable=False)
+    nodes_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    edges_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationGraphDiff(Base):
+    __tablename__ = "transformation_graph_diffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    snapshot_a_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    snapshot_b_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    added_edges_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    removed_edges_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    new_conflicts_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    resolved_conflicts_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationBottleneckCluster(Base):
+    __tablename__ = "transformation_bottleneck_clusters"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    shared_bottleneck_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    transformation_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    downstream_exposure_range: Mapped[str] = mapped_column(String(100), nullable=False, default="14-30 days delay")
+
+
 
 
 
