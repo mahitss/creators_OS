@@ -7048,6 +7048,216 @@ class StrategicExperimentOutcome(Base):
     evidence_details: Mapped[Text] = mapped_column(Text, nullable=False)
     updated_confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
 
+class ExecutionObjective(Base):
+    __tablename__ = "execution_objectives_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    target_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="p1")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # planned, active, at_risk, blocked, achieved, deferred, retired
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class StrategicAlignmentAssessment(Base):
+    __tablename__ = "strategic_alignment_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    portfolio_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    alignment_status: Mapped[str] = mapped_column(String(50), nullable=False, default="aligned") # strong, aligned, weak, misaligned, unknown
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class ExecutionCoverage(Base):
+    __tablename__ = "execution_coverages_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    portfolio_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    initiative_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    mission_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    execution_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    benefit_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.82)
+    has_gap: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class StrategicExecutionPath(Base):
+    __tablename__ = "strategic_execution_paths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    mission_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    action_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    deliverable_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    outcome_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    benefit_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    path_integrity_status: Mapped[str] = mapped_column(String(50), nullable=False, default="intact") # intact, broken_link, degraded
+
+class ExecutionDriftSignal(Base):
+    __tablename__ = "execution_drift_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    drift_type: Mapped[str] = mapped_column(String(100), nullable=False) # priority, scope, schedule, dependency, resource, benefit, alignment
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True) # low, medium, high, critical
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class ExecutionDependencyBlocker(Base):
+    __tablename__ = "execution_dependency_blockers_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    blocked_initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependency_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, resolving, resolved
+
+class ExecutionCapacityConflict(Base):
+    __tablename__ = "execution_capacity_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    competing_initiative_ids_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    resource_type: Mapped[str] = mapped_column(String(100), nullable=False) # people, systems, budget, data, vendors, ai_capacity, infrastructure
+    conflict_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommendation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class DecisionExecutionGap(Base):
+    __tablename__ = "decision_execution_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approval_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    decision_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    approval_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    action_start_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    action_completion_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    delay_days: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    is_stale: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class ExecutionFrictionSignal(Base):
+    __tablename__ = "execution_friction_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    friction_type: Mapped[str] = mapped_column(String(100), nullable=False) # approval, dependency, capacity, data, technical, policy, coordination, communication
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    recurring_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+
+class ExecutionOutcomeGap(Base):
+    __tablename__ = "execution_outcome_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    gap_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    completion_without_success_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class StrategicContributionAssessment(Base):
+    __tablename__ = "strategic_contribution_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    kpi_contribution: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    capability_contribution: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    benefit_contribution: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class ExecutionPriorityAssessment(Base):
+    __tablename__ = "execution_priority_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    strategic_importance: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    urgency: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.25)
+    dependency_weight: Mapped[float] = mapped_column(Float, nullable=False, default=0.80)
+    priority_conflict_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class ExecutionRecommendation(Base):
+    __tablename__ = "execution_recommendations_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    recommendation_type: Mapped[str] = mapped_column(String(100), nullable=False) # accelerate, continue, monitor, reassess, resequence, rescope, pause, escalate
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+class ExecutionQualityAssessment(Base):
+    __tablename__ = "execution_quality_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    rework_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    failure_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rollback_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    defect_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.02)
+    verification_failure_flag: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class ExecutionWasteSignal(Base):
+    __tablename__ = "execution_waste_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    initiative_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    waste_type: Mapped[str] = mapped_column(String(100), nullable=False) # duplicate_work, low_value_work, blocked_work, rework, unused_output, benefit_failure
+    impact_amount: Mapped[float] = mapped_column(Float, nullable=False, default=45000.0)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class ExecutionRiskAssessment(Base):
+    __tablename__ = "execution_risk_assessments_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    delay_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    dependency_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.20)
+    capacity_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.18)
+    alignment_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.10)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+class ExecutionEarlyWarning(Base):
+    __tablename__ = "execution_early_warnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    objective_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    warning_trigger: Mapped[str] = mapped_column(String(100), nullable=False) # velocity_decline, dependency_growth, benefit_lag, quality_degradation, decision_delay
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class ExecutionStrategyReview(Base):
+    __tablename__ = "execution_strategy_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    strategy_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    review_cadence: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly") # weekly, monthly, quarterly, event_driven
+    participants_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    objectives_reviewed_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decisions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True)
+
+class ExecutionLesson(Base):
+    __tablename__ = "execution_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    execution_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    plan_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    execution_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+
 
 
 
