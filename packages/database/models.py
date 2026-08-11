@@ -7516,6 +7516,301 @@ class OperatingModelLesson(Base):
     outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
     lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
 
+class TransformationProgram(Base):
+    __tablename__ = "transformation_programs_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    strategic_drivers_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    scope: Mapped[Text] = mapped_column(Text, nullable=False)
+    horizon: Mapped[str] = mapped_column(String(50), nullable=False, default="3_year")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # draft, active, under_review, approved, executing, completed, paused, retired
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationDriver(Base):
+    __tablename__ = "transformation_drivers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    driver_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # strategy, growth, cost, risk, technology, customer, regulation, resilience, capacity, innovation, operational_performance
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    freshness: Mapped[str] = mapped_column(String(50), nullable=False, default="realtime")
+
+class OperatingModelCurrentState(Base):
+    __tablename__ = "operating_model_current_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    units_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    processes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decision_rights_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    systems_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+
+class OperatingModelTargetState(Base):
+    __tablename__ = "operating_model_target_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    structure_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    target_capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_processes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_decision_rights_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    technology_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    capacity_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+
+class OperatingModelDelta(Base):
+    __tablename__ = "operating_model_deltas"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    current_state_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    target_state_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    gap_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True) # low, medium, high, critical
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationDesignPrinciple(Base):
+    __tablename__ = "transformation_design_principles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    principle_name: Mapped[str] = mapped_column(String(100), nullable=False) # customer_first, simplify, decentralize, standardize, automate, resilience_first, platform_first, control_by_design
+    statement: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationConstraint(Base):
+    __tablename__ = "transformation_constraints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    constraint_type: Mapped[str] = mapped_column(String(100), nullable=False) # budget, regulatory, technology, capacity, dependency, risk, timeline, governance
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class FutureOperatingModel(Base):
+    __tablename__ = "future_operating_models"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    design_principles_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    constraints_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_capabilities_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_processes_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_decision_rights_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class OperatingModelDesignOption(Base):
+    __tablename__ = "operating_model_design_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    future_model_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # centralize, decentralize, federate, platformize, standardize, automate, outsource, insource, integrate, simplify, reconfigure
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class OperatingModelComparison(Base):
+    __tablename__ = "operating_model_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    option_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    cost_tradeoff: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    speed_tradeoff: Mapped[float] = mapped_column(Float, nullable=False, default=0.30)
+    control_tradeoff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.05)
+    resilience_tradeoff: Mapped[float] = mapped_column(Float, nullable=False, default=0.20)
+    complexity_tradeoff: Mapped[float] = mapped_column(Float, nullable=False, default=-0.15)
+    classification: Mapped[str] = mapped_column(String(50), nullable=False, default="competitive") # dominated, competitive, high_upside, high_risk
+
+class TransformationScenario(Base):
+    __tablename__ = "transformation_scenarios_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    scenario_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_type: Mapped[str] = mapped_column(String(100), nullable=False) # growth, downturn, crisis, technology_shift, regulatory_change, capacity_loss, demand_surge
+    simulated_performance: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    simulated_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.18)
+    simulated_resilience: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="simulated", index=True)
+
+class TransformationRisk(Base):
+    __tablename__ = "transformation_risks_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_type: Mapped[str] = mapped_column(String(100), nullable=False) # execution, adoption, technology, dependency, regulatory, capacity, operational, strategic
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationRiskMitigation(Base):
+    __tablename__ = "transformation_risk_mitigations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    risk_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_action: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed")
+
+class TransformationDependency(Base):
+    __tablename__ = "transformation_dependencies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    prerequisite_change: Mapped[Text] = mapped_column(Text, nullable=False)
+    dependent_change: Mapped[Text] = mapped_column(Text, nullable=False)
+    criticality: Mapped[str] = mapped_column(String(50), nullable=False, default="critical_path", index=True) # low, medium, high, critical_path
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+
+class TransformationWorkstream(Base):
+    __tablename__ = "transformation_workstreams"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(100), nullable=False) # organization, process, technology, data, governance, capability, decision_rights, change_management
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner_unit_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationMilestone(Base):
+    __tablename__ = "transformation_milestones"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workstream_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    target_date: Mapped[str] = mapped_column(String(50), nullable=False)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="planned", index=True)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationRoadmap(Base):
+    __tablename__ = "transformation_roadmaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    phases_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    workstreams_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    milestones_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    decision_gates_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationDecisionGate(Base):
+    __tablename__ = "transformation_decision_gates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    roadmap_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gate_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    required_criteria_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    gate_outcome: Mapped[str] = mapped_column(String(50), nullable=False, default="proceed") # proceed, revise, pause, stop, pilot_more
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationPilot(Base):
+    __tablename__ = "transformation_pilots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothesis: Mapped[Text] = mapped_column(Text, nullable=False)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    measurement_criteria: Mapped[Text] = mapped_column(Text, nullable=False)
+    success_threshold: Mapped[Text] = mapped_column(Text, nullable=False)
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=45)
+    outcome_status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated", index=True) # validated, partially_validated, invalidated, inconclusive
+
+class TransformationAdoptionAssessment(Base):
+    __tablename__ = "transformation_adoption_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    process_adoption_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    system_adoption_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    decision_right_adoption_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    capability_adoption_pct: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    aggregate_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.91)
+
+class TransformationReadinessAssessment(Base):
+    __tablename__ = "transformation_readiness_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dimension: Mapped[str] = mapped_column(String(100), nullable=False) # capability, technology, process, governance, capacity, dependency, adoption
+    current_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    required_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    has_gap: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+class TransformationTransitionPlan(Base):
+    __tablename__ = "transformation_transition_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    old_state_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    new_state_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    steps_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    fallback_plan: Mapped[Text] = mapped_column(Text, nullable=False)
+    rollback_conditions: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationOutcome(Base):
+    __tablename__ = "transformation_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    outcome_category: Mapped[str] = mapped_column(String(100), nullable=False) # strategic, operational, financial, risk, resilience, customer, capability
+    expected_value: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_value: Mapped[Text] = mapped_column(Text, nullable=False)
+    variance: Mapped[float] = mapped_column(Float, nullable=False, default=0.03)
+    confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+
+class TransformationDriftSignal(Base):
+    __tablename__ = "transformation_drift_signals_v2"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    approved_target_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    implemented_state_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    observed_state_desc: Mapped[Text] = mapped_column(Text, nullable=False)
+    difference_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+
+class TransformationLesson(Base):
+    __tablename__ = "transformation_lessons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothesis_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    decision_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    change_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    actual_outcome: Mapped[Text] = mapped_column(Text, nullable=False)
+    lesson_text: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationChangeProposal(Base):
+    __tablename__ = "transformation_change_proposals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    program_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    proposal_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="proposed", index=True) # proposed, approved, executed, rejected
+
+
 
 
 
