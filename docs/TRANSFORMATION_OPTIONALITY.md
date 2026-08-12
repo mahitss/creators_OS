@@ -1,5 +1,10 @@
-# Strategic Optionality & Flexibility Analysis
+# Enterprise Transformation Optionality Analysis
 
-Evaluates whether transformation candidates open downstream strategic options, preserve options, or create strategic lock-in.
+## Multi-Path Optionality Engine
 
-Computes optional value scores to prioritize agile foundational changes.
+Vapor evaluates the density of viable alternative pathways available to a transformation program without locking into rigid single-vendor or single-architecture commitments.
+
+## Key Metrics
+* **Path Count**: Number of distinct, un-blocked execution routes to target benefits.
+* **Switching Friction**: Time and cost required to pivot from primary to alternative path.
+* **Optionality Score**: Multi-dimensional score reflecting systemic flexibility under stress.

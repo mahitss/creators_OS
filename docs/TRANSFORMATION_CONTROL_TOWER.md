@@ -8,3 +8,7 @@ TRANSFORMATION STRATEGY -> TRANSFORMATION PORTFOLIO -> SEQUENCE -> WAVES -> WORK
 ## Critical Principle
 This is a CONTROL-TOWER intelligence layer providing visibility, monitoring, diagnostics, simulation, early warning, recommendations, and decision support.
 It strictly does NOT automatically restructure organizations, resequence portfolios, reallocate capital, approve decision gates, or change strategy without human approval.
+
+## Sprint 87 Integration
+Feeds live transformation signals and early resilience warnings to [TRANSFORMATION_RESILIENCE_ENGINEERING.md](./TRANSFORMATION_RESILIENCE_ENGINEERING.md) when capacity margins or dependency concentrations deteriorate.
+

@@ -7,3 +7,7 @@ STRATEGY -> OPERATING MODEL -> CAPABILITIES -> TRANSFORMATIONS -> PORTFOLIOS -> 
 
 ## Critical Principle
 Simulation is NOT reality. Every simulation result explicitly identifies model, inputs, assumptions, scenario, time horizon, output range (low/expected/high), uncertainty, and limitations. Never present simulation results as guaranteed outcomes.
+
+## Sprint 87 Resilience Simulation Integration
+Reuses the Digital Twin engine to evaluate current vs proposed vs alternative resilience designs against severe disruption scenarios without altering live production configurations. See [TRANSFORMATION_RESILIENCE_ENGINEERING.md](./TRANSFORMATION_RESILIENCE_ENGINEERING.md).
+
