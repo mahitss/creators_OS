@@ -55,3 +55,15 @@
 - **Complexity**: Low.
 - **Expected Benefit**: Fast secondary region failover telemetry synchronization.
 - **Priority**: **P3**
+
+
+### 6. Hybrid Quantum-Resistant Event Payload Signing (SECURITY) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_QUANTUM_EVENT_SIGNING.md`)
+- **Problem**: Standard single-hash signatures lack post-quantum hybrid dual-digest verification.
+- **Evidence**: `docs/POST_V1_BACKLOG.md` Security Category.
+- **Impact**: Provides post-quantum event payload authentication integrity.
+- **Risk**: Low.
+- **Complexity**: Medium.
+- **Expected Benefit**: Quantum-safe event signature validation.
+- **Priority**: **P3**
+

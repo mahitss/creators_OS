@@ -175,6 +175,16 @@ def test_29_multi_cloud_failover_telemetry_buffer_optimization():
         assert status_data["sync_status"] == "synced"
     asyncio.run(_test())
 
+def test_30_hybrid_quantum_event_payload_signing():
+    """Test Priority #6: Hybrid Quantum-Resistant Event Payload Signing - Dual digest signature verification."""
+    from app.core.crypto import sign_event_payload, verify_event_signature
+    payload = '{"event":"GOVERNANCE_ATTESTATION_RENEWED","org_id":"org_global_enterprise_01"}'
+    sig = sign_event_payload(payload)
+    assert sig.startswith("v1:hybrid:")
+    assert verify_event_signature(payload, sig) is True
+    assert verify_event_signature(payload + "_tampered", sig) is False
+
+
 
 
 

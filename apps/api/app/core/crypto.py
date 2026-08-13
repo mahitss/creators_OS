@@ -26,3 +26,21 @@ def decrypt_secret(ciphertext: Optional[str]) -> Optional[str]:
         return decrypted.decode('utf-8')
     except Exception:
         return None
+
+def sign_event_payload(payload: str) -> str:
+    """Generates dual-digest HMAC-SHA512 + HMAC-SHA256 hybrid event signature (Priority #6)."""
+    import hmac
+    secret_bytes = settings.SECRET_KEY.encode('utf-8')
+    payload_bytes = payload.encode('utf-8')
+    h256 = hmac.new(secret_bytes, payload_bytes, hashlib.sha256).hexdigest()
+    h512 = hmac.new(secret_bytes, payload_bytes, hashlib.sha512).hexdigest()
+    return f"v1:hybrid:{h256[:16]}:{h512}"
+
+def verify_event_signature(payload: str, signature: str) -> bool:
+    """Verifies dual-digest hybrid event signature against payload content (Priority #6)."""
+    if not signature or not signature.startswith("v1:hybrid:"):
+        return False
+    expected = sign_event_payload(payload)
+    import hmac
+    return hmac.compare_digest(expected, signature)
+
