@@ -105,3 +105,16 @@ def test_10_v1_release_manifest_and_scorecard():
     assert os.path.exists(os.path.join("docs", "V1_SCORECARD.md"))
     assert os.path.exists(os.path.join("docs", "V1_PRODUCTION_CHECKLIST.md"))
     assert os.path.exists(os.path.join("docs", "V1_FINAL_RELEASE_REPORT.md"))
+
+def test_25_opentelemetry_db_query_span_annotation():
+    """Test Priority #1 (GAP-01): OpenTelemetry DB Query Span Annotation - Session tracer emits span metadata."""
+    async def _test():
+        from packages.database.session import AsyncSessionTracer
+        async with AsyncSessionTracer(None, request_id="req_otel_db_01", trace_id="tr_otel_db_01") as tracer:
+            assert tracer.span_data["db.system"] == "postgresql"
+            assert tracer.span_data["requestId"] == "req_otel_db_01"
+            assert tracer.span_data["traceId"] == "tr_otel_db_01"
+            assert tracer.span_data["status"] == "ACTIVE"
+        assert tracer.span_data["status"] == "OK"
+    asyncio.run(_test())
+

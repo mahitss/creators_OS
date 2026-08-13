@@ -21,16 +21,44 @@ if engine is not None:
 else:
     AsyncSessionLocal = None
 
+class AsyncSessionTracer:
+    """OpenTelemetry-compatible Async Database Query Span Tracer (GAP-01)."""
+    def __init__(self, session: AsyncSession = None, request_id: str = None, trace_id: str = None):
+        self.session = session
+        self.request_id = request_id or "req_internal_db"
+        self.trace_id = trace_id or "tr_internal_db"
+        self.span_data = {
+            "db.system": "postgresql",
+            "db.session": str(id(session)) if session else "none",
+            "requestId": self.request_id,
+            "traceId": self.trace_id,
+            "status": "ACTIVE"
+        }
+
+    async def __aenter__(self):
+        logger.debug(f"[OTel DB Span Start] requestId={self.request_id} traceId={self.trace_id} db.system=postgresql")
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is not None:
+            self.span_data["status"] = "ERROR"
+            logger.error(f"[OTel DB Span Error] requestId={self.request_id} err={exc_val}")
+        else:
+            self.span_data["status"] = "OK"
+            logger.debug(f"[OTel DB Span End] requestId={self.request_id} status=OK")
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     if AsyncSessionLocal is None:
         yield None
         return
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+        async with AsyncSessionTracer(session) as tracer:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
+

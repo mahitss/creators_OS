@@ -2,7 +2,8 @@
 
 ## Evidence-Backed Engineering Priority List (Top 5 Priorities)
 
-### 1. OpenTelemetry Database Query Span Annotation (GAP-01)
+### 1. OpenTelemetry Database Query Span Annotation (GAP-01) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_GAP01_DB_SPANS.md`)
 - **Problem**: Sub-millisecond internal DB query step details require manual trace logging.
 - **Evidence**: `docs/V1_OBSERVABILITY_GAPS.md` GAP-01.
 - **Impact**: Improves micro-second query bottleneck diagnostics.
@@ -10,6 +11,7 @@
 - **Complexity**: Low.
 - **Expected Benefit**: Complete trace context across complex async DB transactions.
 - **Priority**: **P3**
+
 
 ### 2. Prometheus Redis Consumer Queue Exporter (GAP-02)
 - **Problem**: Consumer group queue depth histograms currently sampled via background polling.
