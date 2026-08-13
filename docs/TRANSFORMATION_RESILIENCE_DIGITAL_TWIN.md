@@ -17,3 +17,7 @@ Describes capabilities as "enterprise resilience digital twin", "non-destructive
 ## Sprint 106 Stress Testing Integration
 Sprint 106 executes continuous failure injection and stress testing campaigns (`/transformation-resilience-stress-testing`) directly against Digital Twin snapshots in isolated simulation sandboxes.
 
+## Sprint 107 Optimization Integration
+Sprint 107 runs multi-objective optimization simulations against versioned Digital Twin snapshots without writing to production state.
+
+

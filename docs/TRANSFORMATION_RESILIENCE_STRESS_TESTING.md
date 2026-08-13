@@ -13,3 +13,7 @@ This is CONTROLLED SIMULATION. All failure injections default to non-production,
 
 ## Approved Terminology
 Describes capabilities as "continuous resilience validation", "controlled failure simulation", "non-destructive enterprise stress testing", and "evidence-backed resilience assurance".
+
+## Sprint 107 Optimization Integration
+Sprint 107 feeds Sprint 106 stress testing failure results, failed controls, and coverage gaps into the Multi-Objective Resilience Optimization Engine (`/transformation-resilience-optimization`) to rank improvement priorities.
+

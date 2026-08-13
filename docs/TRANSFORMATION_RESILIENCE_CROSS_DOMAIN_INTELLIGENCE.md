@@ -20,4 +20,8 @@ Sprint 105 maps cross-domain resilience graph nodes and propagation paths direct
 ## Sprint 106 Stress Testing Integration
 Sprint 106 tests failure injection propagation across cross-domain graph nodes to evaluate cascade breakpoints and compound failure interactions.
 
+## Sprint 107 Optimization Integration
+Sprint 107 uses cross-domain systemic exposure and dependency concentration data to prioritize candidate resilience investments.
+
+
 
