@@ -1,5 +1,8 @@
 # Enterprise Resilience Optimization & Strategy 2.0
 
+## Governance Integration
+Sprint 107 Optimization integrates with Sprint 109 [Enterprise Resilience Governance](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/TRANSFORMATION_RESILIENCE_GOVERNANCE.md) to ensure resource and control allocation strategies pass release gate verification and control attestation.
+
 ## Overview & Architecture
 
 Vapor OS Sprint 107 builds the multi-objective optimization and portfolio strategy layer above Sprints 104-106:

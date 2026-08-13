@@ -14543,6 +14543,383 @@ class TransformationResilienceLearningLessonValidity(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
 
+# ============================================================================
+# SPRINT 109 — ENTERPRISE TRANSFORMATION RESILIENCE GOVERNANCE & PRODUCTION READINESS 2.0
+# ============================================================================
+
+class TransformationResilienceGovernanceDomain(Base):
+    __tablename__ = "transformation_resilience_governance_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # initializing, active, degraded, paused
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceGovernanceControl(Base):
+    __tablename__ = "transformation_resilience_governance_controls"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_code: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # CTRL_EVENT_INTEGRITY, CTRL_TENANT_ISOLATION, CTRL_DLP_ENFORCEMENT, CTRL_AUDIT_COVERAGE, CTRL_SIMULATION_ISOLATION, etc.
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # security, privacy, governance, reliability, resilience, data, model, simulation, execution, audit, observability, operational
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    responsibility: Mapped[Text] = mapped_column(Text, nullable=False)
+    review_frequency: Mapped[str] = mapped_column(String(50), nullable=False, default="monthly")
+    last_review: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    next_review: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=30))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # active, inactive, degraded, failed, not_tested, unknown
+    validation_method: Mapped[str] = mapped_column(String(100), nullable=False, default="automated_test")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlRequirement(Base):
+    __tablename__ = "transformation_resilience_governance_control_requirements"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    requirement_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical") # mandatory, critical, high, moderate
+    mandatory: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    validation_method: Mapped[str] = mapped_column(String(100), nullable=False, default="automated_test")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlEvidence(Base):
+    __tablename__ = "transformation_resilience_governance_control_evidence"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    evidence_type: Mapped[str] = mapped_column(String(100), nullable=False) # test, audit, configuration, runtime, log, approval, simulation, incident, review, documentation
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    freshness_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    integrity_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    review_status: Mapped[str] = mapped_column(String(50), nullable=False, default="reviewed")
+    evidence_data_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceEvidenceValidity(Base):
+    __tablename__ = "transformation_resilience_governance_evidence_validity"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True) # valid, aging, expired, revoked, unknown
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=90))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlTest(Base):
+    __tablename__ = "transformation_resilience_governance_control_tests"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    test_type: Mapped[str] = mapped_column(String(100), nullable=False) # unit, integration, stress, security, privacy, tenant, disaster_recovery
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    environment: Mapped[str] = mapped_column(String(50), nullable=False, default="staging")
+    start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    result: Mapped[str] = mapped_column(String(50), nullable=False, default="passed", index=True) # passed, failed, partial, inconclusive, not_run
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlAttestation(Base):
+    __tablename__ = "transformation_resilience_governance_control_attestations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    attestor: Mapped[str] = mapped_column(String(255), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    valid_until: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=90))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # draft, submitted, approved, rejected, expired, revoked
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAssuranceClaim(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_claims"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    claim_text: Mapped[Text] = mapped_column(Text, nullable=False)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True) # Null => UNVERIFIED
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="verified", index=True) # verified, partially_verified, unverified, expired, contradicted
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAssurancePacket(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_packets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    packet_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    claims_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    controls_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    tests_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    evidence_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    attestations_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    exceptions_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    known_limitations_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceProductionReadinessAssessment(Base):
+    __tablename__ = "transformation_resilience_governance_readiness_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    verdict: Mapped[str] = mapped_column(String(50), nullable=False, default="ready", index=True) # not_ready, conditionally_ready, ready, degraded, blocked
+    assessor: Mapped[str] = mapped_column(String(255), nullable=False, default="Principal Enterprise Resilience Governance Architect")
+    security_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    privacy_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    reliability_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    resilience_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    observability_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    governance_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    data_integrity_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    model_integrity_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    simulation_safety_score: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    operational_readiness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceReadinessCriterion(Base):
+    __tablename__ = "transformation_resilience_governance_readiness_criteria"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assessment_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    requirement: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    test_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="passed", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceReadinessBlocker(Base):
+    __tablename__ = "transformation_resilience_governance_readiness_blockers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assessment_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    blocker_type: Mapped[str] = mapped_column(String(100), nullable=False) # critical_test_failure, missing_control, missing_evidence, security_failure, privacy_failure, tenant_isolation_failure, audit_gap, rollback_failure, observability_gap, unknown
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    remediation_required: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceException(Base):
+    __tablename__ = "transformation_resilience_governance_exceptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    risk_level: Mapped[str] = mapped_column(String(50), nullable=False, default="low")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_authority: Mapped[str] = mapped_column(String(255), nullable=False, default="Governed Resilience Board")
+    expiration_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=30))
+    mitigation_controls_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # requested, approved, active, expired, rejected, revoked
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceRiskAcceptance(Base):
+    __tablename__ = "transformation_resilience_governance_risk_acceptances"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    risk_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    impact_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.20)
+    rationale: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    approval_authority: Mapped[str] = mapped_column(String(255), nullable=False, default="Governed Resilience Board")
+    expiration: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=90), index=True)
+    review_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=30))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlFailure(Base):
+    __tablename__ = "transformation_resilience_governance_control_failures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    test_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    incident_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    impact_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open")
+    remediation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceRemediation(Base):
+    __tablename__ = "transformation_resilience_governance_remediations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    finding_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    action_plan: Mapped[Text] = mapped_column(Text, nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=14))
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="verified", index=True) # open, planned, in_progress, blocked, completed, verified, rejected
+    evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceRemediationValidation(Base):
+    __tablename__ = "transformation_resilience_governance_remediation_validations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    remediation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    fix_applied: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    test_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    evidence_collected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    validation_status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed")
+    validator: Mapped[str] = mapped_column(String(255), nullable=False, default="Principal Enterprise Resilience Governance Architect")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceFinding(Base):
+    __tablename__ = "transformation_resilience_governance_findings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    finding_type: Mapped[str] = mapped_column(String(100), nullable=False) # control_failure, evidence_gap, test_failure, policy_gap, security_gap, privacy_gap, operational_gap, model_gap, documentation_gap
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="low", index=True) # informational, low, moderate, high, critical
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=14))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceContinuousAssuranceCycle(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_cycles"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cycle_number: Mapped[int] = mapped_column(Integer, nullable=False, default=109)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise_all_sprints")
+    controls_evaluated_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    tests_evaluated_count: Mapped[int] = mapped_column(Integer, nullable=False, default=276)
+    findings_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="completed", index=True) # scheduled, running, completed, degraded, failed, cancelled
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAssuranceDrift(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    drift_type: Mapped[str] = mapped_column(String(100), nullable=False) # control_drift, configuration_drift, evidence_drift, policy_drift, model_drift, operational_drift
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    magnitude: Mapped[float] = mapped_column(Float, nullable=False, default=0.01)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAssuranceRegression(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_regressions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    previous_state: Mapped[str] = mapped_column(String(50), nullable=False, default="passed")
+    current_state: Mapped[str] = mapped_column(String(50), nullable=False, default="failed")
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAssuranceHealth(Base):
+    __tablename__ = "transformation_resilience_governance_assurance_health"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    control_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    evidence_freshness_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    test_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    attestation_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    open_findings_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    remediation_health_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    exception_health_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceControlCoverage(Base):
+    __tablename__ = "transformation_resilience_governance_control_coverage"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tested_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    untested_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    passed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    failed_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    expired_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceEvidenceCoverage(Base):
+    __tablename__ = "transformation_resilience_governance_evidence_coverage"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    claims_with_evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    claims_without_evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    expired_evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    contradictory_evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceAuditReadiness(Base):
+    __tablename__ = "transformation_resilience_governance_audit_readiness"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    audit_scope: Mapped[str] = mapped_column(String(255), nullable=False, default="Enterprise Transformation Resilience OS 2.0")
+    evidence_availability_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    control_coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=100.0)
+    open_findings_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    exceptions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    attestations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceChangeImpact(Base):
+    __tablename__ = "transformation_resilience_governance_change_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    change_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_controls_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    affected_evidence_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    affected_models_json: Mapped[JSON] = mapped_column(JSON, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated") # proposed, assessing, approved, implemented, validated, rolled_back
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceReleaseAssessment(Base):
+    __tablename__ = "transformation_resilience_governance_release_assessments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.UUID)
+    release_tag: Mapped[str] = mapped_column(String(100), nullable=False, default="v2.0-sprint109")
+    gate_status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # blocked, pending, approved, released, rolled_back
+    critical_tests_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    security_tests_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    privacy_tests_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    tenant_isolation_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    audit_passed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    rollback_validated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    observability_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceReleaseGate(Base):
+    __tablename__ = "transformation_resilience_governance_release_gates"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    gate_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # blocked, pending, approved, released, rolled_back
+    policy_evaluation_id: Mapped[str] = mapped_column(String(255), nullable=False, default="pol_release_gate_01")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceRecoveryReadiness(Base):
+    __tablename__ = "transformation_resilience_governance_recovery_readiness"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.UUID)
+    backup_evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    restore_evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    failover_evidence_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    recovery_time_hours: Mapped[float] = mapped_column(Float, nullable=False, default=3.5)
+    recovery_point_minutes: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    data_integrity_validated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceGovernanceContinuityReadiness(Base):
+    __tablename__ = "transformation_resilience_governance_continuity_readiness"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    critical_dependency: Mapped[str] = mapped_column(String(255), nullable=False, default="primary_cloud_compute_cluster")
+    manual_fallback_available: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    contingency_plan: Mapped[Text] = mapped_column(Text, nullable=False, default="Dynamic Secondary Region Reserve Cluster Pool Failover Plan")
+    recovery_owner: Mapped[str] = mapped_column(String(255), nullable=False, default="Resilience Incident Commander")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
+
 
 
 

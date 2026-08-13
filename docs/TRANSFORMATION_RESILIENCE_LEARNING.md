@@ -1,5 +1,9 @@
 # Enterprise Resilience Learning Fabric & Outcome Calibration 2.0
 
+## Governance Integration
+Sprint 108 Learning integrates with Sprint 109 [Enterprise Resilience Governance](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/TRANSFORMATION_RESILIENCE_GOVERNANCE.md) to ensure calibration proposals, model performance changes, and outcome lessons feed continuous control attestation, audit readiness, and release gates.
+
+
 ## Overview & Architecture
 
 Vapor OS Sprint 108 builds the learning and calibration layer above Sprints 101-107:

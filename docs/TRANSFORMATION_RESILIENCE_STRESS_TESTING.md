@@ -1,5 +1,8 @@
 # Autonomous Resilience Simulation & Stress Testing 2.0
 
+## Governance Integration
+Sprint 106 Stress Testing integrates with Sprint 109 [Enterprise Resilience Governance](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/TRANSFORMATION_RESILIENCE_GOVERNANCE.md) to generate automated test evidence for control testing and release gate evaluation.
+
 ## Overview & Architecture
 
 Vapor OS Sprint 106 builds the continuous resilience testing and failure injection layer above Sprints 101-105:

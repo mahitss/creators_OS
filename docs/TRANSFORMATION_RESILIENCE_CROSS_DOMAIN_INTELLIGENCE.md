@@ -1,5 +1,8 @@
 # Enterprise Transformation Resilience Cross-Domain Assurance Intelligence Fabric 2.0
 
+## Governance Integration
+Sprint 104 Cross-Domain Intelligence integrates with Sprint 109 [Enterprise Resilience Governance](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/TRANSFORMATION_RESILIENCE_GOVERNANCE.md) to feed systemic graph topology data into evidence-backed control coverage.
+
 ## Overview & Systemic Intelligence Pipeline
 
 Vapor OS Sprint 104 builds the cross-domain intelligence layer above Sprints 99-103:

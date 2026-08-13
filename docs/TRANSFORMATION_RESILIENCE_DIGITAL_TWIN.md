@@ -1,4 +1,6 @@
-# Enterprise Transformation Resilience Digital Twin 2.0
+## Governance Integration
+Sprint 105 Digital Twin integrates with Sprint 109 [Enterprise Resilience Governance](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/TRANSFORMATION_RESILIENCE_GOVERNANCE.md) to enforce simulation sandbox isolation and zero production mutation guardrails.
+
 
 ## Overview & Architecture
 
