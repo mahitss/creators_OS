@@ -10681,6 +10681,156 @@ class TransformationResilienceDecisionDelayAnalysis(Base):
     delay_days: Mapped[float] = mapped_column(Float, nullable=False, default=0.0, index=True)
     consequence_summary: Mapped[Text] = mapped_column(Text, nullable=False)
 
+# ------------------------------------------------------------------------------
+# SPRINT 93 — ENTERPRISE TRANSFORMATION RESILIENCE DECISION KNOWLEDGE 2.0 MODELS
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceDecisionKnowledgeDomain(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionKnowledgeObject(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_objects"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    statement: Mapped[Text] = mapped_column(Text, nullable=False)
+    context_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95, index=True)
+    applicability_level: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="validated", index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    source_decision_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionKnowledgeValidation(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_validations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    supporting_cases_count: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    contradicting_cases_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    evidence_quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    reproducibility: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    context_consistency: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDecisionKnowledgeContext(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_contexts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    transformation_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    dependency_profile: Mapped[str] = mapped_column(String(255), nullable=False)
+    capacity_profile: Mapped[str] = mapped_column(String(255), nullable=False)
+    risk_profile: Mapped[str] = mapped_column(String(255), nullable=False)
+    recovery_profile: Mapped[str] = mapped_column(String(255), nullable=False)
+    governance_context: Mapped[str] = mapped_column(String(255), nullable=False)
+    time_horizon: Mapped[str] = mapped_column(String(100), nullable=False)
+
+class TransformationResilienceDecisionKnowledgeApplicability(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_applicabilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_decision_context_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    level: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    applicability_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    explanation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceDecisionKnowledgeConflict(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_conflicts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_a_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    knowledge_object_b_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    conflicting_claims: Mapped[Text] = mapped_column(Text, nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    context_differences: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDecisionKnowledgeInvalidation(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_invalidations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger: Mapped[str] = mapped_column(String(100), nullable=False)
+    rationale: Mapped[Text] = mapped_column(Text, nullable=False)
+    contradictory_evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDecisionKnowledgeReview(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending_review", index=True)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    review_after: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=90))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=180))
+
+class TransformationResilienceDecisionKnowledgeReuse(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_reuses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    context_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    recommendation_influence: Mapped[str] = mapped_column(String(100), nullable=False, default="high")
+    result: Mapped[str] = mapped_column(String(50), nullable=False, default="successful", index=True)
+    outcome_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceDecisionKnowledgePack(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_packs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    pack_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    lessons_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    precedents_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    patterns_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    conflicts_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    limitations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDecisionKnowledgeQuality(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_qualities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    knowledge_object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    completeness: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    provenance: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    consistency: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    validation_level: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+
+class TransformationResilienceDecisionKnowledgeGap(Base):
+    __tablename__ = "transformation_resilience_decision_knowledge_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    gap_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    gap_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    recommended_activity: Mapped[Text] = mapped_column(Text, nullable=False)
+
+
 
 
 
