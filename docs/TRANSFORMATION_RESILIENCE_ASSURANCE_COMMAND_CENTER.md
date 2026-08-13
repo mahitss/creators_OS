@@ -30,3 +30,7 @@ The Assurance Operations Center is an orchestration and visibility layer over ex
 
 ## Approved Terminology
 Describes capabilities as "enterprise assurance command center", "real-time operational assurance intelligence", "governed executive response visibility", and "evidence-backed operational control".
+
+## Sprint 104 Cross-Domain Intelligence Fabric Integration
+Sprint 104 feeds cross-domain propagation paths, systemic exposures, compound risk factors, single-point exposure components, cascade breakpoints, and intervention collisions directly into the Assurance Operations Center (`/transformation-resilience-assurance-command`).
+

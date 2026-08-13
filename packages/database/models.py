@@ -13044,6 +13044,234 @@ class TransformationResilienceAssuranceCommandProjectionHealth(Base):
     rebuild_status: Mapped[str] = mapped_column(String(50), nullable=False, default="idle")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+# ------------------------------------------------------------------------------
+# SPRINT 104: Enterprise Transformation Resilience Cross-Domain Assurance Intelligence 2.0
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceCrossDomainIntelligenceDomain(Base):
+    __tablename__ = "transformation_resilience_cross_domain_intelligence_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True) # initializing, active, degraded, paused
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceCrossDomainResilienceGraph(Base):
+    __tablename__ = "transformation_resilience_cross_domain_resilience_graphs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    total_nodes_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_edges_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceCrossDomainGraphNode(Base):
+    __tablename__ = "transformation_resilience_cross_domain_graph_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    node_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # transformation, portfolio, plan, risk, knowledge, evidence, decision, conflict, warning, intervention, dependency, resource, deadline, governance
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    domain: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    state: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+
+class TransformationResilienceCrossDomainGraphEdge(Base):
+    __tablename__ = "transformation_resilience_cross_domain_graph_edges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relationship: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # depends_on, supports, blocks, affects, shared_with, constrained_by, derived_from, mitigates, causes, contributes_to, correlates_with, precedes, governed_by
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9, index=True)
+    evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    evidence_quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    last_validated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceCrossDomainPropagationPath(Base):
+    __tablename__ = "transformation_resilience_cross_domain_propagation_paths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    intermediate_nodes_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    relationships_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    depth: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationResilienceCrossDomainPropagation(Base):
+    __tablename__ = "transformation_resilience_cross_domain_propagations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_condition: Mapped[Text] = mapped_column(Text, nullable=False)
+    propagation_type: Mapped[str] = mapped_column(String(100), nullable=False) # dependency, resource, deadline, evidence, decision, conflict, execution, governance, capacity, knowledge
+    affected_objects_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    propagation_path_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    estimated_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainSystemicExposure(Base):
+    __tablename__ = "transformation_resilience_cross_domain_systemic_exposures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_domains_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    affected_transformations_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    affected_plans_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    shared_dependencies_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    shared_resources_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True)
+    exposure_state: Mapped[str] = mapped_column(String(50), nullable=False, default="emerging") # emerging, elevated, critical, stabilizing, resolved, unknown
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=0.08)
+
+class TransformationResilienceCrossDomainConcentration(Base):
+    __tablename__ = "transformation_resilience_cross_domain_concentrations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    concentration_type: Mapped[str] = mapped_column(String(100), nullable=False) # dependency, resource, evidence, decision, transformation, deadline, knowledge domain
+    object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    concentration_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainSinglePointExposure(Base):
+    __tablename__ = "transformation_resilience_cross_domain_single_point_exposures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    component_type: Mapped[str] = mapped_column(String(100), nullable=False) # shared evidence source, shared dependency, shared infrastructure, shared approval window, shared critical milestone
+    component_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_systems_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+
+class TransformationResilienceCrossDomainFragility(Base):
+    __tablename__ = "transformation_resilience_cross_domain_fragilities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dependents_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    alternative_paths_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    recovery_options_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainRedundancy(Base):
+    __tablename__ = "transformation_resilience_cross_domain_redundancies"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    object_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    alternative_evidence_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    alternative_dependencies_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    alternative_resources_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    alternative_execution_paths_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainResilienceGap(Base):
+    __tablename__ = "transformation_resilience_cross_domain_resilience_gaps"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    gap_type: Mapped[str] = mapped_column(String(100), nullable=False) # missing_redundancy, single_dependency, insufficient_evidence, limited_recovery_path, governance_bottleneck, capacity_concentration
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    recommended_mitigation: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceCrossDomainCompoundRisk(Base):
+    __tablename__ = "transformation_resilience_cross_domain_compound_risks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    contributing_conditions_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class TransformationResilienceCrossDomainCompoundCondition(Base):
+    __tablename__ = "transformation_resilience_cross_domain_compound_conditions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    compound_risk_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    condition_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    relationship: Mapped[str] = mapped_column(String(50), nullable=False)
+    threshold: Mapped[float] = mapped_column(Float, nullable=False, default=0.7)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    evidence_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class TransformationResilienceCrossDomainCascadeProjection(Base):
+    __tablename__ = "transformation_resilience_cross_domain_cascade_projections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    path_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    affected_domains_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    depth: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    intervention_points_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationResilienceCrossDomainCascadeBreakpoint(Base):
+    __tablename__ = "transformation_resilience_cross_domain_cascade_breakpoints"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cascade_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    location_node_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    option_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    expected_effect: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    cost: Mapped[str] = mapped_column(String(100), nullable=False, default="low")
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="reversible")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainSecondOrderEffect(Base):
+    __tablename__ = "transformation_resilience_cross_domain_second_order_effects"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    intervention_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_object_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    effect_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    direction: Mapped[str] = mapped_column(String(50), nullable=False, default="increased_capacity_pressure") # risk_reduced, capacity_pressure_increased, deadline_improved, new_dependency_created
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainInterventionCollision(Base):
+    __tablename__ = "transformation_resilience_cross_domain_intervention_collisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    intervention_a_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    intervention_b_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    collision_type: Mapped[str] = mapped_column(String(50), nullable=False) # compete, conflict, cancel, amplify
+    affected_domains_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    resolution: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceCrossDomainGovernanceContext(Base):
+    __tablename__ = "transformation_resilience_cross_domain_governance_contexts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    required_authorities_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    decision_dependencies_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    approval_dependencies_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    policy_evaluation_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+
+class TransformationResilienceCrossDomainSystemicWarning(Base):
+    __tablename__ = "transformation_resilience_cross_domain_systemic_warnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True) # open, acknowledged, investigating, mitigating, resolved, expired, invalidated
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical", index=True)
+    evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 
