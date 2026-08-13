@@ -13,3 +13,7 @@ OPTIMIZATION IS DECISION SUPPORT. Vapor analyzes, ranks, compares, simulates, re
 
 ## Approved Terminology
 Describes capabilities as "resilience optimization intelligence", "multi-objective resilience analysis", "evidence-backed investment comparison", and "governed resilience improvement planning".
+
+## Sprint 108 Learning Fabric Integration
+Sprint 108 compares expected optimization benefits and costs against actual observed outcomes (`/transformation-resilience-learning`), refining optimization candidate assumptions over time under governed review.
+

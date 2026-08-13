@@ -17,3 +17,7 @@ Describes capabilities as "continuous resilience validation", "controlled failur
 ## Sprint 107 Optimization Integration
 Sprint 107 feeds Sprint 106 stress testing failure results, failed controls, and coverage gaps into the Multi-Objective Resilience Optimization Engine (`/transformation-resilience-optimization`) to rank improvement priorities.
 
+## Sprint 108 Learning Fabric Integration
+Sprint 108 compares stress testing simulated results with real incident outcomes (`/transformation-resilience-learning`), detecting simulation error deltas and updating failure injection parameters.
+
+

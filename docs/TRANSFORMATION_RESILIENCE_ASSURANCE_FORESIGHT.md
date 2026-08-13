@@ -10,7 +10,10 @@ LIVE SIGNALS → TREND DETECTION → LEADING INDICATORS → CONTEXT CHANGE → E
 
 ## Critical Principles
 * **Foresight is Not Certainty**: Every forecast MUST explicitly expose `signal`, `trend`, `forecast horizon`, `confidence`, `uncertainty`, `assumptions`, `alternative explanations`, and `evidence quality`. Never presents a forecast as a fact.
-* **Approved Terminology**: Describes capabilities as "assurance foresight", "leading-indicator intelligence", "early-warning intelligence", "evidence-backed forward-looking risk analysis", and "human-governed preventive planning".
+* **Approved Terminology**: Describes capabilities as "predictive resilience foresight", "early warning intelligence", "evidence-backed risk forecasting", and "governed risk anticipation".
+
+## Sprint 108 Learning Fabric Integration
+Sprint 108 measures Foresight warning precision %, recall %, lead time, and false positive/negative rates (`/transformation-resilience-learning`), proposing governed threshold recalibrations when model drift or prediction errors occur.
 
 ## Sprint 102 Assurance Intervention Integration
 Sprint 102 connects forward-looking assurance foresight to governed intervention orchestration (`EARLY WARNING → INTERVENTION WINDOW → PREVENTIVE OPTION → IMPACT ANALYSIS → SCENARIO SIMULATION → INTERVENTION PLAN → HUMAN APPROVAL → ACTION → VERIFICATION → OUTCOME → LEARNING`).
