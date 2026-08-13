@@ -21,3 +21,7 @@ Instead of collapsing system resilience into an opaque single score, Vapor evalu
 ## Governance & Anti-Surveillance Safeguards
 * **Autonomous Execution Restrictions**: Agents may analyze, simulate, and formulate investment candidates, but CANNOT autonomously allocate funds, alter production architecture, or change governance. All material changes require `PolicyEngine` + `Approval` + `ActionGateway`.
 * **Anti-Surveillance**: Prohibits individual employee resilience rankings or worker performance surveillance profiles.
+
+## Sprint 88 Portfolio Integration
+Single-transformation resilience engineering output feeds directly into [TRANSFORMATION_RESILIENCE_PORTFOLIO.md](./TRANSFORMATION_RESILIENCE_PORTFOLIO.md), enabling cross-portfolio protection optimization, investment overlap detection, capacity-aware sequencing, and option value maximization.
+
