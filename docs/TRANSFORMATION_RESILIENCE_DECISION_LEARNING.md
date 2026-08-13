@@ -1,5 +1,13 @@
-# Transformation Resilience Decision Precedents & Learning
+# Enterprise Transformation Resilience Decision Learning 2.0
 
-## Closed-Loop Precedent Lookup
-* **Historical Precedents**: Matches incoming decision contexts against past outcomes.
-* **Context Difference Visibility**: Surfaces applicability scores alongside explicit contextual differences so leaders never blindly copy historical decisions.
+## Overview & Architecture
+
+Vapor OS Sprint 92 builds the learning layer that answers "Did our resilience decisions actually work?":
+
+```
+DECISION → EXPECTED OUTCOME → EXECUTION → OBSERVED OUTCOME → COMPARISON → EFFECTIVENESS → ROOT CAUSE CLASSIFICATION → LESSON → PATTERN → FUTURE DECISION EVIDENCE
+```
+
+## Governance & Learning Principles
+* **Decision Support Improvement Only**: Learning improves decision support, but CANNOT silently change governance, decision rights, approval requirements, investment policy, risk thresholds, or production systems.
+* **Anti-Surveillance**: Strictly prohibits individual worker decision-quality rankings, behavioral profiles, or performance predictions.
