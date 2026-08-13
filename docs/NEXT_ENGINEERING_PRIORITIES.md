@@ -67,3 +67,15 @@
 - **Expected Benefit**: Quantum-safe event signature validation.
 - **Priority**: **P3**
 
+
+### 7. Stress Simulation Production Isolation Guard (RELIABILITY / GOVERNANCE) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_STRESS_ISOLATION.md`)
+- **Problem**: Stress testing failure injection runs required explicit metadata verification asserting read-only sandbox isolation.
+- **Evidence**: `docs/POST_V1_BACKLOG.md` Reliability Category.
+- **Impact**: Strictly guarantees stress simulation engine operates in read-only sandbox isolation.
+- **Risk**: Low.
+- **Complexity**: Low.
+- **Expected Benefit**: Zero production data mutation during stress simulation runs.
+- **Priority**: **P3**
+
+

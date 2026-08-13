@@ -184,6 +184,16 @@ def test_30_hybrid_quantum_event_payload_signing():
     assert verify_event_signature(payload, sig) is True
     assert verify_event_signature(payload + "_tampered", sig) is False
 
+def test_31_stress_simulation_production_isolation_guard():
+    """Test Priority #7: Stress Simulation Production Isolation Guard - Read-only sandbox isolation."""
+    async def _test():
+        from app.services.transformation_resilience_stress_service import TransformationResilienceStressService
+        res = await TransformationResilienceStressService.process_natural_language_stress_query(None, "analyze compute outage campaign")
+        assert res["evidenceJson"]["simulation_isolation"] == "CTRL_SIMULATION_ISOLATION"
+        assert res["evidenceJson"]["production_mutation"] == "BLOCKED"
+    asyncio.run(_test())
+
+
 
 
 

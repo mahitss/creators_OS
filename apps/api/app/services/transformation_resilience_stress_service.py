@@ -600,7 +600,10 @@ class TransformationResilienceStressService:
             ],
             "evidenceJson": {
                 "data_source": "Autonomous Resilience Simulation & Continuous Enterprise Stress Testing 2.0",
-                "freshness_pct": 100.0
+                "freshness_pct": 100.0,
+                "simulation_isolation": "CTRL_SIMULATION_ISOLATION",
+                "production_mutation": "BLOCKED"
             },
             "confidencePct": 99.8
         }
+
