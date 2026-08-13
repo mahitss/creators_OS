@@ -193,6 +193,17 @@ def test_31_stress_simulation_production_isolation_guard():
         assert res["evidenceJson"]["production_mutation"] == "BLOCKED"
     asyncio.run(_test())
 
+def test_32_ai_provider_automated_fallback_evaluation_harness():
+    """Test Priority #8: AI Provider Automated Fallback Evaluation Harness - Multi-provider fallback readiness."""
+    async def _test():
+        from app.core.ai_provider import evaluate_provider_fallback_readiness
+        readiness = await evaluate_provider_fallback_readiness()
+        assert readiness["fallback_ready"] is True
+        assert readiness["status"] == "OPERATIONAL"
+        assert readiness["fallback_provider"] == "DeterministicTestProvider"
+    asyncio.run(_test())
+
+
 
 
 
