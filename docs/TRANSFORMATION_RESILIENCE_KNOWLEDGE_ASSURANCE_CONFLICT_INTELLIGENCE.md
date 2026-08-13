@@ -18,4 +18,8 @@ Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_DECISION_INTELLIGENCE.md](.
 ## Sprint 101 Assurance Foresight Integration
 Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md](./TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md) to feed conflict pressure signals and emerging conflict risks into early-warning intervention windows and preventive options.
 
+## Sprint 102 Assurance Intervention Integration
+Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_INTERVENTION.md](./TRANSFORMATION_RESILIENCE_ASSURANCE_INTERVENTION.md) to detect conflicts between proposed interventions and active remediation plans prior to governance sign-off.
+
+
 
