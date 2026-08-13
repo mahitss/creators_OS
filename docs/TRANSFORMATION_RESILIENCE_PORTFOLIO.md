@@ -11,3 +11,7 @@ TRANSFORMATION PORTFOLIO → RESILIENCE EXPOSURE → SYSTEMIC WEAKNESSES → SHA
 ## Governance & Anti-Surveillance Safeguards
 * **Autonomous Execution Restrictions**: Agents may model exposure, simulate multi-failure scenarios, and prepare portfolio resilience plans, but CANNOT autonomously allocate budgets, approve investments, change portfolio priorities, or execute material resilience decisions. All material actions require `PolicyEngine` + `Approval` + `ActionGateway`.
 * **Anti-Surveillance**: Prohibits individual employee resilience rankings or individual investment performance rankings.
+
+## Sprint 89 Resilience Sensing Integration
+Integrates continuously with [TRANSFORMATION_RESILIENCE_SENSING.md](./TRANSFORMATION_RESILIENCE_SENSING.md) to receive real-time observations, drift alerts, structural change events, and assumption drift triggers that automatically re-evaluate portfolio protection posture.
+

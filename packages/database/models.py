@@ -10012,6 +10012,193 @@ class TransformationPortfolioResilienceReview(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="open")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
+# ------------------------------------------------------------------------------
+# SPRINT 89 — ENTERPRISE TRANSFORMATION RESILIENCE SENSING 2.0 MODELS
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceSensingDomain(Base):
+    __tablename__ = "transformation_resilience_sensing_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceObservation(Base):
+    __tablename__ = "transformation_resilience_observations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    value: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="portfolio", index=True)
+
+class TransformationResilienceObservationQuality(Base):
+    __tablename__ = "transformation_resilience_observation_qualities"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    observation_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    completeness: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    consistency: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    reliability: Mapped[float] = mapped_column(Float, nullable=False, default=0.96, index=True)
+
+class TransformationResilienceSignalNormalization(Base):
+    __tablename__ = "transformation_resilience_signal_normalizations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    source_metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    normalized_dimension: Mapped[str] = mapped_column(String(100), nullable=False)
+    normalized_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+
+class TransformationResilienceDynamicBaseline(Base):
+    __tablename__ = "transformation_resilience_dynamic_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    effective_period: Mapped[str] = mapped_column(String(100), nullable=False, default="2026-Q3")
+    change_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_context_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    baseline_metrics_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationResilienceDrift(Base):
+    __tablename__ = "transformation_resilience_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_type: Mapped[str] = mapped_column(String(50), nullable=False, default="persistent")
+    metric_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    deviation_pct: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceStructuralChange(Base):
+    __tablename__ = "transformation_resilience_structural_changes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    change_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    affected_scope_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    materiality: Mapped[str] = mapped_column(String(50), nullable=False, default="material", index=True)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceAlertEvaluation(Base):
+    __tablename__ = "transformation_resilience_alert_evaluations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    condition_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    persistence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    corroboration_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    actionable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+class TransformationResilienceSensingWarning(Base):
+    __tablename__ = "transformation_resilience_sensing_warnings"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    condition: Mapped[str] = mapped_column(String(255), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    affected_scope_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    recommended_review: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+
+class TransformationResilienceSignalCorrelation(Base):
+    __tablename__ = "transformation_resilience_signal_correlations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    signal_a: Mapped[str] = mapped_column(String(255), nullable=False)
+    signal_b: Mapped[str] = mapped_column(String(255), nullable=False)
+    relationship_type: Mapped[str] = mapped_column(String(50), nullable=False, default="observed_correlation")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.93, index=True)
+
+class TransformationResilienceStateChange(Base):
+    __tablename__ = "transformation_resilience_state_changes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    previous_state: Mapped[str] = mapped_column(String(50), nullable=False)
+    new_state: Mapped[str] = mapped_column(String(50), nullable=False)
+    evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceTrend(Base):
+    __tablename__ = "transformation_resilience_trends"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    dimension: Mapped[str] = mapped_column(String(100), nullable=False)
+    trend_direction: Mapped[str] = mapped_column(String(50), nullable=False, default="stable")
+    window: Mapped[str] = mapped_column(String(50), nullable=False, default="30d", index=True)
+
+class TransformationResilienceForecast(Base):
+    __tablename__ = "transformation_resilience_forecasts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_metric: Mapped[str] = mapped_column(String(255), nullable=False)
+    forecast_value: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    uncertainty_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceAssumption(Base):
+    __tablename__ = "transformation_resilience_assumptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assumption_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_context: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True)
+
+class TransformationResilienceAssumptionDrift(Base):
+    __tablename__ = "transformation_resilience_assumption_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assumption_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    drift_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    affected_scenarios_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationResilienceInvestmentReviewTrigger(Base):
+    __tablename__ = "transformation_resilience_investment_review_triggers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_investment_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high", index=True)
+    review_deadline: Mapped[str] = mapped_column(String(100), nullable=False, default="2026-Q3")
+
+class TransformationPortfolioResilienceState(Base):
+    __tablename__ = "transformation_portfolio_resilience_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    robustness: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    redundancy: Mapped[float] = mapped_column(Float, nullable=False, default=0.91)
+    recoverability: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    adaptability: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    optionality: Mapped[float] = mapped_column(Float, nullable=False, default=0.93)
+    observability: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+    governability: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
 
 
 

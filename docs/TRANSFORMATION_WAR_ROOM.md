@@ -11,3 +11,7 @@ The War Room is an intelligence and coordination surface. It is NOT an autonomou
 ## Sprint 87 Integration
 Provides real-time situation control during active disruptions while feeding observed failure modes into [TRANSFORMATION_RESILIENCE_ENGINEERING.md](./TRANSFORMATION_RESILIENCE_ENGINEERING.md) for long-term structural hardening.
 
+## Sprint 89 Resilience Sensing Integration
+Connects directly to [TRANSFORMATION_RESILIENCE_SENSING.md](./TRANSFORMATION_RESILIENCE_SENSING.md) to receive early warnings, persistent drift notifications, and assumption invalidation alerts before crisis situations erupt.
+
+
