@@ -607,3 +607,26 @@ class TransformationResilienceStressService:
             "confidencePct": 99.8
         }
 
+    @staticmethod
+    async def inject_hardware_datacenter_power_loss_simulation(
+        session: Optional[AsyncSession],
+        campaign_id: str,
+        datacenter_zone: str = "us-east-1a"
+    ) -> dict:
+        """Injects physical datacenter hardware power loss simulation in read-only sandbox isolation (Priority #12)."""
+        inj_id = f"inj_hw_power_{str(uuid.uuid4())[:8]}"
+        now_iso = datetime.now(timezone.utc).isoformat()
+        rec = {
+            "id": inj_id,
+            "campaign_id": campaign_id,
+            "failure_type": "HARDWARE_DATACENTER_POWER_LOSS",
+            "target_zone": datacenter_zone,
+            "simulation_isolation": "CTRL_SIMULATION_ISOLATION",
+            "production_mutation": "BLOCKED",
+            "status": "SIMULATED",
+            "injected_at": now_iso
+        }
+        _in_memory_stress_failure_injections[inj_id] = rec
+        return rec
+
+

@@ -245,6 +245,18 @@ def test_35_federated_multi_cloud_policy_sync_attestation():
         assert len(att["region_nodes"]) == 3
     asyncio.run(_test())
 
+def test_36_datacenter_hardware_power_loss_stress_injector():
+    """Test Priority #12: Datacenter Hardware Power Loss Stress Simulation Injector - Read-only sandbox hardware failure simulation."""
+    async def _test():
+        from app.services.transformation_resilience_stress_service import TransformationResilienceStressService
+        res = await TransformationResilienceStressService.inject_hardware_datacenter_power_loss_simulation(None, "camp_hw_01", "us-west-2a")
+        assert res["failure_type"] == "HARDWARE_DATACENTER_POWER_LOSS"
+        assert res["target_zone"] == "us-west-2a"
+        assert res["simulation_isolation"] == "CTRL_SIMULATION_ISOLATION"
+        assert res["production_mutation"] == "BLOCKED"
+    asyncio.run(_test())
+
+
 
 
 
