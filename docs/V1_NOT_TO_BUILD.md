@@ -7,3 +7,6 @@ To prevent scope creep, roadmap drift, and architectural complexity, the followi
 3. **REJECTED: Unnecessary Database Migrations / Schema Rewrites** — The existing 146+ SQLAlchemy async model schema (`v2.0-sprint110`) is stable and handles all 24 feature modules cleanly. Speculative schema rewrites are prohibited.
 4. **REJECTED: Employee Behavioral Surveillance Tools** — Anti-surveillance guardrails strictly prohibit worker performance scoring, keystroke logging, or individual productivity tracking.
 5. **REJECTED: Speculative Provider Integrations** — No additional LLM provider abstractions will be introduced unless an existing provider exhibits unmitigated production downtime.
+6. **REJECTED: Speculative V2 Re-Architecture** — Redesigning stable, verified V1 services without empirical production failure evidence is prohibited.
+7. **REJECTED: Unbacked Feature Scope Expansion** — Adding speculative features without explicit production incident or telemetry justification is rejected.
+
