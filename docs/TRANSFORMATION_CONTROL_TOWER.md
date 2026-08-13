@@ -12,3 +12,7 @@ It strictly does NOT automatically restructure organizations, resequence portfol
 ## Sprint 87 Integration
 Feeds live transformation signals and early resilience warnings to [TRANSFORMATION_RESILIENCE_ENGINEERING.md](./TRANSFORMATION_RESILIENCE_ENGINEERING.md) when capacity margins or dependency concentrations deteriorate.
 
+## Sprint 90 Command Center Integration
+Feeds live change orchestration signals into [TRANSFORMATION_RESILIENCE_COMMAND_CENTER.md](./TRANSFORMATION_RESILIENCE_COMMAND_CENTER.md) to form unified situational awareness and executive priority queues.
+
+
