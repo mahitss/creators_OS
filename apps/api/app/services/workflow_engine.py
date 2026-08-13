@@ -29,8 +29,10 @@ _in_memory_node_runs: Dict[str, List[dict]] = {}
 
 MAX_WORKFLOW_NODES = 100
 MAX_BRANCH_FANOUT = 10
+MAX_CYCLE_DEPTH_LIMIT = 50
 
 VALID_NODE_TYPES = {
+
     "trigger", "condition", "branch", "agent", "tool",
     "approval", "delay", "transform", "notification", "mission", "end"
 }
@@ -120,13 +122,15 @@ def validate_workflow_definition(definition: dict) -> Tuple[bool, List[str], Lis
     if errors:
         return False, errors, warnings, sorted(list(capabilities))
 
-    # Cycle Detection using Topological Sort Queue
+    # Cycle Detection using Topological Sort Queue & Topological Order Tracking
     queue = [nid for nid, deg in in_degree.items() if deg == 0]
     visited_count = 0
+    topological_order: List[str] = []
 
     while queue:
         curr = queue.pop(0)
         visited_count += 1
+        topological_order.append(curr)
         for neighbor in adj[curr]:
             in_degree[neighbor] -= 1
             if in_degree[neighbor] == 0:
@@ -136,7 +140,21 @@ def validate_workflow_definition(definition: dict) -> Tuple[bool, List[str], Lis
         errors.append("Graph cycle detected. Arbitrary cycles are forbidden in workflow definitions.")
         return False, errors, warnings, sorted(list(capabilities))
 
+    # Longest Execution Path Depth Calculation (Priority #10)
+    depth_map: Dict[str, int] = {nid: 1 for nid in node_ids}
+    for src in topological_order:
+        for tgt in adj[src]:
+            if depth_map[src] + 1 > depth_map[tgt]:
+                depth_map[tgt] = depth_map[src] + 1
+
+    max_depth = max(depth_map.values()) if depth_map else 0
+    if max_depth > MAX_CYCLE_DEPTH_LIMIT:
+        errors.append(f"Workflow graph depth ({max_depth}) exceeds maximum limit ({MAX_CYCLE_DEPTH_LIMIT}).")
+        return False, errors, warnings, sorted(list(capabilities))
+
+
     return True, errors, warnings, sorted(list(capabilities))
+
 
 def compile_workflow_to_dag(definition: dict, workflow_id: str, version: int) -> dict:
     """Compiles visual workflow definition into a deterministic DAG plan for dag_scheduler.py."""

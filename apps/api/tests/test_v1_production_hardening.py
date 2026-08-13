@@ -226,6 +226,16 @@ def test_33_recovery_execution_circuit_breaker_safety_guard():
         assert "Circuit Breaker Open" in exec_err
     asyncio.run(_test())
 
+def test_34_workflow_graph_depth_limit_guard():
+    """Test Priority #10: Workflow Graph Depth & Execution Limit Guard - Rejection of graph depth exceeding 50 nodes."""
+    from app.services.workflow_engine import validate_workflow_definition
+    nodes = [{"id": f"node_{i}", "type": "trigger" if i == 0 else ("end" if i == 60 else "agent")} for i in range(61)]
+    edges = [{"source_node_id": f"node_{i}", "target_node_id": f"node_{i+1}"} for i in range(60)]
+    valid, errors, _, _ = validate_workflow_definition({"nodes": nodes, "edges": edges})
+    assert valid is False
+    assert any("depth" in e.lower() for e in errors)
+
+
 
 
 

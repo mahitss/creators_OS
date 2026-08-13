@@ -101,5 +101,17 @@
 - **Priority**: **P3**
 
 
+### 10. Workflow Graph Depth & Execution Limit Guard (RELIABILITY / ORCHESTRATION) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_WORKFLOW_DEPTH_GUARD.md`)
+- **Problem**: Visual DAG workflow definitions required explicit graph depth validation.
+- **Evidence**: `docs/V1_RELIABILITY_ROADMAP.md` & `docs/POST_V1_BACKLOG.md` Reliability Category.
+- **Impact**: Rejects workflow definitions exceeding maximum graph depth limit (50 nodes).
+- **Risk**: Low.
+- **Complexity**: Low.
+- **Expected Benefit**: Prevents stack overflow and runaway execution loops.
+- **Priority**: **P3**
+
+
+
 
 
