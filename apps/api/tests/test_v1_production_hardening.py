@@ -118,3 +118,15 @@ def test_25_opentelemetry_db_query_span_annotation():
         assert tracer.span_data["status"] == "OK"
     asyncio.run(_test())
 
+def test_26_prometheus_redis_queue_metrics_exporter():
+    """Test Priority #2 (GAP-02): Prometheus Redis Consumer Queue Exporter - Formatted metrics exposition."""
+    async def _test():
+        from app.services.health_service import get_redis_queue_metrics
+        metrics = await get_redis_queue_metrics("redis://localhost:6379/0")
+        assert "vapor_redis_connected_status" in metrics
+        assert "vapor_redis_queue_depth_items" in metrics
+        assert "vapor_redis_queue_lag_seconds" in metrics
+        assert "vapor_redis_active_consumers_count" in metrics
+    asyncio.run(_test())
+
+

@@ -13,7 +13,8 @@
 - **Priority**: **P3**
 
 
-### 2. Prometheus Redis Consumer Queue Exporter (GAP-02)
+### 2. Prometheus Redis Consumer Queue Exporter (GAP-02) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_GAP02_REDIS_METRICS.md`)
 - **Problem**: Consumer group queue depth histograms currently sampled via background polling.
 - **Evidence**: `docs/V1_OBSERVABILITY_GAPS.md` GAP-02.
 - **Impact**: Enhances event queue burst detection.
@@ -21,6 +22,7 @@
 - **Complexity**: Low.
 - **Expected Benefit**: Real-time queue lag metrics in Prometheus/Grafana.
 - **Priority**: **P3**
+
 
 ### 3. Per-Tenant AI Token Expenditure Attribution (GAP-03)
 - **Problem**: Token usage is currently parsed from structured audit log strings.

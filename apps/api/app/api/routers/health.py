@@ -43,3 +43,11 @@ async def check_readiness(response: Response, db: AsyncSession = Depends(get_db)
         return {"status": "not_ready", "reason": "Database dependency unavailable."}
 
     return {"status": "ready", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@router.get("/metrics")
+async def get_prometheus_metrics():
+    """Prometheus exposition format exporter for Redis consumer queue metrics (GAP-02)."""
+    from app.services.health_service import get_redis_queue_metrics
+    content = await get_redis_queue_metrics(settings.REDIS_URL)
+    return Response(content=content, media_type="text/plain; version=0.0.4")
+
