@@ -13,3 +13,7 @@ Cross-domain intelligence MUST explain relationships showing `source`, `relation
 
 ## Approved Terminology
 Describes capabilities as "cross-domain resilience intelligence", "evidence-backed systemic relationship analysis", "resilience dependency intelligence", and "systemic exposure analysis".
+
+## Sprint 105 Digital Twin Integration
+Sprint 105 maps cross-domain resilience graph nodes and propagation paths directly into isolated Digital Twin scenario forks (`/transformation-resilience-digital-twin`), enabling safe counterfactual simulation without mutating production state.
+

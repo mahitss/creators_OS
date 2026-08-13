@@ -1,0 +1,15 @@
+# Enterprise Transformation Resilience Digital Twin 2.0
+
+## Overview & Architecture
+
+Vapor OS Sprint 105 builds a non-destructive digital representation and governed simulation environment above Sprints 99-104:
+
+```
+READ-ONLY REPRESENTATION + SIMULATION ENVIRONMENT + COUNTERFACTUAL ANALYSIS + SCENARIO COMPARISON
+```
+
+## Critical Principle
+THE DIGITAL TWIN IS NOT PRODUCTION. It provides a read-only operational state representation, isolated scenario forks, counterfactual analysis, and scenario comparisons. It NEVER mutates production state from a simulation.
+
+## Approved Terminology
+Describes capabilities as "enterprise resilience digital twin", "non-destructive operational state model", "counterfactual resilience simulation", and "governed resilience experimentation".

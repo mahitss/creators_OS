@@ -18,3 +18,7 @@ Sprint 103 projects intervention cases, active options, rollback readiness, and 
 ## Sprint 104 Cross-Domain Intelligence Fabric Integration
 Sprint 104 evaluates multi-domain intervention impacts, second-order effects, and intervention collisions prior to ActionGateway execution authorization.
 
+## Sprint 105 Digital Twin Integration
+Sprint 105 simulates intervention option activations inside isolated Digital Twin scenario forks to evaluate residual risk and stabilization time before authorizing live execution.
+
+

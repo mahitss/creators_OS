@@ -13271,6 +13271,278 @@ class TransformationResilienceCrossDomainSystemicWarning(Base):
     evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+# ------------------------------------------------------------------------------
+# SPRINT 105: Enterprise Transformation Resilience Digital Twin 2.0
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceDigitalTwinDomain(Base):
+    __tablename__ = "transformation_resilience_digital_twin_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    source_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    state_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="current", index=True) # initializing, synchronizing, current, stale, degraded, paused, archived
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinState(Base):
+    __tablename__ = "transformation_resilience_digital_twin_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    source_event_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    state_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    completeness: Mapped[float] = mapped_column(Float, nullable=False, default=0.98)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+
+class TransformationResilienceDigitalTwinSnapshot(Base):
+    __tablename__ = "transformation_resilience_digital_twin_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    parent_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    transformations_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    plans_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    dependencies_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    risks_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    knowledge_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    evidence_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    warnings_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    conflicts_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    interventions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    decisions_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    resources_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    deadlines_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    state_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinSynchronization(Base):
+    __tablename__ = "transformation_resilience_digital_twin_synchronizations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    last_source_event_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    last_processed_event_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    lag_seconds: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    errors_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    rebuild_status: Mapped[str] = mapped_column(String(50), nullable=False, default="idle")
+    synchronization_mode: Mapped[str] = mapped_column(String(50), nullable=False, default="event_driven") # event_driven, scheduled_reconciliation, manual_rebuild
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinStateDiff(Base):
+    __tablename__ = "transformation_resilience_digital_twin_state_diffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    previous_snapshot_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    current_snapshot_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    changed_objects_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    added_objects_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    removed_objects_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    changed_relationships_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinNode(Base):
+    __tablename__ = "transformation_resilience_digital_twin_nodes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    node_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # transformation, portfolio, plan, risk, knowledge, evidence, decision, conflict, warning, intervention, dependency, resource, deadline, governance
+    node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    domain: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="medium")
+    state: Mapped[str] = mapped_column(String(50), nullable=False, default="active")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+
+class TransformationResilienceDigitalTwinRelationship(Base):
+    __tablename__ = "transformation_resilience_digital_twin_relationships"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    target_node_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    relationship: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    valid_from: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    valid_to: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+class TransformationResilienceDigitalTwinRealityComparison(Base):
+    __tablename__ = "transformation_resilience_digital_twin_reality_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    production_state_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    twin_state_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    difference_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinScenarioFork(Base):
+    __tablename__ = "transformation_resilience_digital_twin_scenario_forks"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    base_snapshot_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=7))
+
+class TransformationResilienceDigitalTwinScenarioState(Base):
+    __tablename__ = "transformation_resilience_digital_twin_scenario_states"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_fork_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothetical_state_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=dict)
+    isolation_level: Mapped[str] = mapped_column(String(50), nullable=False, default="strictly_isolated")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinCounterfactualChange(Base):
+    __tablename__ = "transformation_resilience_digital_twin_counterfactual_changes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    change_type: Mapped[str] = mapped_column(String(100), nullable=False) # dependency_failure, resource_reduction, deadline_change, scope_change, evidence_loss, risk_increase, intervention_activation, intervention_failure, external_shock
+    target_object_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    parameters_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=dict)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceDigitalTwinCounterfactualScenario(Base):
+    __tablename__ = "transformation_resilience_digital_twin_counterfactual_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    baseline_snapshot_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    changes_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    assumptions_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    horizon_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinScenarioOutcome(Base):
+    __tablename__ = "transformation_resilience_digital_twin_scenario_outcomes"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.8)
+    coverage_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.9)
+    capacity_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.85)
+    deadline_impact_days: Mapped[int] = mapped_column(Integer, nullable=False, default=7)
+    dependency_exposure_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.75)
+    residual_risk_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+    recovery_time_days: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinCounterfactualComparison(Base):
+    __tablename__ = "transformation_resilience_digital_twin_counterfactual_comparisons"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    baseline_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    scenario_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    difference_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    uncertainty: Mapped[float] = mapped_column(Float, nullable=False, default=0.1)
+
+class TransformationResilienceDigitalTwinStressScenario(Base):
+    __tablename__ = "transformation_resilience_digital_twin_stress_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    stress_type: Mapped[str] = mapped_column(String(100), nullable=False) # capacity_stress, deadline_stress, dependency_stress, evidence_stress, governance_stress, compound_stress, external_shock
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="critical")
+    affected_domains_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    recovery_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinExternalShockScenario(Base):
+    __tablename__ = "transformation_resilience_digital_twin_external_shock_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    shock_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    affected_domains_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=14)
+    recovery_assumptions_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinRecoveryScenario(Base):
+    __tablename__ = "transformation_resilience_digital_twin_recovery_scenarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    recovery_mode: Mapped[str] = mapped_column(String(50), nullable=False) # no_recovery_action, normal_recovery, accelerated_recovery, contingency_recovery
+    time_to_stabilization_days: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=85.0)
+    coverage_recovery_pct: Mapped[float] = mapped_column(Float, nullable=False, default=95.0)
+    capacity_recovery_pct: Mapped[float] = mapped_column(Float, nullable=False, default=90.0)
+    residual_exposure: Mapped[float] = mapped_column(Float, nullable=False, default=0.08)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinExperiment(Base):
+    __tablename__ = "transformation_resilience_digital_twin_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    hypothesis: Mapped[Text] = mapped_column(Text, nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="simulation_only")
+    assumptions_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    expected_result: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="approved", index=True) # draft, approved, running, completed, cancelled, invalidated
+    authorization_ref: Mapped[str] = mapped_column(String(255), nullable=False, default="auth_sim_governance")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinExperimentResult(Base):
+    __tablename__ = "transformation_resilience_digital_twin_experiment_results"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    experiment_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    hypothesis: Mapped[Text] = mapped_column(Text, nullable=False)
+    observed_result: Mapped[Text] = mapped_column(Text, nullable=False)
+    expected_result: Mapped[Text] = mapped_column(Text, nullable=False)
+    variance: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    limitations_json: Mapped[JSON] = mapped_column(JSON, nullable=False, default=list)
+    snapshot_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    scenario_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinValidation(Base):
+    __tablename__ = "transformation_resilience_digital_twin_validations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    accuracy_pct: Mapped[float] = mapped_column(Float, nullable=False, default=94.5)
+    coverage_pct: Mapped[float] = mapped_column(Float, nullable=False, default=96.0)
+    divergence_pct: Mapped[float] = mapped_column(Float, nullable=False, default=2.5)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinModelError(Base):
+    __tablename__ = "transformation_resilience_digital_twin_model_errors"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    error_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # state_error, relationship_error, forecast_error, propagation_error, recovery_error, unknown
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    predicted_value: Mapped[str] = mapped_column(String(255), nullable=False)
+    observed_value: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDigitalTwinDrift(Base):
+    __tablename__ = "transformation_resilience_digital_twin_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    drift_type: Mapped[str] = mapped_column(String(100), nullable=False) # state_drift, relationship_drift, behavior_drift, assumption_drift
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    drift_magnitude: Mapped[float] = mapped_column(Float, nullable=False, default=0.03)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceDigitalTwinScenarioLibrary(Base):
+    __tablename__ = "transformation_resilience_digital_twin_scenario_libraries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False) # historical, baseline, stress, shock, recovery, counterfactual, experiment
+    scenario_ref: Mapped[str] = mapped_column(String(255), nullable=False)
+    approved_for_reuse: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
