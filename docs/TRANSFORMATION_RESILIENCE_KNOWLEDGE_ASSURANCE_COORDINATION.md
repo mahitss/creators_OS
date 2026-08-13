@@ -15,3 +15,7 @@ ACTIVE PLANS → DEPENDENCY DISCOVERY → RESOURCE DEMAND → CONTENTION DETECTI
 ## Sprint 99 Conflict Intelligence Integration
 Integrates with [TRANSFORMATION_RESILIENCE_KNOWLEDGE_ASSURANCE_CONFLICT_INTELLIGENCE.md](./TRANSFORMATION_RESILIENCE_KNOWLEDGE_ASSURANCE_CONFLICT_INTELLIGENCE.md) to transform detected cross-plan conflicts into explicit, explainable, governed resolution options with evidence-backed decision packets and trade-off analysis.
 
+## Sprint 101 Assurance Foresight Integration
+Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md](./TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md) to feed capacity and dependency pressure signals into leading indicators and early warnings.
+
+

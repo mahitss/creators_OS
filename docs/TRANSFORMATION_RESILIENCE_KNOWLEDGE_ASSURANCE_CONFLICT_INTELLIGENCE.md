@@ -15,3 +15,7 @@ CONFLICTS → CONFLICT CLASSIFICATION → IMPACT ANALYSIS → STAKEHOLDER / GOVE
 ## Sprint 100 Assurance Decision Intelligence Integration
 Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_DECISION_INTELLIGENCE.md](./TRANSFORMATION_RESILIENCE_ASSURANCE_DECISION_INTELLIGENCE.md) to close the learning loop across conflict intelligence, decision outcomes, expected vs actual variance, recommendation quality, and verified lessons.
 
+## Sprint 101 Assurance Foresight Integration
+Integrates with [TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md](./TRANSFORMATION_RESILIENCE_ASSURANCE_FORESIGHT.md) to feed conflict pressure signals and emerging conflict risks into early-warning intervention windows and preventive options.
+
+
