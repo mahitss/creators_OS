@@ -129,4 +129,27 @@ def test_26_prometheus_redis_queue_metrics_exporter():
         assert "vapor_redis_active_consumers_count" in metrics
     asyncio.run(_test())
 
+def test_27_per_tenant_ai_token_expenditure_attribution():
+    """Test Priority #3 (GAP-03): Per-Tenant AI Token Expenditure Attribution - Audit metadata formatting."""
+    async def _test():
+        from app.core.ai_provider import UsageMetadata
+        meta = UsageMetadata(
+            provider="TestProvider",
+            model="gpt-4o",
+            latency_ms=120,
+            input_tokens=200,
+            output_tokens=400,
+            tenant_id="org_global_enterprise_01",
+            estimated_cost_usd=0.0006
+        )
+        audit_dict = meta.to_audit_dict()
+        assert audit_dict["ai_provider"] == "TestProvider"
+        assert audit_dict["ai_model"] == "gpt-4o"
+        assert audit_dict["tenant_id"] == "org_global_enterprise_01"
+        assert audit_dict["input_tokens"] == 200
+        assert audit_dict["output_tokens"] == 400
+        assert audit_dict["estimated_cost_usd"] == 0.0006
+    asyncio.run(_test())
+
+
 

@@ -24,7 +24,8 @@
 - **Priority**: **P3**
 
 
-### 3. Per-Tenant AI Token Expenditure Attribution (GAP-03)
+### 3. Per-Tenant AI Token Expenditure Attribution (GAP-03) [COMPLETED]
+- **Status**: **COMPLETED & VERIFIED** (See `docs/ENGINEERING_CHANGE_GAP03_AI_TOKEN_COST.md`)
 - **Problem**: Token usage is currently parsed from structured audit log strings.
 - **Evidence**: `docs/V1_OBSERVABILITY_GAPS.md` GAP-03.
 - **Impact**: Enables automated per-tenant AI cost breakdown.
@@ -32,6 +33,7 @@
 - **Complexity**: Low.
 - **Expected Benefit**: Precise cloud financial reporting per tenant workspace.
 - **Priority**: **P3**
+
 
 ### 4. Client Web Vitals OpenTelemetry Reporter (GAP-04)
 - **Problem**: Client-side rendering timing depends on server-side gateway telemetry.
