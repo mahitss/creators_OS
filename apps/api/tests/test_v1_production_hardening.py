@@ -203,6 +203,30 @@ def test_32_ai_provider_automated_fallback_evaluation_harness():
         assert readiness["fallback_provider"] == "DeterministicTestProvider"
     asyncio.run(_test())
 
+def test_33_recovery_execution_circuit_breaker_safety_guard():
+    """Test Priority #9: Recovery Execution Circuit Breaker Safety Verification - Blocked execution on OPEN circuit breaker."""
+    async def _test():
+        from app.services import reliability_service
+        from app.schemas.reliability import RecoveryPlanCreate, RecoveryStep
+        reliability_service._in_memory_incidents["inc_test_cb_01"] = {"id": "inc_test_cb_01", "service": "svc_auth_01"}
+        reliability_service._in_memory_breakers["svc_auth_01"] = {"state": "OPEN", "target": "svc_auth_01"}
+
+        plan_in = RecoveryPlanCreate(
+            incidentId="inc_test_cb_01",
+            steps=[RecoveryStep(type="restart_service", target="svc_auth_01", parameters={})],
+            risk="LOW",
+            estimatedImpact={}
+        )
+
+        plan, err = await reliability_service.create_recovery_plan(None, plan_in)
+        assert err is None
+        res, exec_err = await reliability_service.execute_recovery_action(None, plan["id"], 0)
+        assert res == {}
+        assert exec_err is not None
+        assert "Circuit Breaker Open" in exec_err
+    asyncio.run(_test())
+
+
 
 
 

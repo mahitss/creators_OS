@@ -249,6 +249,12 @@ async def execute_recovery_action(
     if pol_eval.decision == "DENY":
         return {}, f"PolicyEngine Rejected Recovery Action: {pol_eval.reason}"
 
+    # Circuit Breaker Safety Check (Priority #9)
+    breaker = _in_memory_breakers.get(target)
+    if breaker and breaker.get("state") == "OPEN":
+        return {}, f"Circuit Breaker Open: Target '{target}' is currently isolated. Automated recovery blocked."
+
+
     # Idempotency Key Guard: recoveryId:incidentId:target
     rec_key = f"{plan_id}:{plan['incident_id']}:{target}:{step_index}"
     if rec_key in _in_memory_executions and _in_memory_executions[rec_key]["status"] == "verified":
