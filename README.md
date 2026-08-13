@@ -1,8 +1,12 @@
-# Vapor OS — AI Chief of Staff (Platform Foundation)
+# Vapor OS — AI Chief of Staff & Enterprise Resilience OS (v1.0.0-rc1)
 
-Vapor is an AI Chief of Staff designed to transform work into continuous background execution.
+> **RELEASE CANDIDATE STATUS**: `v1.0.0-rc1` | **VERDICT**: `READY_FOR_V1`
+> Vapor OS is a hardened, evidence-based Enterprise Transformation Resilience Operating System & AI Chief of Staff.
+
+See [V1 Final Release Report](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/V1_FINAL_RELEASE_REPORT.md), [V1 Release Manifest](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/V1_RELEASE_MANIFEST.md), [V1 Production Checklist](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/V1_PRODUCTION_CHECKLIST.md), and [V1 Scorecard](file:///c:/Users/pc/OneDrive/Desktop/Hack%20vibe/docs/V1_SCORECARD.md).
 
 ---
+
 
 ## Repository Structure
 

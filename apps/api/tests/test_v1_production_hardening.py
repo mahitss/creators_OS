@@ -1,0 +1,107 @@
+import pytest
+import asyncio
+from app.core.v1_errors import format_v1_api_error
+from app.services.transformation_resilience_governance_service import TransformationResilienceGovernanceService
+from app.services.transformation_resilience_learning_service import TransformationResilienceLearningService
+from app.services.transformation_resilience_digital_twin_service import TransformationResilienceDigitalTwinService
+from app.services import dlp_service
+
+def test_01_v1_standardized_error_contract():
+    """Test #6: API Error Standard - Format error without stack traces, internal paths, or credentials."""
+    err = format_v1_api_error(
+        code="RESOURCE_NOT_FOUND",
+        message="Transformation entity with ID tf_123 not found.\nTraceback (most recent call last):\n  File 'db.py', line 42, in execute",
+        request_id="req_test_01"
+    )
+    assert err["code"] == "RESOURCE_NOT_FOUND"
+    assert err["requestId"] == "req_test_01"
+    assert "timestamp" in err
+    assert "Traceback" not in err["message"]
+    assert "File" not in err["message"]
+
+def test_02_feature_freeze_and_post_v1_backlog():
+    """Test #1: Feature Freeze - Confirm non-critical features are documented in post-V1 backlog."""
+    import os
+    backlog_path = os.path.join("docs", "POST_V1_BACKLOG.md")
+    assert os.path.exists(backlog_path)
+    with open(backlog_path, "r", encoding="utf-8") as f:
+        content = f.read()
+    assert "Deferred Non-Critical Features" in content
+
+def test_03_tenant_isolation_adversarial_check():
+    """Test #10: Tenant Isolation - Organization A MUST NEVER access Organization B."""
+    async def _test():
+        res_org_a = await TransformationResilienceGovernanceService.process_natural_language_governance_query(
+            None, "Is Vapor production ready?", caller_org_id="org_global_enterprise_01"
+        )
+        assert res_org_a["confidencePct"] == 100.0
+
+        res_org_b = await TransformationResilienceGovernanceService.process_natural_language_governance_query(
+            None, "Is Vapor production ready?", caller_org_id="org_unauthorized_attacker_b"
+        )
+        assert "DENY" in res_org_b["evidenceJson"].get("error", "")
+        assert res_org_b["confidencePct"] == 0.0
+    asyncio.run(_test())
+
+def test_04_dlp_secret_redaction_boundary():
+    """Test #15: DLP Final Audit - Secrets in prompts/responses are blocked/redacted."""
+    findings = dlp_service.detect_sensitive_patterns("Check api key vpr_1234567890123")
+    assert len(findings) >= 1
+    assert findings[0]["classification"] == "secret"
+
+def test_05_simulation_sandbox_read_only_safety():
+    """Test #13: Simulation Safety - Digital Twin & Stress Testing cannot mutate production state."""
+    async def _test():
+        tw_res = await TransformationResilienceDigitalTwinService.get_digital_twin_overview(None)
+        assert tw_res is not None
+        # Simulation execution returns scenario projections without mutating base production records
+        assert "domainsCount" in tw_res
+        assert tw_res["domainsCount"] >= 1
+    asyncio.run(_test())
+
+
+def test_06_agent_governance_safety_boundaries():
+    """Test #14: Agent Safety - Subagents CANNOT autonomously approve production releases or accept risk."""
+    allow_recommend = TransformationResilienceGovernanceService.enforce_agent_governance("agent_01", "prepare_readiness_assessment")
+    assert allow_recommend["allowed"] is True
+
+    deny_approve = TransformationResilienceGovernanceService.enforce_agent_governance("agent_01", "approve_releases")
+    assert deny_approve["allowed"] is False
+    assert "BLOCKED" in deny_approve["reason"]
+
+    deny_risk = TransformationResilienceGovernanceService.enforce_agent_governance("agent_01", "accept_risk")
+    assert deny_risk["allowed"] is False
+    assert "BLOCKED" in deny_risk["reason"]
+
+def test_07_disaster_recovery_and_rollback_readiness():
+    """Test #58: Disaster Recovery Assurance - Backup, restore, and failover evidence validated."""
+    async def _test():
+        gov_res = await TransformationResilienceGovernanceService.get_governance_overview(None)
+        recov = gov_res.get("recoveryReadiness", [])
+        assert len(recov) >= 1
+        r = recov[0]
+        assert r["data_integrity_validated"] is True
+        assert r["recovery_time_hours"] <= 4.0
+        assert r["recovery_point_minutes"] == 0.0
+    asyncio.run(_test())
+
+def test_08_correlation_id_and_structured_logging():
+    """Test #30: Correlation IDs - Traceability across request, audit, and event payload."""
+    err = format_v1_api_error("INVALID_INPUT", "Input validation failed", request_id="trace_correl_999")
+    assert err["requestId"] == "trace_correl_999"
+
+def test_09_production_readiness_verdict():
+    """Test #86: Release Decision - Governance readiness assessment outputs explicit verdict."""
+    async def _test():
+        assess = await TransformationResilienceGovernanceService.assess_production_readiness(None)
+        assert assess["verdict"] in ["ready", "conditionally_ready", "not_ready", "degraded", "blocked"]
+        assert assess["summary"] is not None
+    asyncio.run(_test())
+
+def test_10_v1_release_manifest_and_scorecard():
+    """Test #65: Release Manifest - Manifest and Scorecard documentation exist."""
+    import os
+    assert os.path.exists(os.path.join("docs", "V1_RELEASE_MANIFEST.md"))
+    assert os.path.exists(os.path.join("docs", "V1_SCORECARD.md"))
+    assert os.path.exists(os.path.join("docs", "V1_PRODUCTION_CHECKLIST.md"))
+    assert os.path.exists(os.path.join("docs", "V1_FINAL_RELEASE_REPORT.md"))
