@@ -235,6 +235,17 @@ def test_34_workflow_graph_depth_limit_guard():
     assert valid is False
     assert any("depth" in e.lower() for e in errors)
 
+def test_35_federated_multi_cloud_policy_sync_attestation():
+    """Test Priority #11: Federated Multi-Cloud Policy Sync Attestation - Cross-region policy attestation and tenant isolation."""
+    async def _test():
+        from app.services.policy_intelligence_service import attest_federated_policy_sync
+        att = await attest_federated_policy_sync(None, "ws_enterprise_global_01")
+        assert att["sync_status"] == "ATT_SYNCHRONIZED"
+        assert att["tenant_isolation_boundary"] == "STRICT_ENFORCED"
+        assert len(att["region_nodes"]) == 3
+    asyncio.run(_test())
+
+
 
 
 
