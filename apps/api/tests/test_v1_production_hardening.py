@@ -166,6 +166,16 @@ def test_28_client_web_vitals_telemetry_ingestion():
         assert res["timestamp"] is not None
     asyncio.run(_test())
 
+def test_29_multi_cloud_failover_telemetry_buffer_optimization():
+    """Test Priority #5: Multi-Cloud Failover Telemetry Buffer Optimization - Buffer timeout <= 30 seconds."""
+    async def _test():
+        from app.services.health_service import get_failover_telemetry_status
+        status_data = await get_failover_telemetry_status()
+        assert status_data["failover_buffer_seconds"] <= 30
+        assert status_data["sync_status"] == "synced"
+    asyncio.run(_test())
+
+
 
 
 

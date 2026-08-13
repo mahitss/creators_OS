@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
 
+    FAILOVER_TELEMETRY_BUFFER_SECONDS: int = 30
+
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+
 
 settings = Settings()
