@@ -13,3 +13,7 @@ THE DIGITAL TWIN IS NOT PRODUCTION. It provides a read-only operational state re
 
 ## Approved Terminology
 Describes capabilities as "enterprise resilience digital twin", "non-destructive operational state model", "counterfactual resilience simulation", and "governed resilience experimentation".
+
+## Sprint 106 Stress Testing Integration
+Sprint 106 executes continuous failure injection and stress testing campaigns (`/transformation-resilience-stress-testing`) directly against Digital Twin snapshots in isolated simulation sandboxes.
+

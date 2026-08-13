@@ -17,3 +17,7 @@ Describes capabilities as "cross-domain resilience intelligence", "evidence-back
 ## Sprint 105 Digital Twin Integration
 Sprint 105 maps cross-domain resilience graph nodes and propagation paths directly into isolated Digital Twin scenario forks (`/transformation-resilience-digital-twin`), enabling safe counterfactual simulation without mutating production state.
 
+## Sprint 106 Stress Testing Integration
+Sprint 106 tests failure injection propagation across cross-domain graph nodes to evaluate cascade breakpoints and compound failure interactions.
+
+

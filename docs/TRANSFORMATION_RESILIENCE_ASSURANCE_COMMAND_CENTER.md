@@ -37,4 +37,8 @@ Sprint 104 feeds cross-domain propagation paths, systemic exposures, compound ri
 ## Sprint 105 Digital Twin Integration
 Sprint 105 feeds non-destructive counterfactual What-If outcomes, stress scenarios, and governed experiment results directly into the Command Center.
 
+## Sprint 106 Stress Testing Integration
+Sprint 106 projects continuous stress testing campaigns, active failure injections, detection lead times, assurance gaps, scorecards, regressions, and governed remediation recommendations directly into the Command Center (`/transformation-resilience-assurance-command`).
+
+
 
