@@ -11401,6 +11401,196 @@ class TransformationResilienceKnowledgeAssurancePlanFailure(Base):
     reason: Mapped[Text] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
+# ------------------------------------------------------------------------------
+# SPRINT 97 — ENTERPRISE TRANSFORMATION RESILIENCE ADAPTIVE KNOWLEDGE ASSURANCE 2.0 MODELS
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceAdaptiveKnowledgeAssuranceDomain(Base):
+    __tablename__ = "transformation_resilience_adaptive_knowledge_assurance_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceKnowledgeAssurancePlanBaseline(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_baselines"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    plan_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    sequence_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    options_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    residual_risk: Mapped[float] = mapped_column(Float, nullable=False, default=0.08)
+    approval_state: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceKnowledgeAssuranceChangeSignal(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_change_signals"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source: Mapped[str] = mapped_column(String(100), nullable=False, default="resilience_sensing")
+    change_type: Mapped[str] = mapped_column(String(100), nullable=False, default="dependency_change")
+    significance: Mapped[str] = mapped_column(String(50), nullable=False, default="material", index=True)
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceKnowledgeAssuranceChangeDetection(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_change_detections"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    signal_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    affected_actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceKnowledgeAssuranceAssumptionImpact(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_assumption_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assumption: Mapped[Text] = mapped_column(Text, nullable=False)
+    previous_state: Mapped[str] = mapped_column(String(255), nullable=False)
+    current_state: Mapped[str] = mapped_column(String(255), nullable=False)
+    impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceKnowledgeAssurancePlanImpact(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    sequence_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    capacity_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    coverage_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    residual_risk_impact: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="material", index=True)
+
+class TransformationResilienceKnowledgeAssurancePlanHealth(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_healths"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    risk_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+    evidence_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.88)
+    capacity_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.75)
+    sequence_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.90)
+    deadline_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    assumption_alignment: Mapped[float] = mapped_column(Float, nullable=False, default=0.80)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceKnowledgeAssurancePlanStaleness(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_stalenesses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="materially_stale", index=True)
+    outdated_assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    outdated_evidence_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    changed_dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationResilienceKnowledgeAssuranceReplanTrigger(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_replan_triggers"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(100), nullable=False, default="material_plan_impact")
+    description: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="open", index=True)
+    triggered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceKnowledgeAssuranceReplanRecommendation(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_replan_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    label: Mapped[str] = mapped_column(String(100), nullable=False, default="ANALYTICAL RECOMMENDATION — NOT APPROVAL")
+    recommended_option: Mapped[str] = mapped_column(String(100), nullable=False, default="resequence")
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    tradeoffs: Mapped[Text] = mapped_column(Text, nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94)
+
+class TransformationResilienceKnowledgeAssurancePlanVersion(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    version_number: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0", index=True)
+    parent_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    change_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_state: Mapped[str] = mapped_column(String(50), nullable=False, default="approved")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceKnowledgeAssurancePlanDiff(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_plan_diffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    from_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1.0")
+    to_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    added_risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    removed_risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    reordered_actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    changed_assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+class TransformationResilienceKnowledgeAssuranceReplanQueue(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_replan_queues"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_type: Mapped[str] = mapped_column(String(100), nullable=False, default="material_plan_impact")
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="material")
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=1, index=True)
+    recommended_action: Mapped[str] = mapped_column(String(100), nullable=False, default="resequence")
+    approval_requirement: Mapped[str] = mapped_column(String(50), nullable=False, default="approval_required")
+
+class TransformationResilienceKnowledgeAssuranceEmergencyReplan(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_emergency_replans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    war_room_session_id: Mapped[str] = mapped_column(String(255), nullable=False, default="war_room_01")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceKnowledgeAssuranceCrossPlanImpact(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_cross_plan_impacts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    affected_plan_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    impact_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, default="material", index=True)
+    recommended_action: Mapped[str] = mapped_column(String(100), nullable=False, default="resequence_affected_plan")
+
+class TransformationResilienceKnowledgeAssurancePortfolioDrift(Base):
+    __tablename__ = "transformation_resilience_knowledge_assurance_portfolio_drifts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    risk_drift: Mapped[float] = mapped_column(Float, nullable=False, default=0.12)
+    capacity_drift: Mapped[float] = mapped_column(Float, nullable=False, default=0.15)
+    evidence_drift: Mapped[float] = mapped_column(Float, nullable=False, default=0.08)
+    dependency_drift: Mapped[float] = mapped_column(Float, nullable=False, default=0.10)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+
 
 
 
