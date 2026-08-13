@@ -256,6 +256,17 @@ def test_36_datacenter_hardware_power_loss_stress_injector():
         assert res["production_mutation"] == "BLOCKED"
     asyncio.run(_test())
 
+def test_37_digital_twin_3d_layout_depth_coordinate_exporter():
+    """Test Priority #13: Digital Twin 3D Layout Immersive Depth Coordinate Exporter - AR/VR 3D spatial node depth export."""
+    async def _test():
+        from app.services.transformation_resilience_digital_twin_service import TransformationResilienceDigitalTwinService
+        exp = await TransformationResilienceDigitalTwinService.export_digital_twin_3d_spatial_layout(None, "dtdom_01")
+        assert exp["spatial_format"] == "USDZ_GLTF_3D"
+        assert len(exp["nodes_3d"]) == 3
+        assert "z" in exp["nodes_3d"][0]
+    asyncio.run(_test())
+
+
 
 
 
