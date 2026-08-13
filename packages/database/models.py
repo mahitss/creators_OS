@@ -10301,6 +10301,200 @@ class TransformationResilienceUnappliedLesson(Base):
     recommended_review: Mapped[Text] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="unapplied", index=True)
 
+# ------------------------------------------------------------------------------
+# SPRINT 91 — ENTERPRISE TRANSFORMATION RESILIENCE DECISION LIFECYCLE 2.0 MODELS
+# ------------------------------------------------------------------------------
+
+class TransformationResilienceDecisionDomain(Base):
+    __tablename__ = "transformation_resilience_decision_domains"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    organization_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    workspace_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="enterprise")
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
+    version: Mapped[str] = mapped_column(String(50), nullable=False, default="v2.0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionQuestion(Base):
+    __tablename__ = "transformation_resilience_decision_questions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    question: Mapped[Text] = mapped_column(Text, nullable=False)
+    context_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    trigger: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    scope: Mapped[str] = mapped_column(String(100), nullable=False, default="portfolio")
+    deadline: Mapped[str] = mapped_column(String(100), nullable=False, default="2026-Q3")
+    decision_owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    required_approvers_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationResilienceDecisionContext(Base):
+    __tablename__ = "transformation_resilience_decision_contexts"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    portfolio_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    resilience_state_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    capacity_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    recovery_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    risk_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    assumptions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    scenario_versions_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionEvidencePack(Base):
+    __tablename__ = "transformation_resilience_decision_evidence_packs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evidence_items_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    freshness: Mapped[float] = mapped_column(Float, nullable=False, default=1.0)
+    quality: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.94, index=True)
+    conflicts_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+
+class TransformationResilienceDecisionAssumption(Base):
+    __tablename__ = "transformation_resilience_decision_assumptions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    assumption: Mapped[Text] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(String(255), nullable=False)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    sensitivity: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="valid", index=True)
+
+class TransformationResilienceDecisionOption(Base):
+    __tablename__ = "transformation_resilience_decision_options"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    option_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    benefits_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    risks_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    capacity_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    dependencies_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    reversibility: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
+    optionality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.92)
+
+class TransformationResilienceDecisionScenarioSet(Base):
+    __tablename__ = "transformation_resilience_decision_scenario_sets"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    evaluated_scenarios_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    scenario_comparisons_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionTradeoff(Base):
+    __tablename__ = "transformation_resilience_decision_tradeoffs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tradeoff_matrix_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionRecommendation(Base):
+    __tablename__ = "transformation_resilience_decision_recommendations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    recommended_option_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    supporting_evidence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.95, index=True)
+    alternatives_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+    required_approval: Mapped[str] = mapped_column(String(255), nullable=False)
+    label: Mapped[str] = mapped_column(String(100), nullable=False, default="RECOMMENDATION - NOT DECISION")
+
+class TransformationResilienceDecision(Base):
+    __tablename__ = "transformation_resilience_decisions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    domain_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    decision_title: Mapped[str] = mapped_column(String(255), nullable=False)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending_decision", index=True)
+    selected_option_id: Mapped[str] = mapped_column(String(255), nullable=True)
+    rationale_summary: Mapped[Text] = mapped_column(Text, nullable=False)
+    approval_state: Mapped[str] = mapped_column(String(50), nullable=False, default="submitted")
+    deadline: Mapped[str] = mapped_column(String(100), nullable=False, default="2026-Q3", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionConsequence(Base):
+    __tablename__ = "transformation_resilience_decision_consequences"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_impact_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    affected_transformations_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    delay_consequence_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+
+class TransformationResilienceDecisionExecutionPlan(Base):
+    __tablename__ = "transformation_resilience_decision_execution_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    actions_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    milestones_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    owner: Mapped[str] = mapped_column(String(255), nullable=False)
+    rollback_strategy: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceDecisionVerification(Base):
+    __tablename__ = "transformation_resilience_decision_verifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    expected_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    observed_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    variance_pct: Mapped[float] = mapped_column(Float, nullable=False, default=2.1)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.96)
+
+class TransformationResilienceDecisionEffectiveness(Base):
+    __tablename__ = "transformation_resilience_decision_effectivenesses"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    objective_achievement: Mapped[float] = mapped_column(Float, nullable=False, default=0.95)
+    resilience_improvement: Mapped[float] = mapped_column(Float, nullable=False, default=0.05)
+    risk_reduction_pct: Mapped[float] = mapped_column(Float, nullable=False, default=65.0)
+
+class TransformationResilienceDecisionFailure(Base):
+    __tablename__ = "transformation_resilience_decision_failures"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    failure_classification: Mapped[str] = mapped_column(String(100), nullable=False, default="bad_assumption")
+    details: Mapped[Text] = mapped_column(Text, nullable=False)
+
+class TransformationResilienceDecisionReview(Base):
+    __tablename__ = "transformation_resilience_decision_reviews"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    decision_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    trigger_reason: Mapped[Text] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="review_requested", index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+class TransformationResilienceDecisionPrecedent(Base):
+    __tablename__ = "transformation_resilience_decision_precedents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    prior_decision_id: Mapped[str] = mapped_column(String(255), nullable=False)
+    context_description: Mapped[Text] = mapped_column(Text, nullable=False)
+    outcome: Mapped[str] = mapped_column(String(100), nullable=False)
+    applicability: Mapped[float] = mapped_column(Float, nullable=False, default=0.92, index=True)
+    limitations: Mapped[Text] = mapped_column(Text, nullable=False)
+
+
 
 
 
