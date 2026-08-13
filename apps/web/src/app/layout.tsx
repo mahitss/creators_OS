@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from './providers';
+import { WebVitalsReporter } from '../components/WebVitalsReporter';
 
 export const metadata: Metadata = {
   title: 'Vapor OS — AI Chief of Staff',
@@ -16,9 +17,11 @@ export default function RootLayout({
     <html lang="en" className="dark h-full">
       <body className="h-full bg-[#090A0F] text-slate-100 antialiased flex flex-col">
         <ThemeProvider>
+          <WebVitalsReporter />
           {children}
         </ThemeProvider>
       </body>
     </html>
   );
 }
+

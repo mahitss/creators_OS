@@ -151,5 +151,21 @@ def test_27_per_tenant_ai_token_expenditure_attribution():
         assert audit_dict["estimated_cost_usd"] == 0.0006
     asyncio.run(_test())
 
+def test_28_client_web_vitals_telemetry_ingestion():
+    """Test Priority #4 (GAP-04): Client Web Vitals OpenTelemetry Reporter - Ingestion route accepts RUM metrics."""
+    async def _test():
+        from app.api.routers.health import record_web_vitals_telemetry
+        payload = {
+            "name": "FCP",
+            "value": 420.5,
+            "rating": "good",
+            "url": "http://localhost:3000/operations/v1-health"
+        }
+        res = await record_web_vitals_telemetry(payload)
+        assert res["status"] == "accepted"
+        assert res["timestamp"] is not None
+    asyncio.run(_test())
+
+
 
 

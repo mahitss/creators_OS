@@ -51,3 +51,12 @@ async def get_prometheus_metrics():
     content = await get_redis_queue_metrics(settings.REDIS_URL)
     return Response(content=content, media_type="text/plain; version=0.0.4")
 
+@router.post("/telemetry/web-vitals")
+async def record_web_vitals_telemetry(payload: dict):
+    """Ingests client Real User Monitoring (RUM) Web Vitals performance metrics (GAP-04)."""
+    import logging
+    logger = logging.getLogger("vapor.telemetry")
+    logger.info(f"[Web Vitals RUM] metric={payload.get('name')} value={payload.get('value')}ms rating={payload.get('rating')} url={payload.get('url')}")
+    return {"status": "accepted", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
