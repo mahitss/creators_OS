@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class KnowledgeProvenanceRead(BaseModel):
     id: str
@@ -14,8 +14,7 @@ class KnowledgeProvenanceRead(BaseModel):
     ingested_at: str = Field(..., alias="ingestedAt")
     origin: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SourceAuthorityRead(BaseModel):
     id: str
@@ -25,8 +24,7 @@ class SourceAuthorityRead(BaseModel):
     context_scope: str = Field(..., alias="contextScope")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class KnowledgeClaimRead(BaseModel):
     id: str
@@ -38,8 +36,7 @@ class KnowledgeClaimRead(BaseModel):
     confidence: str
     observed_at: str = Field(..., alias="observedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class KnowledgeConflictRead(BaseModel):
     id: str
@@ -52,8 +49,7 @@ class KnowledgeConflictRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     resolved_at: Optional[str] = Field(None, alias="resolvedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class TrustedContextRequest(BaseModel):
     query: str
@@ -69,8 +65,7 @@ class ContextItem(BaseModel):
     classification: str
     evidence_reference: Dict[str, Any] = Field(..., alias="evidenceReference")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class TrustedContextResponse(BaseModel):
     context_items: List[ContextItem] = Field(..., alias="contextItems")
@@ -79,8 +74,7 @@ class TrustedContextResponse(BaseModel):
     conflicts: List[KnowledgeConflictRead]
     freshness_summary: Dict[str, int] = Field(..., alias="freshnessSummary")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CitationValidationResponse(BaseModel):
     is_valid: bool = Field(..., alias="isValid")
@@ -88,8 +82,7 @@ class CitationValidationResponse(BaseModel):
     missing_sources: List[str] = Field(..., alias="missingSources")
     status: str # grounded, partially_grounded, unsupported, citation_error
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AIOutputProvenanceRead(BaseModel):
     id: str
@@ -101,8 +94,7 @@ class AIOutputProvenanceRead(BaseModel):
     generated_at: str = Field(..., alias="generatedAt")
     evaluation_status: str = Field(..., alias="evaluationStatus")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class KnowledgeFeedbackRequest(BaseModel):
     feedback_type: str = Field(..., alias="feedbackType")
@@ -122,5 +114,4 @@ class KnowledgeGovernanceOverview(BaseModel):
     grounding_accuracy: float = Field(..., alias="groundingAccuracy")
     last_updated: str = Field(..., alias="lastUpdated")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

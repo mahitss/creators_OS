@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class AgentMemoryCreate(BaseModel):
     owner_type: str = Field("agent", alias="ownerType")
@@ -31,8 +31,7 @@ class AgentMemoryRead(BaseModel):
     updated_at: str = Field(..., alias="updatedAt")
     expires_at: Optional[str] = Field(None, alias="expiresAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MemoryVersionRead(BaseModel):
     id: str
@@ -43,8 +42,7 @@ class MemoryVersionRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MemoryProvenanceRead(BaseModel):
     id: str
@@ -55,8 +53,7 @@ class MemoryProvenanceRead(BaseModel):
     author: Optional[str] = None
     origin: Optional[str] = None
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MemoryCandidateRead(BaseModel):
     id: str
@@ -68,8 +65,7 @@ class MemoryCandidateRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MemoryConflictRead(BaseModel):
     id: str
@@ -82,8 +78,7 @@ class MemoryConflictRead(BaseModel):
     resolved_by: Optional[str] = Field(None, alias="resolvedBy")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MemoryCorrectRequest(BaseModel):
     corrected_title: Optional[str] = Field(None, alias="correctedTitle")

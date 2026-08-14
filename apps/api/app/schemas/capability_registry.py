@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class CapabilityCreate(BaseModel):
     owner_type: str = Field("workspace", alias="ownerType")
@@ -32,8 +32,7 @@ class CapabilityRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CapabilityVersionRead(BaseModel):
     id: str
@@ -47,8 +46,7 @@ class CapabilityVersionRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CapabilityInstallationRead(BaseModel):
     id: str
@@ -59,8 +57,7 @@ class CapabilityInstallationRead(BaseModel):
     status: str
     installed_at: str = Field(..., alias="installedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CapabilityHealthRead(BaseModel):
     id: str
@@ -71,8 +68,7 @@ class CapabilityHealthRead(BaseModel):
     security_state: str = Field(..., alias="securityState")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CapabilityRequestCreate(BaseModel):
     capability_id: str = Field(..., alias="capabilityId")
@@ -89,8 +85,7 @@ class CapabilityRequestRead(BaseModel):
     reviewed_at: Optional[str] = Field(None, alias="reviewedAt")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class CapabilityInvokeRequest(BaseModel):
     input_payload: Dict[str, Any] = Field(default_factory=dict, alias="inputPayload")
@@ -113,5 +108,4 @@ class CapabilityPackageRead(BaseModel):
     contained_capability_ids: List[str] = Field(..., alias="containedCapabilityIds")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

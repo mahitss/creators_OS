@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class DecisionCreate(BaseModel):
     question: str
@@ -17,8 +17,7 @@ class DecisionClaimRead(BaseModel):
     time_horizon: Optional[str] = Field(None, alias="timeHorizon")
     source_evidence_ids: List[str] = Field(default_factory=list, alias="sourceEvidenceIds")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionEvidenceRead(BaseModel):
     id: str
@@ -34,8 +33,7 @@ class DecisionEvidenceRead(BaseModel):
     relevance: float
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvidenceConflictRead(BaseModel):
     id: str
@@ -48,8 +46,7 @@ class EvidenceConflictRead(BaseModel):
     authority_b: str = Field(..., alias="authorityB")
     resolution_status: str = Field(..., alias="resolutionStatus")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionOptionRead(BaseModel):
     id: str
@@ -62,8 +59,7 @@ class DecisionOptionRead(BaseModel):
     requirements: List[str]
     risks: List[str]
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionTradeoffRead(BaseModel):
     id: str
@@ -74,8 +70,7 @@ class DecisionTradeoffRead(BaseModel):
     advantage_b: str = Field(..., alias="advantageB")
     tradeoff_summary: str = Field(..., alias="tradeoffSummary")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionRiskRead(BaseModel):
     id: str
@@ -89,8 +84,7 @@ class DecisionRiskRead(BaseModel):
     execution_risk: str = Field(..., alias="executionRisk")
     reputational_risk: str = Field(..., alias="reputationalRisk")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionRead(BaseModel):
     id: str
@@ -106,8 +100,7 @@ class DecisionRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionAnalyzeRequest(BaseModel):
     force_fresh_evidence: bool = Field(False, alias="forceFreshEvidence")
@@ -126,8 +119,7 @@ class DecisionScenarioRead(BaseModel):
     result_summary: Dict[str, Any] = Field(..., alias="resultSummary")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class DecisionApprovalRequest(BaseModel):
     recommended_option_id: str = Field(..., alias="recommendedOptionId")
@@ -150,5 +142,4 @@ class DecisionOutcomeRead(BaseModel):
     observed_at: Optional[str] = Field(None, alias="observedAt")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

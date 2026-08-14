@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class OperationalHealthRead(BaseModel):
     scope: str
@@ -10,8 +10,7 @@ class OperationalHealthRead(BaseModel):
     source: str
     last_updated: str = Field(..., alias="lastUpdated")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ServiceTopologyNode(BaseModel):
     id: str
@@ -23,8 +22,7 @@ class ServiceTopologyNode(BaseModel):
     error_rate: float = Field(..., alias="errorRate")
     throughput_qps: float = Field(..., alias="throughputQps")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ControlActionRequest(BaseModel):
     action_type: str = Field(..., alias="actionType")
@@ -34,8 +32,7 @@ class ControlActionRequest(BaseModel):
     idempotency_key: Optional[str] = Field(None, alias="idempotencyKey")
     metadata_info: Dict[str, Any] = Field(default_factory=dict, alias="metadataInfo")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ControlActionRead(BaseModel):
     id: str
@@ -50,8 +47,7 @@ class ControlActionRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     completed_at: Optional[str] = Field(None, alias="completedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ControlActionApprovalRequest(BaseModel):
     decision: str # approved, rejected
@@ -65,8 +61,7 @@ class ControlActionApprovalRead(BaseModel):
     comments: Optional[str] = None
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class OperationsOverviewRead(BaseModel):
     system_status: str = Field(..., alias="systemStatus")
@@ -80,8 +75,7 @@ class OperationsOverviewRead(BaseModel):
     contributing_signals: List[Dict[str, Any]] = Field(..., alias="contributingSignals")
     last_updated: str = Field(..., alias="lastUpdated")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AIOperationsQueryRequest(BaseModel):
     prompt: str

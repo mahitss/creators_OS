@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class ModelGatewayRequest(BaseModel):
     request_type: str = Field(..., alias="requestType") # chat, reasoning, classification, extraction, summarization, generation, code, embedding, reranking, vision, structured_output
@@ -25,8 +25,7 @@ class ModelGatewayResponse(BaseModel):
     routing_decision_id: str = Field(..., alias="routingDecisionId")
     fallback_used: bool = Field(False, alias="fallbackUsed")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelRegistryRead(BaseModel):
     id: str
@@ -41,8 +40,7 @@ class ModelRegistryRead(BaseModel):
     status: str
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelProviderRead(BaseModel):
     id: str
@@ -53,8 +51,7 @@ class ModelProviderRead(BaseModel):
     capabilities: List[str]
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelRoutingDecisionRead(BaseModel):
     id: str
@@ -68,8 +65,7 @@ class ModelRoutingDecisionRead(BaseModel):
     routing_policy_version: str = Field(..., alias="routingPolicyVersion")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelHealthRead(BaseModel):
     id: str
@@ -80,8 +76,7 @@ class ModelHealthRead(BaseModel):
     availability: float
     last_updated: str = Field(..., alias="lastUpdated")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelExperimentCreate(BaseModel):
     name: str
@@ -96,8 +91,7 @@ class ModelExperimentRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ModelAdminActionRequest(BaseModel):
     reason: Optional[str] = None

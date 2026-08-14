@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class EventEnvelopePublishRequest(BaseModel):
     event_type: str = Field(..., alias="eventType")
@@ -17,8 +17,7 @@ class EventEnvelopePublishRequest(BaseModel):
     classification: str = Field("internal")
     metadata_info: Dict[str, Any] = Field(default_factory=dict, alias="metadataInfo")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventEnvelopeRead(BaseModel):
     id: str
@@ -38,8 +37,7 @@ class EventEnvelopeRead(BaseModel):
     classification: str
     metadata_info: Dict[str, Any] = Field(..., alias="metadataInfo")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventSchemaRead(BaseModel):
     id: str
@@ -50,8 +48,7 @@ class EventSchemaRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventSubscriptionCreate(BaseModel):
     organization_id: str = Field("org_default_creator", alias="organizationId")
@@ -61,8 +58,7 @@ class EventSubscriptionCreate(BaseModel):
     filter_config: Dict[str, Any] = Field(default_factory=dict, alias="filterConfig")
     enabled: bool = Field(True)
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventSubscriptionRead(BaseModel):
     id: str
@@ -74,8 +70,7 @@ class EventSubscriptionRead(BaseModel):
     enabled: bool
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventDeliveryRead(BaseModel):
     id: str
@@ -87,8 +82,7 @@ class EventDeliveryRead(BaseModel):
     error_message: Optional[str] = Field(None, alias="errorMessage")
     delivered_at: Optional[str] = Field(None, alias="deliveredAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventDeadLetterRead(BaseModel):
     id: str
@@ -100,8 +94,7 @@ class EventDeadLetterRead(BaseModel):
     payload_ref: Dict[str, Any] = Field(..., alias="payloadRef")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventReplayRequest(BaseModel):
     reason: str = Field(...)
@@ -114,8 +107,7 @@ class EventReplayRead(BaseModel):
     status: str
     replayed_at: str = Field(..., alias="replayedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventHealthRead(BaseModel):
     throughput_eps: float = Field(..., alias="throughputEps")
@@ -125,8 +117,7 @@ class EventHealthRead(BaseModel):
     dead_letter_count: int = Field(..., alias="deadLetterCount")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EventCatalogRead(BaseModel):
     id: str
@@ -137,5 +128,4 @@ class EventCatalogRead(BaseModel):
     classification: str
     retention_days: int = Field(..., alias="retentionDays")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

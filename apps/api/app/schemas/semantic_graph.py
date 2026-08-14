@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class SemanticEntityRead(BaseModel):
     id: str
@@ -18,8 +18,7 @@ class SemanticEntityRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SemanticRelationshipCreate(BaseModel):
     from_entity_id: str = Field(..., alias="fromEntityId")
@@ -29,8 +28,7 @@ class SemanticRelationshipCreate(BaseModel):
     confidence: Optional[str] = "high" # high, medium, low
     evidence_references: List[Dict[str, Any]] = Field(default_factory=list, alias="evidenceReferences")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SemanticRelationshipRead(BaseModel):
     id: str
@@ -48,8 +46,7 @@ class SemanticRelationshipRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class RelationshipConflictRead(BaseModel):
     id: str
@@ -60,8 +57,7 @@ class RelationshipConflictRead(BaseModel):
     resolution_notes: Optional[str] = Field(None, alias="resolutionNotes")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ContextPackCreate(BaseModel):
     scope: str
@@ -69,8 +65,7 @@ class ContextPackCreate(BaseModel):
     max_depth: Optional[int] = Field(2, alias="maxDepth")
     max_nodes: Optional[int] = Field(50, alias="maxNodes")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ContextPackRead(BaseModel):
     id: str
@@ -83,8 +78,7 @@ class ContextPackRead(BaseModel):
     generated_at: str = Field(..., alias="generatedAt")
     expires_at: str = Field(..., alias="expiresAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class GraphImpactResponse(BaseModel):
     root_entity_id: str = Field(..., alias="rootEntityId")
@@ -95,8 +89,7 @@ class GraphImpactResponse(BaseModel):
     affected_integrations: List[Dict[str, Any]] = Field(..., alias="affectedIntegrations")
     total_impacted_count: int = Field(..., alias="totalImpactedCount")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class GraphHealthRead(BaseModel):
     entity_count: int = Field(..., alias="entityCount")
@@ -106,5 +99,4 @@ class GraphHealthRead(BaseModel):
     sync_lag_seconds: float = Field(..., alias="syncLagSeconds")
     last_updated: str = Field(..., alias="lastUpdated")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

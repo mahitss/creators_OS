@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 class PolicyRuleCreate(BaseModel):
     name: str = Field(..., description="Name of the custom policy rule")
     action: str = Field(..., description="Action: ALLOW, DENY, APPROVAL_REQUIRED")
-    conditions: Dict[str, Any] = Field(default_dict={}, description="Matching conditions e.g. tool_name, risk_level")
+    conditions: Dict[str, Any] = Field(default_factory=dict, description="Matching conditions e.g. tool_name, risk_level")
     priority: int = Field(10, description="Rule priority (higher priority evaluated first)")
 
 class PolicyRuleResponse(BaseModel):

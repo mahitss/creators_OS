@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class AgentExecutionCreate(BaseModel):
     agent_id: str = Field(..., alias="agentId")
@@ -22,8 +22,7 @@ class AgentExecutionRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AgentExecutionStateRead(BaseModel):
     id: str
@@ -36,8 +35,7 @@ class AgentExecutionStateRead(BaseModel):
     blocked_steps: List[str] = Field(..., alias="blockedSteps")
     last_checkpoint_id: Optional[str] = Field(None, alias="lastCheckpointId")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AgentExecutionStepRead(BaseModel):
     id: str
@@ -50,8 +48,7 @@ class AgentExecutionStepRead(BaseModel):
     started_at: Optional[str] = Field(None, alias="startedAt")
     completed_at: Optional[str] = Field(None, alias="completedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ExecutionCheckpointRead(BaseModel):
     id: str
@@ -62,8 +59,7 @@ class ExecutionCheckpointRead(BaseModel):
     reason: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class UnknownOutcomeResolveRequest(BaseModel):
     resolution: str # resolved_success, resolved_failure
@@ -80,8 +76,7 @@ class UnknownOutcomeRead(BaseModel):
     resolved_by: Optional[str] = Field(None, alias="resolvedBy")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ExecutionTraceRead(BaseModel):
     execution: AgentExecutionRead
@@ -90,8 +85,7 @@ class ExecutionTraceRead(BaseModel):
     checkpoints: List[ExecutionCheckpointRead]
     unknown_outcomes: List[UnknownOutcomeRead]
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class ExecutionActionRequest(BaseModel):
     reason: Optional[str] = None

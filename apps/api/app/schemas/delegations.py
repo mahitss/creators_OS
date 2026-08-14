@@ -50,7 +50,7 @@ class AgentHandoffCreate(BaseModel):
     target_agent_definition_id: str = Field(..., description="Target AgentDefinition ID")
     mission_id: str = Field(..., description="Mission ID")
     scope: str = Field("mission", description="Scope")
-    input_reference: Dict[str, Any] = Field(default_dict={}, description="Handoff input data reference")
+    input_reference: Dict[str, Any] = Field(default_factory=dict, description="Handoff input data reference")
     current_depth: int = Field(1, description="Current handoff depth")
 
 class AgentHandoffResponse(BaseModel):

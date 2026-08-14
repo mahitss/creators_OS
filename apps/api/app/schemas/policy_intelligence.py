@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class PolicyCreate(BaseModel):
     name: str
@@ -23,8 +23,7 @@ class PolicyVersionRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyRead(BaseModel):
     id: str
@@ -42,8 +41,7 @@ class PolicyRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyEvaluateRequest(BaseModel):
     actor_id: str = Field(..., alias="actorId")
@@ -65,8 +63,7 @@ class RiskAssessmentRead(BaseModel):
     reputational_risk: str = Field(..., alias="reputationalRisk")
     score: float
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyControlRead(BaseModel):
     id: str
@@ -75,8 +72,7 @@ class PolicyControlRead(BaseModel):
     parameters: Dict[str, Any]
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyEvaluateResponse(BaseModel):
     request_id: str = Field(..., alias="requestId")
@@ -88,8 +84,7 @@ class PolicyEvaluateResponse(BaseModel):
     latency_ms: float = Field(..., alias="latencyMs")
     timestamp: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyRequestRead(BaseModel):
     id: str
@@ -103,8 +98,7 @@ class PolicyRequestRead(BaseModel):
     context: Dict[str, Any]
     timestamp: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyConflictRead(BaseModel):
     id: str
@@ -114,8 +108,7 @@ class PolicyConflictRead(BaseModel):
     precedence_applied: str = Field(..., alias="precedenceApplied")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyGapRead(BaseModel):
     id: str
@@ -126,8 +119,7 @@ class PolicyGapRead(BaseModel):
     recommended_control: str = Field(..., alias="recommendedControl")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicySimulationCreate(BaseModel):
     test_type: str = Field("shadow", alias="testType") # historical, synthetic, shadow
@@ -139,8 +131,7 @@ class PolicySimulationRead(BaseModel):
     comparison_results: Dict[str, Any] = Field(..., alias="comparisonResults")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class PolicyOverrideCreate(BaseModel):
     reason: str
@@ -156,8 +147,7 @@ class PolicyOverrideRead(BaseModel):
     expires_at: Optional[str] = Field(None, alias="expiresAt")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class TemporaryAccessGrantCreate(BaseModel):
     actor_id: str = Field(..., alias="actorId")
@@ -177,8 +167,7 @@ class TemporaryAccessGrantRead(BaseModel):
     granted_by: str = Field(..., alias="grantedBy")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class BreakGlassGrantCreate(BaseModel):
     actor_id: str = Field(..., alias="actorId")
@@ -195,5 +184,4 @@ class BreakGlassGrantRead(BaseModel):
     audit_trail_id: str = Field(..., alias="auditTrailId")
     status: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

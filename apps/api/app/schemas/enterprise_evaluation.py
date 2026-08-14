@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class EvaluationRunCreate(BaseModel):
     evaluation_type: str = Field(..., alias="evaluationType") # offline, online, regression, benchmark, human_review, simulation, production_sample
@@ -26,8 +26,7 @@ class EvaluationRunRead(BaseModel):
     started_at: str = Field(..., alias="startedAt")
     completed_at: Optional[str] = Field(None, alias="completedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvaluationDatasetCreate(BaseModel):
     name: str
@@ -47,8 +46,7 @@ class EvaluationDatasetRead(BaseModel):
     is_golden: bool = Field(..., alias="isGolden")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvaluationCaseRead(BaseModel):
     id: str
@@ -59,8 +57,7 @@ class EvaluationCaseRead(BaseModel):
     metadata_info: Dict[str, Any] = Field(default_factory=dict, alias="metadataInfo")
     classification: str
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvaluationResultRead(BaseModel):
     id: str
@@ -72,8 +69,7 @@ class EvaluationResultRead(BaseModel):
     evidence: Dict[str, Any]
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class HumanEvaluationCreate(BaseModel):
     case_id: str = Field(..., alias="caseId")
@@ -92,8 +88,7 @@ class HumanEvaluationRead(BaseModel):
     comment: Optional[str] = None
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvaluationExperimentCreate(BaseModel):
     name: str
@@ -108,8 +103,7 @@ class EvaluationExperimentRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class EvaluationRegressionRead(BaseModel):
     id: str
@@ -122,8 +116,7 @@ class EvaluationRegressionRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AIEvaluationOverviewRead(BaseModel):
     total_runs: int = Field(..., alias="totalRuns")
@@ -135,5 +128,4 @@ class AIEvaluationOverviewRead(BaseModel):
     total_datasets_count: int = Field(..., alias="totalDatasetsCount")
     last_evaluated_at: str = Field(..., alias="lastEvaluatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

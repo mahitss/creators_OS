@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class MissionObjectiveCreate(BaseModel):
     title: str
@@ -24,8 +24,7 @@ class MissionObjectiveRead(BaseModel):
     risk_level: str = Field(..., alias="riskLevel")
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MissionStepRead(BaseModel):
     id: str
@@ -41,8 +40,7 @@ class MissionStepRead(BaseModel):
     input_payload: Dict[str, Any] = Field(default_factory=dict, alias="inputPayload")
     output_payload: Dict[str, Any] = Field(default_factory=dict, alias="outputPayload")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MissionPlanRead(BaseModel):
     id: str
@@ -55,8 +53,7 @@ class MissionPlanRead(BaseModel):
     steps: List[MissionStepRead] = Field(default_factory=list)
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MissionReplanRequest(BaseModel):
     trigger_reason: str = Field(..., alias="triggerReason")
@@ -76,8 +73,7 @@ class MissionCostRead(BaseModel):
     tool_cost_usd: float = Field(..., alias="toolCostUsd")
     remaining_budget_usd: float = Field(..., alias="remainingBudgetUsd")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class MissionRiskRead(BaseModel):
     mission_id: str = Field(..., alias="missionId")
@@ -88,5 +84,4 @@ class MissionRiskRead(BaseModel):
     execution_risk: str = Field(..., alias="executionRisk")
     active_warnings: List[str] = Field(default_factory=list, alias="activeWarnings")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

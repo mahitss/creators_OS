@@ -41,7 +41,7 @@ class IntegrationCapabilityRead(BaseModel):
 class ActionExecuteRequest(BaseModel):
     capability_id: str = Field(..., alias="capabilityId")
     connection_id: str = Field(..., alias="connectionId")
-    input_data: Dict[str, Any] = Field(default_dict={}, alias="inputData")
+    input_data: Dict[str, Any] = Field(default_factory=dict, alias="inputData")
     idempotency_key: Optional[str] = Field(None, alias="idempotencyKey")
     simulate_only: bool = Field(False, alias="simulateOnly")
 

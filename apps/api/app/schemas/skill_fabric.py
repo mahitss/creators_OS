@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class AgentSkillCreate(BaseModel):
     owner_type: str = Field("workspace", alias="ownerType")
@@ -29,8 +29,7 @@ class AgentSkillRead(BaseModel):
     created_at: str = Field(..., alias="createdAt")
     updated_at: str = Field(..., alias="updatedAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class AgentSkillVersionRead(BaseModel):
     id: str
@@ -46,8 +45,7 @@ class AgentSkillVersionRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SkillCandidateRead(BaseModel):
     id: str
@@ -60,8 +58,7 @@ class SkillCandidateRead(BaseModel):
     status: str
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SkillEvaluationRead(BaseModel):
     id: str
@@ -75,8 +72,7 @@ class SkillEvaluationRead(BaseModel):
     passed: bool
     created_at: str = Field(..., alias="createdAt")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SkillHealthRead(BaseModel):
     id: str
@@ -88,8 +84,7 @@ class SkillHealthRead(BaseModel):
     safety_score: float = Field(..., alias="safetyScore")
     freshness_status: str = Field(..., alias="freshnessStatus")
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 class SkillInvokeRequest(BaseModel):
     input_payload: Dict[str, Any] = Field(default_factory=dict, alias="inputPayload")
