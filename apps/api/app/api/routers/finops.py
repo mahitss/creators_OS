@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
@@ -19,19 +19,23 @@ router = APIRouter(tags=["finops"])
 
 @router.get("/finops/overview", response_model=FinOpsOverviewResponse)
 async def get_finops_overview(
-    workspace_id: str = Query(..., alias="workspaceId"),
+    workspace_id: Optional[str] = Query(None, alias="workspaceId"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves executive spend overview, budget usage, and active anomaly count."""
-    return await finops_service.get_finops_overview(session, workspace_id)
+    ws_id = workspace_id or x_workspace_id or "ws_default_01"
+    return await finops_service.get_finops_overview(session, ws_id)
 
 @router.get("/finops/forecast", response_model=FinOpsForecastResponse)
 async def get_finops_forecast(
-    workspace_id: str = Query(..., alias="workspaceId"),
+    workspace_id: Optional[str] = Query(None, alias="workspaceId"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     session: AsyncSession = Depends(get_db)
 ):
     """Generates monthly spend projections based on daily run rate."""
-    return await finops_service.get_finops_forecast(session, workspace_id)
+    ws_id = workspace_id or x_workspace_id or "ws_default_01"
+    return await finops_service.get_finops_forecast(session, ws_id)
 
 @router.post("/usage", response_model=UsageRecordRead, status_code=201)
 async def record_usage(
@@ -43,18 +47,20 @@ async def record_usage(
 
 @router.get("/budgets", response_model=List[BudgetRead])
 async def list_budgets(
-    workspace_id: str = Query(..., alias="workspaceId"),
+    workspace_id: Optional[str] = Query(None, alias="workspaceId"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists workspace budgets and current consumption."""
+    ws_id = workspace_id or x_workspace_id or "ws_default_01"
     now_iso = "2026-08-11T00:00:00Z"
-    ov = await finops_service.get_finops_overview(session, workspace_id)
+    ov = await finops_service.get_finops_overview(session, ws_id)
     return [
         BudgetRead(
             id="b_ws_default",
-            workspace_id=workspace_id,
+            workspace_id=ws_id,
             scope_type="workspace",
-            scope_id=workspace_id,
+            scope_id=ws_id,
             period="monthly",
             limit_amount=ov.budget_limit,
             used_amount=ov.budget_used,
@@ -69,16 +75,20 @@ async def list_budgets(
 
 @router.get("/anomalies", response_model=List[UsageAnomalyRead])
 async def list_anomalies(
-    workspace_id: str = Query(..., alias="workspaceId"),
+    workspace_id: Optional[str] = Query(None, alias="workspaceId"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves cost and latency anomalies detected against 7D/30D baselines."""
-    return await finops_service.detect_cost_anomalies(session, workspace_id)
+    ws_id = workspace_id or x_workspace_id or "ws_default_01"
+    return await finops_service.detect_cost_anomalies(session, ws_id)
 
 @router.get("/incidents", response_model=List[OperationalIncidentRead])
 async def list_incidents(
     workspace_id: Optional[str] = Query(None, alias="workspaceId"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves active operational incidents."""
     return []
+
