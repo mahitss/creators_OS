@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Zap,
   Play,
@@ -76,11 +76,19 @@ export const AutomationsWorkspace: React.FC = () => {
   const [scope, setScope] = useState('workspace');
   const [cooldownSec, setCooldownSec] = useState(7200);
 
-  useEffect(() => {
-    fetchTriggers();
+  const fetchHistory = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/v1/automations/${id}/history`);
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data);
+      }
+    } catch (err) {
+      console.error('Failed to load history', err);
+    }
   }, []);
 
-  const fetchTriggers = async () => {
+  const fetchTriggers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch('/api/v1/automations?workspaceId=ws_default_creator');
@@ -97,19 +105,11 @@ export const AutomationsWorkspace: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedTrigger, fetchHistory]);
 
-  const fetchHistory = async (id: string) => {
-    try {
-      const res = await fetch(`/api/v1/automations/${id}/history`);
-      if (res.ok) {
-        const data = await res.json();
-        setHistory(data);
-      }
-    } catch (err) {
-      console.error('Failed to load trigger history', err);
-    }
-  };
+  useEffect(() => {
+    fetchTriggers();
+  }, [fetchTriggers]);
 
   const handleToggleTrigger = async (tr: TriggerItem) => {
     const endpoint = tr.enabled ? `/api/v1/automations/${tr.id}/pause` : `/api/v1/automations/${tr.id}/enable`;

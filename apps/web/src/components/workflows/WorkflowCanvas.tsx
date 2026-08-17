@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   GitBranch,
   Play,
@@ -82,11 +82,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
   const [configDescription, setConfigDescription] = useState('');
   const [configApprovalRequired, setConfigApprovalRequired] = useState(false);
 
-  useEffect(() => {
-    fetchWorkflow();
-  }, [workflowId]);
-
-  const fetchWorkflow = async () => {
+  const fetchWorkflow = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/workflows/${workflowId}`);
@@ -112,11 +108,15 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ workflowId }) =>
         }
       }
     } catch (err) {
-      console.error('Failed to fetch workflow', err);
+      console.error('Failed to load workflow', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [workflowId]);
+
+  useEffect(() => {
+    fetchWorkflow();
+  }, [fetchWorkflow]);
 
   const handleAddNode = (type: string) => {
     const newId = `node_${type}_${Date.now().toString().slice(-4)}`;

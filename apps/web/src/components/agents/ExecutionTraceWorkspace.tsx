@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Play, 
   Pause, 
@@ -131,7 +131,7 @@ export const ExecutionTraceWorkspace: React.FC<{ executionId?: string }> = ({ ex
   const [activeTab, setActiveTab] = useState<'timeline' | 'checkpoints' | 'state' | 'unknown'>('timeline');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchTrace = async () => {
+  const fetchTrace = useCallback(async () => {
     try {
       const res = await fetch(`/api/v1/agents/executions/${executionId}/trace`);
       if (res.ok) {
@@ -144,11 +144,11 @@ export const ExecutionTraceWorkspace: React.FC<{ executionId?: string }> = ({ ex
     } catch (e) {
       // Keep fallback state
     }
-  };
+  }, [executionId]);
 
   useEffect(() => {
     fetchTrace();
-  }, [executionId]);
+  }, [fetchTrace]);
 
   const handlePause = async () => {
     try {

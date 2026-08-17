@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Activity, 
   AlertTriangle, 
@@ -59,6 +59,24 @@ export const AgentControlCenter: React.FC = () => {
   const [sseConnected, setSseConnected] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'agents' | 'reliability'>('agents');
 
+  const fetchData = useCallback(async () => {
+    try {
+      const headers = { 'X-User-Id': 'usr_admin_01', 'X-Workspace-Id': 'ws_default_01' };
+
+      const ovRes = await fetch('/api/v1/admin/agents/overview', { headers });
+      if (ovRes.ok) setOverview(await ovRes.json());
+
+      const url = statusFilter !== 'all' ? `/api/v1/admin/agents?status=${statusFilter}` : '/api/v1/admin/agents';
+      const agRes = await fetch(url, { headers });
+      if (agRes.ok) setAgents(await agRes.json());
+
+      const stRes = await fetch('/api/v1/admin/agents/stuck', { headers });
+      if (stRes.ok) setStuckList(await stRes.json());
+    } catch (err) {
+      console.error("Control Center fetch failed:", err);
+    }
+  }, [statusFilter]);
+
   useEffect(() => {
     fetchData();
 
@@ -77,25 +95,7 @@ export const AgentControlCenter: React.FC = () => {
     return () => {
       eventSource.close();
     };
-  }, [statusFilter]);
-
-  const fetchData = async () => {
-    try {
-      const headers = { 'X-User-Id': 'usr_admin_01', 'X-Workspace-Id': 'ws_default_01' };
-
-      const ovRes = await fetch('/api/v1/admin/agents/overview', { headers });
-      if (ovRes.ok) setOverview(await ovRes.json());
-
-      const url = statusFilter !== 'all' ? `/api/v1/admin/agents?status=${statusFilter}` : '/api/v1/admin/agents';
-      const agRes = await fetch(url, { headers });
-      if (agRes.ok) setAgents(await agRes.json());
-
-      const stRes = await fetch('/api/v1/admin/agents/stuck', { headers });
-      if (stRes.ok) setStuckList(await stRes.json());
-    } catch (err) {
-      console.error("Control Center fetch failed:", err);
-    }
-  };
+  }, [fetchData]);
 
   const handleOperatorAction = async (runId: string, action: string) => {
     try {

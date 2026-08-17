@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Database, ShieldCheck, CheckCircle2, AlertTriangle, GitPullRequest, Info, FileText, Lock, Clock, Sparkles, User, Layers, ArrowRight } from 'lucide-react';
 
 interface MemoryItem {
@@ -28,11 +28,7 @@ export const MemoryWorkspace: React.FC = () => {
   const [selectedProvenance, setSelectedProvenance] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, [activeTab]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const headers = { 'X-Workspace-Id': 'ws_default_01', 'X-User-Id': 'usr_alex' };
@@ -51,7 +47,11 @@ export const MemoryWorkspace: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleApproveCandidate = async (id: string) => {
     try {

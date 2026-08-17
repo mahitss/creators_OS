@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Network, 
   Search, 
@@ -64,7 +64,7 @@ export const GlobalGraphWorkspace: React.FC = () => {
   const [toEntity, setToEntity] = useState('ent_integ_01');
   const [pathResult, setPathResult] = useState<any[]>([]);
 
-  const fetchGraphData = async () => {
+  const fetchGraphData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [hRes, pRes, nRes] = await Promise.all([
@@ -81,11 +81,11 @@ export const GlobalGraphWorkspace: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedEntityId]);
 
   useEffect(() => {
     fetchGraphData();
-  }, [selectedEntityId]);
+  }, [fetchGraphData]);
 
   const handleCalculateImpact = async () => {
     try {

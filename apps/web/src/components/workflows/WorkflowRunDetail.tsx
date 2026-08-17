@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Activity,
   CheckCircle2,
@@ -20,11 +20,7 @@ export const WorkflowRunDetail: React.FC<WorkflowRunDetailProps> = ({ runId }) =
   const [run, setRun] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    fetchRunDetail();
-  }, [runId]);
-
-  const fetchRunDetail = async () => {
+  const fetchRunDetail = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/workflows/runs/${runId}`);
@@ -37,7 +33,11 @@ export const WorkflowRunDetail: React.FC<WorkflowRunDetailProps> = ({ runId }) =
     } finally {
       setLoading(false);
     }
-  };
+  }, [runId]);
+
+  useEffect(() => {
+    fetchRunDetail();
+  }, [fetchRunDetail]);
 
   if (loading) {
     return <div className="p-8 text-center text-xs text-slate-500">Loading workflow execution telemetry...</div>;

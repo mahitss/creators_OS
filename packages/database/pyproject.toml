@@ -11,3 +11,6 @@ dependencies = [
     "alembic>=1.13.1",
     "pydantic>=2.6.4"
 ]
+
+[tool.setuptools]
+py-modules = ["models", "session"]

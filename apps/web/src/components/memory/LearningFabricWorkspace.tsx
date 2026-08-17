@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Brain, 
   Search, 
@@ -128,7 +128,7 @@ export const LearningFabricWorkspace: React.FC = () => {
   const [editingMemory, setEditingMemory] = useState<AgentMemoryData | null>(null);
   const [correctedContent, setCorrectedContent] = useState<string>('');
 
-  const fetchMemories = async () => {
+  const fetchMemories = useCallback(async () => {
     try {
       const res = await fetch(`/api/v1/memory/search?query=${searchQuery}&type=${selectedType}&scope=${selectedScope}`);
       if (res.ok) {
@@ -138,11 +138,11 @@ export const LearningFabricWorkspace: React.FC = () => {
     } catch (e) {
       // Keep fallback
     }
-  };
+  }, [searchQuery, selectedType, selectedScope]);
 
   useEffect(() => {
     fetchMemories();
-  }, [searchQuery, selectedType, selectedScope]);
+  }, [fetchMemories]);
 
   const handleCorrect = async (id: string) => {
     try {

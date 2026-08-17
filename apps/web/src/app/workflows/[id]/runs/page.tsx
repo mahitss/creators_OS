@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { AppShell } from '@/components/shell/AppShell';
 import { WorkflowRunDetail } from '@/components/workflows/WorkflowRunDetail';
@@ -13,11 +13,7 @@ export default function WorkflowRunsPage() {
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    fetchRuns();
-  }, [workflowId]);
-
-  const fetchRuns = async () => {
+  const fetchRuns = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/v1/workflows/${workflowId}/runs`);
@@ -33,7 +29,11 @@ export default function WorkflowRunsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [workflowId, selectedRunId]);
+
+  useEffect(() => {
+    fetchRuns();
+  }, [fetchRuns]);
 
   return (
     <AppShell>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   AlertTriangle,
   Clock,
@@ -27,7 +27,7 @@ export function IncidentDetailWorkspace({ incidentId }: { incidentId: string }) 
   const [responsePlans, setResponsePlans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
       const [incRes, timeRes, evRes, impRes, respRes] = await Promise.all([
@@ -48,11 +48,11 @@ export function IncidentDetailWorkspace({ incidentId }: { incidentId: string }) 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [incidentId]);
 
   useEffect(() => {
     fetchData();
-  }, [incidentId]);
+  }, [fetchData]);
 
   const handleApprovePlan = async (planId: string) => {
     try {
