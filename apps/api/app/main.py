@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -39,12 +39,15 @@ async def vapor_exception_handler(request: Request, exc: VaporException):
 # Global Exception Handler
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import logging
+    logger = logging.getLogger("vapor.api")
+    logger.exception(f"Unhandled exception on {request.method} {request.url.path}: {exc}")
     request_id = getattr(request.state, "request_id", None)
     return JSONResponse(
         status_code=500,
         content={
             "error_code": ErrorCode.INTERNAL_ERROR,
-            "message": "An unexpected error occurred on the Vapor core API.",
+            "message": f"An unexpected error occurred on the Vapor core API: {str(exc)}",
             "request_id": request_id,
             "path": str(request.url.path)
         }
@@ -58,6 +61,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health", include_in_schema=False)
+async def root_health_probe(db=Depends(health.get_db)):
+    return await health.check_health(db=db)
 
 app.include_router(health.router, prefix=settings.API_V1_STR, tags=["Health"])
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["Auth"])

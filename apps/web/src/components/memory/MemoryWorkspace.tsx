@@ -104,12 +104,18 @@ export const MemoryWorkspace: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             <Database className="w-8 h-8 text-emerald-400" />
-            Agent Knowledge & Memory 2.0
+            Context Vault Memory
           </h1>
           <p className="text-zinc-400 mt-1">
             Traceable, human-approved, policy-scoped memory architecture with explicit provenance and conflict resolution.
           </p>
         </div>
+        <button
+          onClick={() => alert('New Memory modal')}
+          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-xl transition-all shadow-md shadow-emerald-600/20"
+        >
+          + Add Memory
+        </button>
       </div>
 
       {/* Tabs */}
@@ -173,6 +179,12 @@ export const MemoryWorkspace: React.FC = () => {
               </div>
             ))
           )}
+        </div>
+      ) : filteredMemories.length === 0 ? (
+        <div className="p-12 text-center border border-zinc-800 rounded-2xl bg-zinc-900/40 text-zinc-400 space-y-2">
+          <Database className="w-8 h-8 text-zinc-600 mx-auto mb-2" />
+          <p className="font-semibold text-zinc-300">Vapor hasn&apos;t learned anything about this workspace yet.</p>
+          <p className="text-xs text-zinc-500">Autonomous insights and extracted rules will appear here as missions execute.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

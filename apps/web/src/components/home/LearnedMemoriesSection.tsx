@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { Card, Typography, Badge } from '@vapor/ui';
@@ -13,28 +15,34 @@ export const LearnedMemoriesSection: React.FC<LearnedMemoriesSectionProps> = ({ 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <Typography variant="h3" className="text-xs font-semibold text-cyan-400 uppercase tracking-wider">
-          Saved Workspace Context
-        </Typography>
-        <Link href="/memory" className="text-xs font-mono text-slate-400 hover:text-cyan-400 transition-colors">
-          View Vault →
+        <div className="flex items-center gap-2">
+          <span className="text-cyan-400 text-sm">🧠</span>
+          <Typography variant="h3" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+            Workspace Context & Learned Memories
+          </Typography>
+        </div>
+        <Link href="/memory/explore" className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors">
+          Explore Vault ({memories.length}) →
         </Link>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {memories.map((mem) => (
-          <Card key={mem.id} variant="panel" className="flex items-start justify-between p-3.5 border-slate-800/80">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <Badge variant="cyan">{mem.type.toUpperCase()}</Badge>
-                <Typography variant="body" className="text-xs font-semibold text-slate-200">
-                  {mem.title}
-                </Typography>
-              </div>
-              <Typography variant="caption" className="text-xs text-slate-400 line-clamp-1">
-                {mem.content}
-              </Typography>
+          <Card
+            key={mem.id}
+            variant="panel"
+            className="flex flex-col gap-2 p-4 border-slate-800/80 bg-[#121520] hover:border-cyan-500/40 transition-all rounded-xl shadow-sm"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <Badge variant="cyan">{mem.type.toUpperCase()}</Badge>
+              <span className="text-[10px] font-mono text-slate-500">SYNCHRONIZED</span>
             </div>
+            <Typography variant="body" className="text-xs font-bold text-slate-100 line-clamp-1">
+              {mem.title}
+            </Typography>
+            <Typography variant="caption" className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+              {mem.content}
+            </Typography>
           </Card>
         ))}
       </div>

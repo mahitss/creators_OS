@@ -1,3 +1,4 @@
+import { apiClient } from './client';
 import { Content } from './content';
 
 export interface DeliverableSuggestion {
@@ -18,57 +19,24 @@ export interface DeliverableSuggestionListResponse {
   total: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchMissionDeliverableSuggestions(missionId: string): Promise<DeliverableSuggestionListResponse> {
-  const res = await fetch(`${API_BASE_URL}/missions/${missionId}/deliverable-suggestions`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch deliverable suggestions (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<DeliverableSuggestionListResponse>(`/missions/${missionId}/deliverable-suggestions`);
 }
 
 export async function analyzeMissionDeliverables(missionId: string): Promise<DeliverableSuggestion | null> {
-  const res = await fetch(`${API_BASE_URL}/missions/${missionId}/deliverable-suggestions/analyze`, {
+  return await apiClient<DeliverableSuggestion | null>(`/missions/${missionId}/deliverable-suggestions/analyze`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to analyze deliverable intelligence (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function acceptDeliverableSuggestion(suggestionId: string): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/deliverable-suggestions/${suggestionId}/accept`, {
+  return await apiClient<Content>(`/deliverable-suggestions/${suggestionId}/accept`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to accept deliverable suggestion (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function dismissDeliverableSuggestion(suggestionId: string): Promise<DeliverableSuggestion> {
-  const res = await fetch(`${API_BASE_URL}/deliverable-suggestions/${suggestionId}/dismiss`, {
+  return await apiClient<DeliverableSuggestion>(`/deliverable-suggestions/${suggestionId}/dismiss`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to dismiss deliverable suggestion (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }

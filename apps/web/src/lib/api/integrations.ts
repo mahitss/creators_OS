@@ -1,3 +1,5 @@
+import { apiClient } from './client';
+
 export interface IntegrationConnection {
   id: string;
   workspace_id: string;
@@ -23,85 +25,36 @@ export interface OAuthConnectUrlResponse {
   state: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchIntegrations(): Promise<IntegrationListResponse> {
-  const res = await fetch(`${API_BASE_URL}/integrations`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch integrations (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<IntegrationListResponse>('/integrations');
 }
 
 export async function fetchIntegration(provider: string): Promise<IntegrationConnection | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/integrations/${provider}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return null;
-    return await res.json();
+    return await apiClient<IntegrationConnection>(`/integrations/${provider}`);
   } catch (err) {
     return null;
   }
 }
 
 export async function connectIntegration(provider: string): Promise<OAuthConnectUrlResponse> {
-  const res = await fetch(`${API_BASE_URL}/integrations/${provider}/connect`, {
+  return await apiClient<OAuthConnectUrlResponse>(`/integrations/${provider}/connect`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to generate connect URL (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function handleOAuthCallback(provider: string, code: string, state: string): Promise<IntegrationConnection> {
-  const res = await fetch(`${API_BASE_URL}/integrations/${provider}/callback?code=${code}&state=${state}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
-
-  if (!res.ok) {
-    throw new Error(`OAuth callback failed (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<IntegrationConnection>(`/integrations/${provider}/callback?code=${code}&state=${state}`);
 }
 
 export async function disconnectIntegration(provider: string): Promise<IntegrationConnection> {
-  const res = await fetch(`${API_BASE_URL}/integrations/${provider}/disconnect`, {
+  return await apiClient<IntegrationConnection>(`/integrations/${provider}/disconnect`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to disconnect integration (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function refreshIntegration(provider: string): Promise<IntegrationConnection> {
-  const res = await fetch(`${API_BASE_URL}/integrations/${provider}/refresh`, {
+  return await apiClient<IntegrationConnection>(`/integrations/${provider}/refresh`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to refresh integration (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }

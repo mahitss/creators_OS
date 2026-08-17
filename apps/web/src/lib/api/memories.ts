@@ -1,3 +1,5 @@
+import { apiClient } from './client';
+
 export interface Memory {
   id: string;
   workspace_id: string;
@@ -47,8 +49,6 @@ export interface MemoryCreateInput {
   source_id?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchMemories(params?: {
   type?: string;
   importance?: string;
@@ -61,132 +61,58 @@ export async function fetchMemories(params?: {
   if (params?.search) query.set('search', params.search);
   if (params?.archived) query.set('archived', 'true');
 
-  const res = await fetch(`${API_BASE_URL}/memories?${query.toString()}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch memories (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  const qStr = query.toString();
+  return await apiClient<MemoryListResponse>(`/memories${qStr ? `?${qStr}` : ''}`);
 }
 
 export async function createMemory(input: MemoryCreateInput): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memories`, {
+  return await apiClient<Memory>('/memories', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create memory (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function getMemory(id: string): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memories/${id}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch memory ${id} (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<Memory>(`/memories/${id}`);
 }
 
 export async function updateMemory(id: string, input: Partial<MemoryCreateInput> & { is_archived?: boolean }): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memories/${id}`, {
+  return await apiClient<Memory>(`/memories/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to update memory (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function archiveMemory(id: string): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memories/${id}/archive`, {
+  return await apiClient<Memory>(`/memories/${id}/archive`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to archive memory (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function restoreMemory(id: string): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memories/${id}/restore`, {
+  return await apiClient<Memory>(`/memories/${id}/restore`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to restore memory (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function deleteMemory(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/memories/${id}`, {
+  await apiClient<void>(`/memories/${id}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to delete memory (HTTP ${res.status})`);
-  }
 }
 
 export async function fetchMemoryCandidates(): Promise<MemoryCandidateListResponse> {
-  const res = await fetch(`${API_BASE_URL}/memory-candidates`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch memory candidates (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<MemoryCandidateListResponse>('/memory-candidates');
 }
 
 export async function approveMemoryCandidate(id: string): Promise<Memory> {
-  const res = await fetch(`${API_BASE_URL}/memory-candidates/${id}/approve`, {
+  return await apiClient<Memory>(`/memory-candidates/${id}/approve`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to approve candidate (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function rejectMemoryCandidate(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/memory-candidates/${id}/reject`, {
+  await apiClient<void>(`/memory-candidates/${id}/reject`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to reject candidate (HTTP ${res.status})`);
-  }
 }

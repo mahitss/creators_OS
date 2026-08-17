@@ -337,7 +337,7 @@ export const DecisionDetailWorkspace: React.FC<{ decisionId: string }> = ({ deci
             <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 text-xs font-mono text-slate-300 space-y-2">
               <div>Predicted Impact: <span className="text-indigo-400">{scenarioResult.predicted_impact}</span></div>
               <div>Risk Delta: <span className="text-amber-400">{scenarioResult.risk_delta}</span></div>
-              <div>Production Mutated: <span className="text-emerald-400">{scenarioResult.production_mutated ? 'YES' : 'NO (MOCKED)'}</span></div>
+              <div>Production Mutated: <span className="text-emerald-400">{scenarioResult.production_mutated ? 'YES' : 'NO (DRY RUN)'}</span></div>
             </div>
           )}
         </div>

@@ -29,7 +29,7 @@ describe('Executive Intelligence Home View', () => {
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText(/You're all caught up/i)).toBeInTheDocument();
+      expect(screen.getByText(/Workspace Quiet State/i)).toBeInTheDocument();
       expect(screen.queryByText(/0%/i)).not.toBeInTheDocument();
       expect(screen.queryByText(/0 tasks/i)).not.toBeInTheDocument();
     });

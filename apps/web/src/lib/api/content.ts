@@ -1,3 +1,5 @@
+import { apiClient } from './client';
+
 export interface Content {
   id: string;
   workspace_id: string;
@@ -26,8 +28,6 @@ export interface ContentCreateInput {
   mission_id?: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchContentItems(params?: {
   type?: string;
   status?: string;
@@ -40,88 +40,41 @@ export async function fetchContentItems(params?: {
   if (params?.mission_id) query.set('mission_id', params.mission_id);
   if (params?.search) query.set('search', params.search);
 
-  const res = await fetch(`${API_BASE_URL}/content?${query.toString()}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch content items (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  const qStr = query.toString();
+  return await apiClient<ContentListResponse>(`/content${qStr ? `?${qStr}` : ''}`);
 }
 
 export async function createContentItem(input: ContentCreateInput): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content`, {
+  return await apiClient<Content>('/content', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create content (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function getContentItem(id: string): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content/${id}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch content item ${id} (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<Content>(`/content/${id}`);
 }
 
 export async function updateContentItem(
   id: string,
   input: Partial<ContentCreateInput> & { status?: string }
 ): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content/${id}`, {
+  return await apiClient<Content>(`/content/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to update content (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function archiveContentItem(id: string): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content/${id}/archive`, {
+  return await apiClient<Content>(`/content/${id}/archive`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to archive content (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function approveContentItem(id: string): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content/${id}/approve`, {
+  return await apiClient<Content>(`/content/${id}/approve`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to approve content (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function generateContentAI(
@@ -129,15 +82,8 @@ export async function generateContentAI(
   intent: 'draft' | 'rewrite' | 'expand' | 'summarize' | 'improve',
   customPrompt?: string
 ): Promise<Content> {
-  const res = await fetch(`${API_BASE_URL}/content/${id}/generate`, {
+  return await apiClient<Content>(`/content/${id}/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ intent, custom_prompt: customPrompt }),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to generate AI content (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }

@@ -149,8 +149,10 @@ export function ResilienceWorkspace() {
             <span>SLO Compliance</span>
             <Clock className="w-4 h-4 text-cyan-400" />
           </div>
-          <p className="text-2xl font-bold text-cyan-400">99.95%</p>
-          <span className="text-[10px] text-slate-500">Availability Target: 99.9%</span>
+          <p className="text-2xl font-bold text-cyan-400">
+            {dashboard?.sloCompliance != null ? `${dashboard.sloCompliance}%` : 'Not Connected'}
+          </p>
+          <span className="text-[10px] text-slate-500">Live Telemetry Ingestion</span>
         </div>
       </div>
 
@@ -316,13 +318,17 @@ export function ResilienceWorkspace() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40 space-y-2">
               <span className="text-slate-400 font-bold">Mission Execution SLO</span>
-              <p className="text-2xl font-bold text-emerald-400">99.95%</p>
-              <p className="text-slate-500">Target: 99.9% | Latency: 42.0ms (Target &lt;250ms)</p>
+              <p className="text-2xl font-bold text-emerald-400">
+                {dashboard?.missionSlo != null ? `${dashboard.missionSlo}%` : 'Not Connected'}
+              </p>
+              <p className="text-slate-500">Target: 99.9% | Real Telemetry Ingestion</p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40 space-y-2">
               <span className="text-slate-400 font-bold">Reliability Error Budget</span>
-              <p className="text-2xl font-bold text-cyan-400">85.0% Remaining</p>
-              <p className="text-slate-500">Allowed Error: 0.1% | Current Burn Rate: 0.015</p>
+              <p className="text-2xl font-bold text-cyan-400">
+                {dashboard?.errorBudget != null ? `${dashboard.errorBudget}% Remaining` : 'Not Connected'}
+              </p>
+              <p className="text-slate-500">Allowed Error: 0.1% | Active Burn Monitoring</p>
             </div>
           </div>
         </div>
@@ -339,19 +345,27 @@ export function ResilienceWorkspace() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40">
               <span className="text-slate-400">CPU Usage</span>
-              <p className="text-xl font-bold text-purple-300">38.5%</p>
+              <p className="text-xl font-bold text-purple-300">
+                {dashboard?.cpuUsage != null ? `${dashboard.cpuUsage}%` : 'Not Connected'}
+              </p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40">
               <span className="text-slate-400">Memory Usage</span>
-              <p className="text-xl font-bold text-purple-300">44.0%</p>
+              <p className="text-xl font-bold text-purple-300">
+                {dashboard?.memoryUsage != null ? `${dashboard.memoryUsage}%` : 'Not Connected'}
+              </p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40">
               <span className="text-slate-400">Queue Depth</span>
-              <p className="text-xl font-bold text-purple-300">8 msgs</p>
+              <p className="text-xl font-bold text-purple-300">
+                {dashboard?.queueDepth != null ? `${dashboard.queueDepth} msgs` : '0 msgs'}
+              </p>
             </div>
             <div className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/40">
               <span className="text-slate-400">Load Shedding</span>
-              <p className="text-xl font-bold text-emerald-400">INACTIVE</p>
+              <p className="text-xl font-bold text-emerald-400">
+                {dashboard?.loadSheddingActive ? 'ACTIVE' : 'INACTIVE'}
+              </p>
             </div>
           </div>
         </div>

@@ -1,3 +1,5 @@
+import { apiClient } from './client';
+
 export interface MissionActivity {
   id: string;
   mission_id: string;
@@ -93,8 +95,6 @@ export interface MissionUpdateInput {
   status?: 'draft' | 'active' | 'completed' | 'archived';
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchMissions(params?: {
   status?: string;
   priority?: string;
@@ -105,215 +105,92 @@ export async function fetchMissions(params?: {
   if (params?.priority && params.priority !== 'all') query.set('priority', params.priority);
   if (params?.search) query.set('search', params.search);
 
-  const res = await fetch(`${API_BASE_URL}/missions?${query.toString()}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch missions (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  const qStr = query.toString();
+  return await apiClient<MissionListResponse>(`/missions${qStr ? `?${qStr}` : ''}`);
 }
 
 export async function createMission(input: MissionCreateInput): Promise<Mission> {
-  const res = await fetch(`${API_BASE_URL}/missions`, {
+  return await apiClient<Mission>('/missions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create mission (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function getMission(id: string): Promise<Mission> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch mission ${id} (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<Mission>(`/missions/${id}`);
 }
 
 export async function updateMission(id: string, input: MissionUpdateInput): Promise<Mission> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}`, {
+  return await apiClient<Mission>(`/missions/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to update mission (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function completeMission(id: string): Promise<Mission> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/complete`, {
+  return await apiClient<Mission>(`/missions/${id}/complete`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to complete mission (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function archiveMission(id: string): Promise<Mission> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/archive`, {
+  return await apiClient<Mission>(`/missions/${id}/archive`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to archive mission (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function generateMissionPlan(id: string): Promise<MissionPlan> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan`, {
+  return await apiClient<MissionPlan>(`/missions/${id}/plan`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to generate mission plan (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function getMissionPlan(id: string): Promise<MissionPlan> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch mission plan (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<MissionPlan>(`/missions/${id}/plan`);
 }
 
 export async function regenerateMissionPlan(id: string): Promise<MissionPlan> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/plan/regenerate`, {
+  return await apiClient<MissionPlan>(`/missions/${id}/plan/regenerate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to regenerate mission plan (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function convertPlanToSteps(id: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/steps`, {
+  return await apiClient<MissionStepsPayload>(`/missions/${id}/steps`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to convert plan to steps (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function fetchMissionSteps(id: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/steps`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch mission steps (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<MissionStepsPayload>(`/missions/${id}/steps`);
 }
 
 export async function startExecution(id: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/start`, {
+  return await apiClient<MissionStepsPayload>(`/missions/${id}/start`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to start execution (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function pauseExecution(id: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/pause`, {
+  return await apiClient<MissionStepsPayload>(`/missions/${id}/pause`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to pause execution (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function cancelExecution(id: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/missions/${id}/cancel`, {
+  return await apiClient<MissionStepsPayload>(`/missions/${id}/cancel`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to cancel execution (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function completeStep(stepId: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/mission-steps/${stepId}/complete`, {
+  return await apiClient<MissionStepsPayload>(`/mission-steps/${stepId}/complete`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to complete step (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function skipStep(stepId: string): Promise<MissionStepsPayload> {
-  const res = await fetch(`${API_BASE_URL}/mission-steps/${stepId}/skip`, {
+  return await apiClient<MissionStepsPayload>(`/mission-steps/${stepId}/skip`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to skip step (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }

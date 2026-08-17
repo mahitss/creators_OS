@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr
+from app.core.crypto import sign_event_payload
 
 router = APIRouter()
 
@@ -19,8 +20,10 @@ async def verify_passkey(payload: PasskeyRegisterRequest) -> TokenResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid passkey credential signature."
         )
+    token = sign_event_payload(f"{payload.email}:{payload.credential_id}")
     return TokenResponse(
-        access_token="mock_signed_jwt_passkey_session_token",
+        access_token=token,
         token_type="bearer",
         expires_in=900
     )
+

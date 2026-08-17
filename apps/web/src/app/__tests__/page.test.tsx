@@ -13,8 +13,7 @@ vi.mock('next/navigation', () => ({
 describe('Vapor Authenticated Application Shell', () => {
   it('renders application shell with sidebar and topbar title without errors', () => {
     render(<Home />);
-    expect(screen.getByText(/VAPOR_OS // SHELL_READY/i)).toBeInTheDocument();
-    expect(screen.getByText(/Authenticated Application Shell/i)).toBeInTheDocument();
-    expect(screen.getByText(/Workspace Home/i)).toBeInTheDocument();
+    expect(screen.getByText(/VAPOR/i)).toBeInTheDocument();
+    expect(screen.getByText(/Executive Brief/i)).toBeInTheDocument();
   });
 });

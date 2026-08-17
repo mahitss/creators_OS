@@ -1,3 +1,5 @@
+import { apiClient } from './client';
+
 export interface GmailThread {
   id: string;
   workspace_id: string;
@@ -51,18 +53,9 @@ export interface CreateMissionFromEmailResponse {
   description: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
 export async function fetchGmailStatus(): Promise<GmailStatusResponse> {
   try {
-    const res = await fetch(`${API_BASE_URL}/gmail/status`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store',
-    });
-
-    if (!res.ok) return { is_connected: false, thread_count: 0, unread_count: 0 };
-    return await res.json();
+    return await apiClient<GmailStatusResponse>('/gmail/status');
   } catch (err) {
     return { is_connected: false, thread_count: 0, unread_count: 0 };
   }
@@ -71,69 +64,28 @@ export async function fetchGmailStatus(): Promise<GmailStatusResponse> {
 export async function fetchGmailThreads(filterType: string = 'all'): Promise<GmailThreadListResponse> {
   const query = new URLSearchParams();
   if (filterType && filterType !== 'all') query.set('filter', filterType);
-
-  const res = await fetch(`${API_BASE_URL}/gmail/threads?${query.toString()}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch Gmail threads (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  const qStr = query.toString();
+  return await apiClient<GmailThreadListResponse>(`/gmail/threads${qStr ? `?${qStr}` : ''}`);
 }
 
 export async function fetchGmailMessage(id: string): Promise<GmailMessage> {
-  const res = await fetch(`${API_BASE_URL}/gmail/messages/${id}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch Gmail message (HTTP ${res.status})`);
-  }
-
-  return await res.json();
+  return await apiClient<GmailMessage>(`/gmail/messages/${id}`);
 }
 
 export async function summarizeEmail(id: string): Promise<EmailSummaryResponse> {
-  const res = await fetch(`${API_BASE_URL}/gmail/messages/${id}/summarize`, {
+  return await apiClient<EmailSummaryResponse>(`/gmail/messages/${id}/summarize`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to summarize email (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function createMissionFromEmail(id: string): Promise<CreateMissionFromEmailResponse> {
-  const res = await fetch(`${API_BASE_URL}/gmail/messages/${id}/create-mission`, {
+  return await apiClient<CreateMissionFromEmailResponse>(`/gmail/messages/${id}/create-mission`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to create mission from email (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
 
 export async function syncGmail(): Promise<GmailStatusResponse> {
-  const res = await fetch(`${API_BASE_URL}/gmail/sync`, {
+  return await apiClient<GmailStatusResponse>('/gmail/sync', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!res.ok) {
-    throw new Error(`Failed to sync Gmail (HTTP ${res.status})`);
-  }
-
-  return await res.json();
 }
