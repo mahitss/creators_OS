@@ -33,20 +33,38 @@ _in_memory_lineage_nodes: Dict[str, dict] = {}
 _in_memory_lineage_edges: Dict[str, dict] = {}
 _in_memory_quarantine: Dict[str, dict] = {}
 
-# Patterns for sensitive data & secrets
+import math
+from collections import Counter
+
+# Enhanced Patterns for sensitive data & secrets
 SENSITIVE_PATTERNS = [
-    ("api_key", r"(vpr_[a-zA-Z0-9_]{10,}|sk_[a-zA-Z0-9_]{10,}|ak_[a-zA-Z0-9_]{10,})"),
+    ("api_key", r"(vpr_[a-zA-Z0-9_]{10,}|sk_[a-zA-Z0-9_]{10,}|ak_[a-zA-Z0-9_]{10,}|ghp_[a-zA-Z0-9]{20,}|xox[baprs]-[a-zA-Z0-9-]{10,})"),
     ("private_key", r"-----BEGIN (RSA|EC|DSA|OPENSSH|PRIVATE) KEY-----"),
     ("jwt_token", r"eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}"),
-    ("password", r"(password\s*[:=]\s*\S+)"),
+    ("password", r"(password\s*[:=]\s*\S+|passwd\s*[:=]\s*\S+|secret\s*[:=]\s*\S+)"),
     ("credit_card", r"\b(?:4[0-9]{12}(?:[0-9]{3})?|5[1-5][0-9]{14}|3[47][0-9]{13})\b"),
     ("email", r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"),
     ("phone", r"\b\d{3}[-.]?\d{3}[-.]?\d{4}\b")
 ]
 
+def calculate_shannon_entropy(data: str) -> float:
+    """Calculates the Shannon entropy of a string to detect high-randomness secrets."""
+    if not data:
+        return 0.0
+    entropy = 0.0
+    length = len(data)
+    counts = Counter(data)
+    for count in counts.values():
+        p_x = count / length
+        if p_x > 0:
+            entropy += - p_x * math.log2(p_x)
+    return entropy
+
 def detect_sensitive_patterns(text: str) -> List[dict]:
-    """Detects sensitive patterns & secrets using deterministic regex detectors."""
+    """Detects sensitive patterns, obfuscated secrets, and high-entropy credential blobs."""
     findings = []
+    
+    # 1. Regex Detectors
     for detector_name, pattern in SENSITIVE_PATTERNS:
         matches = re.findall(pattern, text)
         if matches:
@@ -56,6 +74,31 @@ def detect_sensitive_patterns(text: str) -> List[dict]:
                 "count": len(matches),
                 "classification": classification
             })
+
+    # 2. De-obfuscation Check (Spaced tokens e.g. 's k _ ...')
+    normalized_spaced = re.sub(r"\s+", "", text)
+    if re.search(r"(sk_|vpr_|ghp_)[\w]{10,}", normalized_spaced) and not any(f["detector"] == "api_key" for f in findings):
+        findings.append({
+            "detector": "obfuscated_api_key",
+            "count": 1,
+            "classification": "secret"
+        })
+
+    # 3. High-Entropy Credential Detection
+    tokens = re.findall(r"\b[A-Za-z0-9+/=_-]{24,}\b", text)
+    for token in tokens:
+        # Ignore common base64 words or structured markdown
+        if not re.match(r"^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", token):
+            continue
+        entropy = calculate_shannon_entropy(token)
+        if entropy >= 4.2 and not any(f["detector"] == "jwt_token" for f in findings):
+            findings.append({
+                "detector": "high_entropy_secret",
+                "count": 1,
+                "classification": "secret"
+            })
+            break
+
     return findings
 
 def redact_sensitive_content(text: str, mode: str = "mask") -> Tuple[str, int]:

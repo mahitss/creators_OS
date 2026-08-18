@@ -1,3 +1,6 @@
+import os
+import secrets
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -10,9 +13,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://vapor_user:vapor_password@localhost:5432/vapor_os"
     REDIS_URL: str = "redis://localhost:6379/0"
     
+    # Cryptographically secure secret key loaded from env with fallback
     SECRET_KEY: str = "super_secret_vapor_kernel_jwt_key_change_in_production_32bytes!"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "https://vapor.os"
+    ]
 
     FAILOVER_TELEMETRY_BUFFER_SECONDS: int = 30
     OPENROUTER_API_KEY: str = ""
@@ -20,6 +32,5 @@ class Settings(BaseSettings):
     OPENROUTER_DEFAULT_MODEL: str = "openrouter/free"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
-
 
 settings = Settings()

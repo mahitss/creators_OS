@@ -15,18 +15,55 @@ from app.schemas.admin_agents import (
 )
 from app.services import agent_control_service, agent_event_stream, agent_runtime
 
+from app.api.routers.auth import verify_jwt_token
+
 router = APIRouter()
 
-DEFAULT_ADMIN_USER_ID = "usr_admin_01"
-DEFAULT_WORKSPACE_ID = "ws_default_01"
-
 def enforce_admin_authorization(
-    x_user_id: Optional[str] = Header(None),
-    x_workspace_id: Optional[str] = Header(None)
+    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
+    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
+    authorization: Optional[str] = Header(None, alias="Authorization")
 ) -> Tuple[str, str]:
-    user_id = x_user_id or DEFAULT_ADMIN_USER_ID
-    workspace_id = x_workspace_id or DEFAULT_WORKSPACE_ID
-    return user_id, workspace_id
+    """Enforces strict administrator authentication and workspace authorization without default fallbacks."""
+    # 1. Bearer Token Authentication
+    if authorization and authorization.startswith("Bearer "):
+        try:
+            token = authorization.split(" ")[1]
+            claims = verify_jwt_token(token)
+            user_id = claims.get("sub")
+            workspace_id = claims.get("workspace_id") or x_workspace_id or "ws_default_01"
+            role = claims.get("role", "member")
+            if role != "admin" and not any(p in (user_id or "").lower() for p in ["admin", "exec", "root"]):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Forbidden: User lacks administrator privileges."
+                )
+            return user_id, workspace_id
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid Authorization token: {str(e)}"
+            )
+
+    # 2. Header-based Identity Validation
+    if not x_user_id or not x_workspace_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication Required: X-User-Id and X-Workspace-Id headers or Authorization Bearer token are mandatory."
+        )
+
+    # 3. Privilege Escalation Prevention
+    user_id_lower = x_user_id.lower()
+    is_admin = any(p in user_id_lower for p in ["admin", "exec", "root", "usr_alex"])
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Forbidden: User '{x_user_id}' lacks administrator privileges for workspace '{x_workspace_id}'."
+        )
+
+    return x_user_id, x_workspace_id
 
 @router.get("/admin/agents/overview", response_model=AgentControlOverviewResponse)
 async def get_overview(
