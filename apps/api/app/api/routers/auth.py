@@ -331,39 +331,79 @@ async def get_passkey_challenge(email: EmailStr = Query(..., description="User e
     )
 
 @router.post("/auth/passkey/verify", response_model=TokenResponse)
-async def verify_passkey(payload: PasskeyRegisterRequest, response: Response) -> TokenResponse:
-    """Verifies Passkey credential challenge/signature and returns a signed session token."""
+async def verify_passkey(
+    payload: PasskeyRegisterRequest,
+    response: Response,
+    db: Optional[AsyncSession] = Depends(get_db)
+) -> TokenResponse:
+    """Verifies Passkey WebAuthn credential challenge and returns a signed session token."""
     if not payload.email or not payload.credential_id or len(payload.credential_id) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid passkey credential. Email and minimum 8-character credential ID are required."
+            detail="Invalid passkey credential: email and credential ID are required."
         )
     
+    if not payload.challenge:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: WebAuthn challenge response is mandatory."
+        )
+
     challenge_entry = _pending_challenges.get(payload.email)
-    if challenge_entry:
-        if time.time() - challenge_entry["issued_at"] > 300:
-            _pending_challenges.pop(payload.email, None)
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="WebAuthn challenge expired. Request a new challenge."
-            )
-        if payload.challenge and payload.challenge != challenge_entry["challenge"]:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid WebAuthn challenge response."
-            )
+    if not challenge_entry:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: No active challenge found for email. Request a new challenge."
+        )
+
+    if time.time() - challenge_entry["issued_at"] > 60:
         _pending_challenges.pop(payload.email, None)
-        user_id = challenge_entry["user_id"]
-    else:
-        user_id = f"usr_{hashlib.sha256(payload.email.encode()).hexdigest()[:12]}"
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="WebAuthn challenge expired."
+        )
+
+    if payload.challenge != challenge_entry["challenge"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid WebAuthn challenge signature."
+        )
+
+    # Optional origin verification if client_data_json provided
+    if payload.client_data_json:
+        try:
+            client_data = json.loads(base64.urlsafe_b64decode(payload.client_data_json.encode() + b"==").decode())
+            origin = client_data.get("origin", "")
+            if origin and not any(o in origin for o in ["localhost", "127.0.0.1", "vapor.os"]):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=f"Untrusted WebAuthn client origin: {origin}"
+                )
+        except Exception:
+            pass
+
+    _pending_challenges.pop(payload.email, None)
+    user_id = challenge_entry["user_id"]
+
+    # Resolve or provision user safely
+    user_claims = {
+        "sub": user_id,
+        "email": payload.email,
+        "name": payload.email.split("@")[0].capitalize(),
+        "provider": "passkey"
+    }
+    user, workspace, membership, p_err = await identity_service.authenticate_or_provision_google_user(db, user_claims)
+    role = membership["role"] if membership else "member"
+    ws_id = workspace["id"] if workspace else "ws_default_01"
 
     now = time.time()
     token_claims = {
-        "sub": user_id,
+        "sub": user["id"] if user else user_id,
         "email": payload.email,
         "credential_id": payload.credential_id,
-        "role": "admin" if "admin" in payload.email.lower() else "member",
-        "workspace_id": "ws_default_01",
+        "role": role,
+        "workspace_id": ws_id,
+        "provider": "passkey",
         "iat": int(now),
         "exp": int(now + 86400),
         "jti": str(uuid.uuid4())
@@ -385,8 +425,8 @@ async def verify_passkey(payload: PasskeyRegisterRequest, response: Response) ->
         access_token=token,
         token_type="bearer",
         expires_in=86400,
-        user_id=user_id,
+        user_id=token_claims["sub"],
         email=payload.email,
-        workspace_id="ws_default_01",
-        role=token_claims["role"]
+        workspace_id=ws_id,
+        role=role
     )

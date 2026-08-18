@@ -15,63 +15,16 @@ from app.schemas.admin_agents import (
 )
 from app.services import agent_control_service, agent_event_stream, agent_runtime
 
-from app.api.routers.auth import verify_jwt_token
+from app.dependencies.auth import require_admin, WorkspaceContext
 
 router = APIRouter()
 
-def enforce_admin_authorization(
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-    x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
-    authorization: Optional[str] = Header(None, alias="Authorization")
-) -> Tuple[str, str]:
-    """Enforces strict administrator authentication and workspace authorization without default fallbacks."""
-    # 1. Bearer Token Authentication
-    if authorization and authorization.startswith("Bearer "):
-        try:
-            token = authorization.split(" ")[1]
-            claims = verify_jwt_token(token)
-            user_id = claims.get("sub")
-            workspace_id = claims.get("workspace_id") or x_workspace_id or "ws_default_01"
-            role = claims.get("role", "member")
-            if role != "admin" and not any(p in (user_id or "").lower() for p in ["admin", "exec", "root"]):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Forbidden: User lacks administrator privileges."
-                )
-            return user_id, workspace_id
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Invalid Authorization token: {str(e)}"
-            )
-
-    # 2. Header-based Identity Validation
-    if not x_user_id or not x_workspace_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication Required: X-User-Id and X-Workspace-Id headers or Authorization Bearer token are mandatory."
-        )
-
-    # 3. Privilege Escalation Prevention
-    user_id_lower = x_user_id.lower()
-    is_admin = any(p in user_id_lower for p in ["admin", "exec", "root", "usr_alex"])
-    if not is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Forbidden: User '{x_user_id}' lacks administrator privileges for workspace '{x_workspace_id}'."
-        )
-
-    return x_user_id, x_workspace_id
-
 @router.get("/admin/agents/overview", response_model=AgentControlOverviewResponse)
 async def get_overview(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> AgentControlOverviewResponse:
-    _, ws_id = auth
-    overview = await agent_control_service.get_control_overview(db, ws_id)
+    overview = await agent_control_service.get_control_overview(db, ws_ctx.workspace_id)
     return AgentControlOverviewResponse(**overview)
 
 @router.get("/admin/agents", response_model=List[AgentRunSummaryResponse])
@@ -79,74 +32,66 @@ async def list_agents(
     status: Optional[str] = Query(None, description="Filter by status (running, waiting_for_approval, paused, failed, completed)"),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[AgentRunSummaryResponse]:
-    _, ws_id = auth
-    runs, _ = await agent_control_service.list_active_agents(db, ws_id, status_filter=status, page=page, limit=limit)
+    runs, _ = await agent_control_service.list_active_agents(db, ws_ctx.workspace_id, status_filter=status, page=page, limit=limit)
     return [AgentRunSummaryResponse(**r) for r in runs]
 
 @router.get("/admin/agents/events")
 async def stream_agent_events(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization)
+    ws_ctx: WorkspaceContext = Depends(require_admin)
 ):
-    _, ws_id = auth
     return StreamingResponse(
-        agent_event_stream.event_generator(ws_id),
+        agent_event_stream.event_generator(ws_ctx.workspace_id),
         media_type="text/event-stream"
     )
 
 @router.get("/admin/agents/stuck")
 async def get_stuck_agents(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[dict]:
-    _, ws_id = auth
-    return await agent_control_service.detect_stuck_agents(db, ws_id)
+    return await agent_control_service.detect_stuck_agents(db, ws_ctx.workspace_id)
 
 @router.get("/admin/agents/approvals")
 async def get_admin_approvals(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization)
+    ws_ctx: WorkspaceContext = Depends(require_admin)
 ) -> List[dict]:
-    _, ws_id = auth
-    approvals = [app for app in agent_runtime._in_memory_approvals.values() if app.get("workspace_id") == ws_id]
+    approvals = [app for app in agent_runtime._in_memory_approvals.values() if app.get("workspace_id") == ws_ctx.workspace_id]
     return agent_control_service.redact_sensitive_content(approvals)
 
 @router.get("/admin/agents/failures")
 async def get_admin_failures(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization)
+    ws_ctx: WorkspaceContext = Depends(require_admin)
 ) -> List[dict]:
-    _, ws_id = auth
     runs = agent_runtime._in_memory_runs
-    failed = [r for r in runs.values() if r.get("workspace_id") == ws_id and r.get("status") == "failed"]
+    failed = [r for r in runs.values() if r.get("workspace_id") == ws_ctx.workspace_id and r.get("status") == "failed"]
     return agent_control_service.redact_sensitive_content(failed)
 
 @router.get("/admin/agents/providers", response_model=ProviderHealthResponse)
 async def get_providers_health(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> ProviderHealthResponse:
-    _, ws_id = auth
-    data = await agent_control_service.get_provider_health(db, ws_id)
+    data = await agent_control_service.get_provider_health(db, ws_ctx.workspace_id)
     return ProviderHealthResponse(**data)
 
 @router.get("/admin/agents/metrics", response_model=List[ToolOperationMetricResponse])
 async def get_tools_metrics(
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[ToolOperationMetricResponse]:
-    _, ws_id = auth
-    metrics = await agent_control_service.get_tool_operations_metrics(db, ws_id)
+    metrics = await agent_control_service.get_tool_operations_metrics(db, ws_ctx.workspace_id)
     return [ToolOperationMetricResponse(**m) for m in metrics]
 
 @router.get("/admin/agents/{id}", response_model=AgentDetailResponse)
 async def get_agent_detail(
     id: str,
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> AgentDetailResponse:
-    _, ws_id = auth
-    detail = await agent_control_service.get_agent_detail(db, ws_id, id)
+    detail = await agent_control_service.get_agent_detail(db, ws_ctx.workspace_id, id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AgentRun not found.")
     return AgentDetailResponse(**detail)
@@ -154,11 +99,10 @@ async def get_agent_detail(
 @router.get("/admin/agents/{id}/timeline")
 async def get_agent_timeline(
     id: str,
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[dict]:
-    _, ws_id = auth
-    detail = await agent_control_service.get_agent_detail(db, ws_id, id)
+    detail = await agent_control_service.get_agent_detail(db, ws_ctx.workspace_id, id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AgentRun not found.")
     return detail.get("timeline", [])
@@ -166,11 +110,10 @@ async def get_agent_timeline(
 @router.get("/admin/agents/{id}/tools")
 async def get_agent_tools(
     id: str,
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[dict]:
-    _, ws_id = auth
-    detail = await agent_control_service.get_agent_detail(db, ws_id, id)
+    detail = await agent_control_service.get_agent_detail(db, ws_ctx.workspace_id, id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AgentRun not found.")
     return detail.get("tool_executions", [])
@@ -178,11 +121,10 @@ async def get_agent_tools(
 @router.get("/admin/agents/{id}/checkpoints")
 async def get_agent_checkpoints(
     id: str,
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[dict]:
-    _, ws_id = auth
-    detail = await agent_control_service.get_agent_detail(db, ws_id, id)
+    detail = await agent_control_service.get_agent_detail(db, ws_ctx.workspace_id, id)
     if not detail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="AgentRun not found.")
     return detail.get("checkpoints", [])
@@ -191,13 +133,12 @@ async def get_agent_checkpoints(
 async def perform_operator_action(
     id: str,
     payload: OperatorActionPayload,
-    auth: Tuple[str, str] = Depends(enforce_admin_authorization),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> OperatorActionResponse:
-    user_id, ws_id = auth
     try:
         res = await agent_control_service.execute_operator_action(
-            db, operator_id=user_id, workspace_id=ws_id, run_id=id, action=payload.action, reason=payload.reason or ""
+            db, operator_id=ws_ctx.user_id, workspace_id=ws_ctx.workspace_id, run_id=id, action=payload.action, reason=payload.reason or ""
         )
         return OperatorActionResponse(**res)
     except ValueError as exc:

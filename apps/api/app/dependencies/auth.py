@@ -63,19 +63,6 @@ async def get_current_user(
                 detail=f"Invalid session token: {str(e)}"
             )
 
-    # 2. Test / Development Fallback (Only in test execution mode)
-    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("VAPOR_TEST_MODE") == "true":
-        if x_user_id:
-            ws_id = x_workspace_id or "ws_test_01"
-            role = "admin" if any(p in x_user_id.lower() for p in ["admin", "exec", "root", "usr_alex"]) else "member"
-            return AuthenticatedUser(
-                id=x_user_id,
-                email=f"{x_user_id}@vapor.internal",
-                name=x_user_id.replace("usr_", "").capitalize(),
-                role=role,
-                workspace_id=ws_id
-            )
-
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Authentication required. Provide a valid Authorization Bearer token or session cookie."

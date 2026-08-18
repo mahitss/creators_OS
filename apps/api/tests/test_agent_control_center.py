@@ -10,8 +10,25 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.services.agent_control_service import redact_sensitive_content
 
+import time
+import uuid
+from app.api.routers.auth import _create_jwt_token
+
 client = TestClient(app)
-ADMIN_HEADERS = {"X-User-Id": "usr_admin_01", "X-Workspace-Id": "ws_admin_ctrl"}
+_now = int(time.time())
+_admin_token = _create_jwt_token({
+    "sub": "usr_admin_01",
+    "email": "admin@vapor.internal",
+    "role": "admin",
+    "workspace_id": "ws_admin_ctrl",
+    "iat": _now,
+    "exp": _now + 3600,
+    "jti": str(uuid.uuid4())
+})
+ADMIN_HEADERS = {
+    "Authorization": f"Bearer {_admin_token}",
+    "X-Workspace-Id": "ws_admin_ctrl"
+}
 
 def test_sensitive_content_redaction():
     raw = {
