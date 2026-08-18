@@ -1,8 +1,9 @@
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 from app.schemas.integration import (
     IntegrationConnectionResponse,
     IntegrationListResponse,
@@ -16,17 +17,12 @@ from app.services import integration_service, integration_fabric_service, action
 
 router = APIRouter()
 
-DEFAULT_WORKSPACE_ID = "ws_default_01"
-
-def get_current_workspace_id(x_workspace_id: Optional[str] = Header(None)) -> str:
-    return x_workspace_id or DEFAULT_WORKSPACE_ID
-
 @router.get("/integrations", response_model=IntegrationListResponse)
 async def list_integrations(
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> IntegrationListResponse:
-    connections, total = await integration_service.list_connections(db, workspace_id)
+    connections, total = await integration_service.list_connections(db, ws_ctx.workspace_id)
     return IntegrationListResponse(
         connections=[IntegrationConnectionResponse(**conn) for conn in connections],
         total=total
@@ -34,6 +30,7 @@ async def list_integrations(
 
 @router.get("/integrations/catalog")
 async def list_integration_catalog(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Retrieves the Integration Provider Manifest Catalog."""
@@ -41,6 +38,7 @@ async def list_integration_catalog(
 
 @router.get("/integrations/actions")
 async def list_integration_actions(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Lists audit records of executed integration actions."""
@@ -49,7 +47,7 @@ async def list_integration_actions(
             "id": "act_01",
             "capability_id": "gmail.send",
             "connection_id": "conn_google_01",
-            "actor": "usr_executive_01",
+            "actor": ws_ctx.user_id,
             "status": "completed",
             "created_at": "2026-08-11T01:00:00Z"
         }
@@ -58,16 +56,16 @@ async def list_integration_actions(
 @router.post("/integrations/actions/execute")
 async def execute_action_gateway(
     request: ActionExecuteRequest,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Executes an action via Universal Action Gateway through 10-step pipeline."""
-    return await action_gateway_service.execute_action(db, request, x_user_id, workspace_id)
+    return await action_gateway_service.execute_action(db, request, ws_ctx.user_id, ws_ctx.workspace_id)
 
 @router.get("/integrations/actions/{id}")
 async def get_action_detail(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Retrieves detail for a specific action gateway request."""
@@ -75,7 +73,7 @@ async def get_action_detail(
         "id": id,
         "capability_id": "gmail.send",
         "connection_id": "conn_google_01",
-        "actor": "usr_executive_01",
+        "actor": ws_ctx.user_id,
         "status": "completed",
         "result_reference": {"status": "verified", "provider_status": 200},
         "created_at": "2026-08-11T01:00:00Z"
@@ -84,6 +82,7 @@ async def get_action_detail(
 @router.post("/integrations/actions/{id}/simulate")
 async def simulate_action_gateway(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Simulates an action gateway execution without contacting external services."""
@@ -93,11 +92,11 @@ async def simulate_action_gateway(
 async def receive_integration_webhook(
     provider: str,
     request: WebhookIngestRequest,
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Receives and verifies cryptographic webhooks with replay protection & DLP scan."""
-    result, code = await integration_fabric_service.handle_webhook(db, provider, request, workspace_id)
+    result, code = await integration_fabric_service.handle_webhook(db, provider, request, ws_ctx.workspace_id)
     if code != 200:
         raise HTTPException(status_code=code, detail=result.get("error", "Webhook verification failed."))
     return result
@@ -105,6 +104,7 @@ async def receive_integration_webhook(
 @router.get("/integrations/{provider}/capabilities")
 async def get_integration_capabilities(
     provider: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Lists capabilities supported by provider connector."""
@@ -113,6 +113,7 @@ async def get_integration_capabilities(
 @router.get("/integrations/{provider}/health")
 async def get_integration_health(
     provider: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ):
     """Returns connection health telemetry and circuit breaker state."""
@@ -121,10 +122,10 @@ async def get_integration_health(
 @router.get("/integrations/{provider}", response_model=IntegrationConnectionResponse)
 async def get_integration(
     provider: str,
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> IntegrationConnectionResponse:
-    conn = await integration_service.get_connection(db, workspace_id, provider)
+    conn = await integration_service.get_connection(db, ws_ctx.workspace_id, provider)
     if not conn:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -135,10 +136,10 @@ async def get_integration(
 @router.post("/integrations/{provider}/connect", response_model=OAuthConnectUrlResponse)
 async def connect_integration(
     provider: str,
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
 ) -> OAuthConnectUrlResponse:
     try:
-        auth_url, state = await integration_service.generate_connect_url(workspace_id, provider)
+        auth_url, state = await integration_service.generate_connect_url(ws_ctx.workspace_id, provider)
         return OAuthConnectUrlResponse(authorization_url=auth_url, state=state)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -148,11 +149,11 @@ async def oauth_callback(
     provider: str,
     code: str = Query(..., description="Authorization code from provider"),
     state: str = Query(..., description="CSRF state token"),
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> IntegrationConnectionResponse:
     try:
-        conn = await integration_service.handle_oauth_callback(db, workspace_id, provider, code, state)
+        conn = await integration_service.handle_oauth_callback(db, ws_ctx.workspace_id, provider, code, state)
         return IntegrationConnectionResponse(**conn)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -160,10 +161,10 @@ async def oauth_callback(
 @router.post("/integrations/{provider}/disconnect", response_model=IntegrationConnectionResponse)
 async def disconnect_integration(
     provider: str,
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> IntegrationConnectionResponse:
-    conn = await integration_service.disconnect_provider(db, workspace_id, provider)
+    conn = await integration_service.disconnect_provider(db, ws_ctx.workspace_id, provider)
     if not conn:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -174,10 +175,10 @@ async def disconnect_integration(
 @router.post("/integrations/{provider}/refresh", response_model=IntegrationConnectionResponse)
 async def refresh_integration(
     provider: str,
-    workspace_id: str = Depends(get_current_workspace_id),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> IntegrationConnectionResponse:
-    conn = await integration_service.refresh_connection(db, workspace_id, provider)
+    conn = await integration_service.refresh_connection(db, ws_ctx.workspace_id, provider)
     if not conn:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.mission_orchestration import (
@@ -15,25 +15,26 @@ from app.schemas.mission_orchestration import (
 )
 from app.services import mission_orchestration_service
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 
 router = APIRouter(prefix="/missions", tags=["Enterprise Agent Orchestration & Mission Intelligence 2.0"])
 
 @router.post("/orchestrate", response_model=MissionPlanRead)
 async def create_mission_orchestration(
     req: MissionObjectiveCreate,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
-    user_id: str = Header("usr_default_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Creates a mission with objective clarity analysis and initial DAG plan."""
     _, plan = await mission_orchestration_service.create_mission_orchestration(
-        db, workspace_id=workspace_id, user_id=user_id, req=req
+        db, workspace_id=ws_ctx.workspace_id, user_id=ws_ctx.user_id, req=req
     )
     return plan
 
 @router.get("/{mission_id}/plan", response_model=MissionPlanRead)
 async def get_mission_plan(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns the latest active DAG plan for a mission."""
@@ -45,6 +46,7 @@ async def get_mission_plan(
 @router.get("/{mission_id}/plan/versions", response_model=List[dict])
 async def get_mission_plan_versions(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns immutable plan version snapshots and replan history."""
@@ -54,18 +56,19 @@ async def get_mission_plan_versions(
 async def replan_mission(
     mission_id: str,
     req: MissionReplanRequest,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Triggers event-driven replanning, generating a new plan version snapshot and diff."""
     return await mission_orchestration_service.replan_mission(
-        db, workspace_id=workspace_id, mission_id=mission_id, req=req
+        db, workspace_id=ws_ctx.workspace_id, mission_id=mission_id, req=req
     )
 
 @router.post("/{mission_id}/plan/validate")
 async def validate_deliverable(
     mission_id: str,
     req: MissionValidateRequest,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """MissionValidator: Verifies deliverable artifact or ActionGateway output before marking complete."""
@@ -76,6 +79,7 @@ async def validate_deliverable(
 @router.get("/{mission_id}/costs", response_model=MissionCostRead)
 async def get_mission_costs(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns estimated vs actual cost and remaining budget telemetry."""
@@ -87,6 +91,7 @@ async def get_mission_costs(
 @router.get("/{mission_id}/risks", response_model=MissionRiskRead)
 async def get_mission_risks(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns multi-dimensional risk scores and active warnings."""

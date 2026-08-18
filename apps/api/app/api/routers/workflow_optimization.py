@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, require_admin, WorkspaceContext
 from app.schemas.workflow_optimization import (
     OptimizationExperimentCreate
 )
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/workflows", tags=["adaptive-workflow-optimization"])
 async def get_workflow_performance(
     id: str,
     version: int = Query(1),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves aggregated WorkflowPerformanceProfile metrics."""
@@ -23,6 +25,7 @@ async def get_workflow_performance(
 async def list_workflow_bottlenecks(
     id: str,
     version: int = Query(1),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists evidence-backed workflow execution bottlenecks."""
@@ -31,6 +34,7 @@ async def list_workflow_bottlenecks(
 @router.get("/{id}/optimization")
 async def list_optimization_proposals(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists active optimization proposals for a workflow."""
@@ -40,6 +44,7 @@ async def list_optimization_proposals(
 @router.post("/{id}/optimization/analyze")
 async def analyze_and_propose_optimization(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Analyzes telemetry and generates a new optimization proposal."""
@@ -52,6 +57,7 @@ async def analyze_and_propose_optimization(
 async def simulate_optimization_proposal(
     id: str,
     proposal_id: str = Query(..., alias="proposalId"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Runs deterministic graph simulation in sandbox mode displaying estimated latency/cost deltas."""
@@ -61,7 +67,7 @@ async def simulate_optimization_proposal(
 async def approve_optimization_proposal(
     id: str,
     proposal_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     session: AsyncSession = Depends(get_db)
 ):
     """Approves an optimization proposal for publication."""
@@ -73,38 +79,40 @@ async def approve_optimization_proposal(
 async def publish_optimization_proposal(
     id: str,
     proposal_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     session: AsyncSession = Depends(get_db)
 ):
     """Publishes a new immutable workflow version from an approved proposal."""
-    return await workflow_optimization_service.publish_optimization(session, proposal_id, x_user_id)
+    return await workflow_optimization_service.publish_optimization(session, proposal_id, ws_ctx.user_id)
 
 @router.post("/{id}/optimization/{proposal_id}/rollback")
 async def rollback_workflow_optimization(
     id: str,
     proposal_id: str,
     target_version: int = Query(1, alias="targetVersion"),
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     session: AsyncSession = Depends(get_db)
 ):
     """Instantly rolls back future executions to a previous stable workflow version."""
-    return await workflow_optimization_service.rollback_optimization(session, id, target_version, x_user_id)
+    return await workflow_optimization_service.rollback_optimization(session, id, target_version, ws_ctx.user_id)
 
 @router.get("/{id}/versions")
 async def list_workflow_versions(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists published version history for a workflow."""
     return [
         {"version": 1, "workflow_id": id, "published_by": "creator", "published_at": "2026-08-11T00:00:00Z"},
-        {"version": 2, "workflow_id": id, "published_by": "usr_executive_01", "published_at": "2026-08-11T01:00:00Z"}
+        {"version": 2, "workflow_id": id, "published_by": ws_ctx.user_id, "published_at": "2026-08-11T01:00:00Z"}
     ]
 
 @router.get("/{id}/versions/{version}")
 async def get_workflow_version_detail(
     id: str,
     version: int,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves full workflow graph definition for a specific version."""
@@ -123,6 +131,7 @@ async def compare_workflow_versions(
     id: str,
     a: int,
     b: int,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Compares metrics and visual graph diff between two workflow versions."""
@@ -131,6 +140,7 @@ async def compare_workflow_versions(
 @router.get("/{id}/experiments")
 async def list_optimization_experiments(
     id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists active canary A/B traffic split experiments."""
@@ -151,6 +161,7 @@ async def list_optimization_experiments(
 async def create_optimization_experiment(
     id: str,
     exp_data: OptimizationExperimentCreate,
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     session: AsyncSession = Depends(get_db)
 ):
     """Starts a controlled canary A/B traffic split experiment."""
@@ -160,6 +171,7 @@ async def create_optimization_experiment(
 async def stop_optimization_experiment(
     id: str,
     exp_id: str,
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     session: AsyncSession = Depends(get_db)
 ):
     """Stops a canary A/B experiment and restores 100% baseline traffic."""

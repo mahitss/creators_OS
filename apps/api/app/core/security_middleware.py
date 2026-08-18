@@ -1,9 +1,11 @@
 import time
+from urllib.parse import urlparse
 from collections import defaultdict
 from typing import Dict, List, Tuple
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+from app.core.config import settings
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Enforces enterprise security headers on all HTTP responses."""
@@ -12,18 +14,64 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https:; "
-            "font-src 'self' data:; "
-            "connect-src 'self' http://localhost:* http://127.0.0.1:* https://openrouter.ai;"
-        )
+        
+        is_prod = settings.ENVIRONMENT == "production"
+        if is_prod:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self' data:; "
+                "connect-src 'self' https://openrouter.ai; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "frame-ancestors 'none';"
+            )
+        else:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self' data:; "
+                "connect-src 'self' http://localhost:* http://127.0.0.1:* https://openrouter.ai; "
+                "object-src 'none'; "
+                "base-uri 'self';"
+            )
         return response
+
+
+class CSRFProtectionMiddleware(BaseHTTPMiddleware):
+    """Protects cookie-authenticated state-changing requests against Cross-Site Request Forgery."""
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+            # State-changing requests
+            origin = request.headers.get("origin")
+            referer = request.headers.get("referer")
+            has_cookie = "vapor_session_token" in request.cookies
+
+            # If authenticated by cookie or sending an Origin header, validate the origin
+            if origin:
+                if origin not in settings.CORS_ORIGINS:
+                    return JSONResponse(
+                        status_code=403,
+                        content={"error": "CSRF_FORBIDDEN", "detail": f"Untrusted origin '{origin}' rejected."}
+                    )
+            elif referer and has_cookie:
+                parsed = urlparse(referer)
+                ref_origin = f"{parsed.scheme}://{parsed.netloc}"
+                if ref_origin not in settings.CORS_ORIGINS:
+                    return JSONResponse(
+                        status_code=403,
+                        content={"error": "CSRF_FORBIDDEN", "detail": f"Untrusted referer '{ref_origin}' rejected."}
+                    )
+
+        return await call_next(request)
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
@@ -40,7 +88,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         client_key = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
-        auth_key = request.headers.get("Authorization") or request.headers.get("X-User-Id")
+        auth_key = request.headers.get("Authorization")
         if auth_key:
             client_key = f"{client_key}:{auth_key}"
 
@@ -74,3 +122,4 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Limit"] = str(self.requests_per_minute)
         response.headers["X-RateLimit-Remaining"] = str(max(0, remaining))
         return response
+

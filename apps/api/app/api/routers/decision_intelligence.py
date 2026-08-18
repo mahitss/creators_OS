@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 from app.schemas.decision_intelligence import (
     DecisionSignalCreate,
     DecisionScenarioCreate,
@@ -14,16 +15,17 @@ router = APIRouter(prefix="/intelligence", tags=["enterprise-decision-intelligen
 
 @router.get("/signals")
 async def list_decision_signals(
-    workspace_id: str = Query("ws_default_creator", alias="workspaceId"),
     signal_type: Optional[str] = Query(None, alias="signalType"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists normalized time-series operational decision signals."""
-    return await decision_intelligence_service.get_signals(session, workspace_id, signal_type=signal_type)
+    return await decision_intelligence_service.get_signals(session, ws_ctx.workspace_id, signal_type=signal_type)
 
 @router.post("/signals")
 async def record_decision_signal(
     sig_data: DecisionSignalCreate,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Records a new operational decision signal."""
@@ -31,6 +33,7 @@ async def record_decision_signal(
 
 @router.get("/anomalies")
 async def list_anomaly_events(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists detected statistical anomaly events."""
@@ -50,6 +53,7 @@ async def list_anomaly_events(
 @router.get("/forecasts")
 async def list_forecasts(
     signal_type: Optional[str] = Query("workflow_volume", alias="signalType"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves non-speculative time-series statistical forecasts."""
@@ -59,6 +63,7 @@ async def list_forecasts(
 
 @router.get("/recommendations")
 async def list_recommendations(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists evidence-backed policy-controlled recommendations."""
@@ -82,6 +87,7 @@ async def list_recommendations(
 @router.get("/recommendations/{recommendation_id}")
 async def get_recommendation_detail(
     recommendation_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves detailed recommendation evidence and policy requirements."""
@@ -105,36 +111,37 @@ async def get_recommendation_detail(
 @router.post("/recommendations/{recommendation_id}/accept")
 async def accept_recommendation(
     recommendation_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Accepts a recommendation and creates a DecisionRecord & Outcome entry."""
-    return await decision_intelligence_service.resolve_recommendation(session, recommendation_id, "accept", x_user_id)
+    return await decision_intelligence_service.resolve_recommendation(session, recommendation_id, "accept", ws_ctx.user_id)
 
 @router.post("/recommendations/{recommendation_id}/reject")
 async def reject_recommendation(
     recommendation_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Rejects a recommendation."""
-    return await decision_intelligence_service.resolve_recommendation(session, recommendation_id, "reject", x_user_id)
+    return await decision_intelligence_service.resolve_recommendation(session, recommendation_id, "reject", ws_ctx.user_id)
 
 @router.get("/decisions")
 async def list_decision_records(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists historical Decision Journal records."""
     return [
         {
             "id": "dec_01",
-            "organization_id": "org_default_creator",
-            "workspace_id": "ws_default_creator",
+            "organization_id": ws_ctx.workspace_id,
+            "workspace_id": ws_ctx.workspace_id,
             "trigger": "Recommendation rec_01 Accepted",
             "evidence": [{"source": "finops_metrics", "finding": "Provider B cost optimization"}],
             "recommendation_id": "rec_01",
             "decision": "Approved cost_optimization provider routing",
-            "actor": "usr_executive_01",
+            "actor": ws_ctx.user_id,
             "policy_version": 1,
             "created_at": "2026-08-11T00:00:00Z"
         }
@@ -143,18 +150,19 @@ async def list_decision_records(
 @router.get("/decisions/{decision_id}")
 async def get_decision_detail(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves full Decision Journal detail including evidence, policy, actor, and outcome."""
     return {
         "id": decision_id,
-        "organization_id": "org_default_creator",
-        "workspace_id": "ws_default_creator",
+        "organization_id": ws_ctx.workspace_id,
+        "workspace_id": ws_ctx.workspace_id,
         "trigger": "Recommendation rec_01 Accepted",
         "evidence": [{"source": "finops_metrics", "finding": "Provider B cost optimization"}],
         "recommendation_id": "rec_01",
         "decision": "Approved cost_optimization provider routing",
-        "actor": "usr_executive_01",
+        "actor": ws_ctx.user_id,
         "policy_version": 1,
         "outcome": {
             "expected_impact": "Save $45/mo",
@@ -168,15 +176,16 @@ async def get_decision_detail(
 @router.post("/scenarios")
 async def create_decision_scenario(
     scen_data: DecisionScenarioCreate,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Creates a what-if decision simulation model."""
-    return await decision_intelligence_service.create_scenario(session, scen_data, x_user_id)
+    return await decision_intelligence_service.create_scenario(session, scen_data, ws_ctx.user_id)
 
 @router.post("/scenarios/{scenario_id}/simulate")
 async def simulate_decision_scenario(
     scenario_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Runs deterministic what-if scenario simulation without mutating production systems."""
@@ -184,6 +193,7 @@ async def simulate_decision_scenario(
 
 @router.get("/outcomes")
 async def list_decision_outcomes(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists actual decision outcomes and impact evaluations."""
@@ -202,7 +212,8 @@ async def list_decision_outcomes(
 @router.post("/feedback")
 async def record_human_feedback(
     fb_data: DecisionFeedbackCreate,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Records human operator feedback on recommendations (useful, not_useful, incorrect, unsafe, missing_context)."""
-    return await decision_intelligence_service.record_feedback(session, fb_data.recommendation_id, fb_data.feedback, fb_data.actor or "usr_executive_01")
+    return await decision_intelligence_service.record_feedback(session, fb_data.recommendation_id, fb_data.feedback, ws_ctx.user_id)

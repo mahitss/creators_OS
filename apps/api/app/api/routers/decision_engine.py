@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.decision_engine import (
@@ -21,32 +21,33 @@ from app.schemas.decision_engine import (
 )
 from app.services import decision_engine_service
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 
 router = APIRouter(prefix="/decisions", tags=["Enterprise Decision Intelligence 2.0 & Evidence-Backed Agent Decision Engine"])
 
 @router.get("", response_model=List[DecisionRead])
 async def list_decisions(
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Lists workspace decisions."""
-    return await decision_engine_service.list_decisions(db, workspace_id=workspace_id)
+    return await decision_engine_service.list_decisions(db, workspace_id=ws_ctx.workspace_id)
 
 @router.post("", response_model=DecisionRead)
 async def create_decision(
     req: DecisionCreate,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
-    user_id: str = Header("usr_default_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Creates a new decision with evidence gathering and option generation."""
     return await decision_engine_service.create_decision(
-        db, workspace_id=workspace_id, user_id=user_id, req=req
+        db, workspace_id=ws_ctx.workspace_id, user_id=ws_ctx.user_id, req=req
     )
 
 @router.get("/{decision_id}", response_model=DecisionRead)
 async def get_decision(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Gets decision details by ID."""
@@ -58,6 +59,7 @@ async def get_decision(
 @router.get("/{decision_id}/evidence", response_model=List[DecisionEvidenceRead])
 async def get_decision_evidence(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns supporting and contradicting evidence items."""
@@ -66,6 +68,7 @@ async def get_decision_evidence(
 @router.get("/{decision_id}/options", response_model=List[DecisionOptionRead])
 async def get_decision_options(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns generated decision options."""
@@ -74,6 +77,7 @@ async def get_decision_options(
 @router.get("/{decision_id}/risks", response_model=List[DecisionRiskRead])
 async def get_decision_risks(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns multi-dimensional risk evaluations for options."""
@@ -82,6 +86,7 @@ async def get_decision_risks(
 @router.get("/{decision_id}/outcome", response_model=DecisionOutcomeRead)
 async def get_decision_outcome(
     decision_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns expected vs actual outcome tracking."""
@@ -94,6 +99,7 @@ async def get_decision_outcome(
 async def analyze_decision(
     decision_id: str,
     req: DecisionAnalyzeRequest,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Performs deep evidence analysis, claim classification, and trade-off evaluation."""
@@ -105,6 +111,7 @@ async def analyze_decision(
 async def create_scenario(
     decision_id: str,
     req: DecisionScenarioCreate,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Performs non-destructive scenario analysis ('what-if' simulation)."""
@@ -116,22 +123,22 @@ async def create_scenario(
 async def approve_decision(
     decision_id: str,
     req: DecisionApprovalRequest,
-    user_id: str = Header("usr_default_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Approves a recommended decision option."""
     return await decision_engine_service.approve_decision(
-        db, decision_id=decision_id, req=req, approver_id=user_id
+        db, decision_id=decision_id, req=req, approver_id=ws_ctx.user_id
     )
 
 @router.post("/{decision_id}/override", response_model=DecisionRead)
 async def override_decision(
     decision_id: str,
     req: DecisionOverrideRequest,
-    user_id: str = Header("usr_default_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Performs human override of AI recommendation while preserving original state in audit trail."""
     return await decision_engine_service.override_decision(
-        db, decision_id=decision_id, req=req, actor_id=user_id
+        db, decision_id=decision_id, req=req, actor_id=ws_ctx.user_id
     )

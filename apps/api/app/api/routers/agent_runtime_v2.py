@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.agent_runtime_v2 import (
@@ -13,11 +13,13 @@ from app.schemas.agent_runtime_v2 import (
 )
 from app.services import agent_runtime_v2_service
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 
 router = APIRouter(prefix="/agents/executions", tags=["Enterprise Agent Runtime 2.0 & Durable Cognitive Execution"])
 
 @router.get("", response_model=List[AgentExecutionRead])
 async def list_executions(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Lists agent executions."""
@@ -26,19 +28,19 @@ async def list_executions(
 @router.post("", response_model=AgentExecutionRead)
 async def create_execution(
     req: AgentExecutionCreate,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
-    organization_id: str = Header("org_default_creator", alias="X-Organization-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Creates a new durable Agent Execution 2.0 instance."""
     exec_inst, _ = await agent_runtime_v2_service.create_execution(
-        db, workspace_id=workspace_id, req=req, organization_id=organization_id
+        db, workspace_id=ws_ctx.workspace_id, req=req, organization_id=ws_ctx.workspace_id
     )
     return exec_inst
 
 @router.get("/{execution_id}", response_model=AgentExecutionRead)
 async def get_execution(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Fetches agent execution details."""
@@ -50,6 +52,7 @@ async def get_execution(
 @router.get("/{execution_id}/trace", response_model=ExecutionTraceRead)
 async def get_execution_trace(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Returns complete execution trace including state, steps, checkpoints, and unknown outcomes."""
@@ -61,6 +64,7 @@ async def get_execution_trace(
 @router.post("/{execution_id}/pause", response_model=AgentExecutionRead)
 async def pause_execution(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Pauses a running execution."""
@@ -72,6 +76,7 @@ async def pause_execution(
 @router.post("/{execution_id}/resume", response_model=AgentExecutionRead)
 async def resume_execution(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Resumes a paused execution."""
@@ -83,6 +88,7 @@ async def resume_execution(
 @router.post("/{execution_id}/cancel", response_model=AgentExecutionRead)
 async def cancel_execution(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Cancels an execution."""
@@ -94,6 +100,7 @@ async def cancel_execution(
 @router.post("/{execution_id}/recover", response_model=AgentExecutionRead)
 async def recover_execution(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Recovers a crashed or stale execution."""
@@ -105,6 +112,7 @@ async def recover_execution(
 @router.get("/{execution_id}/checkpoints", response_model=List[ExecutionCheckpointRead])
 async def list_checkpoints(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Lists checkpoints for execution."""
@@ -113,6 +121,7 @@ async def list_checkpoints(
 @router.get("/{execution_id}/unknown-outcomes", response_model=List[UnknownOutcomeRead])
 async def list_unknown_outcomes(
     execution_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Lists unknown outcomes requiring operator resolution."""
@@ -123,10 +132,10 @@ async def resolve_unknown_outcome(
     execution_id: str,
     step_id: str,
     req: UnknownOutcomeResolveRequest,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db)
 ):
     """Resolves an unknown outcome with explicit operator evidence notes."""
     return await agent_runtime_v2_service.resolve_unknown_outcome(
-        db, execution_id=execution_id, step_id=step_id, req=req, user_id=x_user_id
+        db, execution_id=execution_id, step_id=step_id, req=req, user_id=ws_ctx.user_id
     )

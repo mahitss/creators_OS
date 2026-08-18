@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 from app.schemas.workflow_ai import (
     WorkflowAIRequestCreate,
     WorkflowProposalRead,
@@ -25,12 +26,13 @@ router = APIRouter(prefix="/workflows", tags=["workflow_ai"])
 @router.post("/ai", response_model=WorkflowProposalRead, status_code=201)
 async def request_ai_workflow(
     request_in: WorkflowAIRequestCreate,
-    x_user_id: str = Header("usr_default_owner", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Processes natural language request to generate a structured workflow proposal."""
+    request_in.workspace_id = ws_ctx.workspace_id
     try:
-        proposal = await workflow_ai_service.generate_workflow_proposal(session, request_in, user_id=x_user_id)
+        proposal = await workflow_ai_service.generate_workflow_proposal(session, request_in, user_id=ws_ctx.user_id)
         return proposal
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -39,6 +41,7 @@ async def request_ai_workflow(
 async def explain_workflow(
     workflow_id: str,
     explain_in: Optional[WorkflowExplainRequest] = None,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Generates structured explanation of workflow nodes, branches, and capability access."""
@@ -53,6 +56,7 @@ async def explain_workflow(
 async def debug_workflow(
     workflow_id: str,
     debug_in: WorkflowDebugRequest,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Analyzes execution run logs and PolicyEngine decisions to categorize failures and recommend remediations."""
@@ -63,6 +67,7 @@ async def debug_workflow(
 async def optimize_workflow(
     workflow_id: str,
     opt_in: Optional[WorkflowOptimizeRequest] = None,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Generates cost, performance, and safety optimization proposals."""
@@ -77,6 +82,7 @@ async def optimize_workflow(
 async def simulate_workflow(
     workflow_id: str,
     sim_in: Optional[WorkflowSimulationRequest] = None,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Simulates workflow execution across synthetic scenarios."""
@@ -90,12 +96,12 @@ async def simulate_workflow(
 @router.post("/proposals/{proposal_id}/accept")
 async def accept_proposal(
     proposal_id: str,
-    x_user_id: str = Header("usr_default_owner", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Accepts proposal, creating a new draft WorkflowVersion. Does NOT auto-publish production."""
     try:
-        res = await workflow_ai_service.accept_proposal(session, proposal_id, user_id=x_user_id)
+        res = await workflow_ai_service.accept_proposal(session, proposal_id, user_id=ws_ctx.user_id)
         return res
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -103,6 +109,7 @@ async def accept_proposal(
 @router.post("/proposals/{proposal_id}/reject")
 async def reject_proposal(
     proposal_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Rejects workflow proposal."""

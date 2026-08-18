@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, WorkspaceContext
 from app.schemas.agent_mesh import (
     AgentCapabilityCreate,
     AgentCapabilityRead,
@@ -20,16 +21,17 @@ router = APIRouter(prefix="/agents", tags=["agent-mesh"])
 
 @router.get("/registry")
 async def list_registered_agents(
-    workspace_id: str = Query("ws_default_creator", alias="workspaceId"),
     specialization: Optional[str] = None,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists registered specialist agents in the mesh."""
-    return await agent_mesh_service.discover_agents(session, workspace_id, specialization=specialization)
+    return await agent_mesh_service.discover_agents(session, ws_ctx.workspace_id, specialization=specialization)
 
 @router.get("/capabilities")
 async def list_agent_capabilities(
     agent_id: Optional[str] = None,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists capability descriptors registered in the Agent Mesh."""
@@ -63,6 +65,7 @@ async def list_agent_capabilities(
 @router.post("/delegations")
 async def request_delegation(
     req: DelegationRequestCreate,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Requests controlled agent-to-agent delegation with cycle detection and authority bounds."""
@@ -74,6 +77,7 @@ async def request_delegation(
 @router.get("/delegations")
 async def list_delegations(
     mission_id: str = Query("msn_default_creator", alias="missionId"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists active agent delegations for a mission."""
@@ -96,6 +100,7 @@ async def list_delegations(
 @router.get("/mesh/{mission_id}")
 async def get_mesh_execution_graph(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Retrieves multi-agent orchestration execution graph (DAG nodes and dependency edges)."""
@@ -120,6 +125,7 @@ async def get_mesh_execution_graph(
 @router.get("/mesh/{mission_id}/artifacts")
 async def get_mesh_artifacts(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists structured artifacts produced by specialist agents for a mission."""
@@ -143,6 +149,7 @@ async def get_mesh_artifacts(
 @router.get("/mesh/{mission_id}/disagreements")
 async def get_mesh_disagreements(
     mission_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists agent fact disagreements and evidence resolution status."""
@@ -165,19 +172,20 @@ async def get_mesh_disagreements(
 
 @router.get("/reviews")
 async def list_human_review_tasks(
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Lists pending human escalation review tasks."""
     return [
         {
             "id": "rev_01",
-            "mission_id": "msn_default_creator",
+            "mission_id": ws_ctx.workspace_id,
             "task_id": "tsk_03",
             "artifact_id": "art_01",
             "reason": "Agent disagreement on financial target ($5.2M vs $4.8M) requires human operator approval.",
             "risk_level": "high",
             "status": "pending",
-            "assigned_to": "usr_executive_01",
+            "assigned_to": ws_ctx.user_id,
             "created_at": "2026-08-11T00:00:00Z"
         }
     ]
@@ -185,17 +193,17 @@ async def list_human_review_tasks(
 @router.post("/reviews/{review_id}/approve")
 async def approve_human_review(
     review_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Approves a human escalation review task."""
-    return await agent_mesh_service.resolve_review_task(session, review_id, "approved", x_user_id)
+    return await agent_mesh_service.resolve_review_task(session, review_id, "approved", ws_ctx.user_id)
 
 @router.post("/reviews/{review_id}/reject")
 async def reject_human_review(
     review_id: str,
-    x_user_id: str = Header("usr_executive_01", alias="X-User-Id"),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     session: AsyncSession = Depends(get_db)
 ):
     """Rejects a human escalation review task."""
-    return await agent_mesh_service.resolve_review_task(session, review_id, "rejected", x_user_id)
+    return await agent_mesh_service.resolve_review_task(session, review_id, "rejected", ws_ctx.user_id)

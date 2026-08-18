@@ -53,9 +53,10 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-from app.core.security_middleware import SecurityHeadersMiddleware, RateLimitMiddleware
+from app.core.security_middleware import SecurityHeadersMiddleware, RateLimitMiddleware, CSRFProtectionMiddleware
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(RateLimitMiddleware, requests_per_minute=300)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(

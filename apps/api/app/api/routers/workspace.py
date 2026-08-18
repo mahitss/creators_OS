@@ -1,23 +1,13 @@
-from typing import Optional, List, Tuple
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, status
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_workspace, require_admin, WorkspaceContext, AuthenticatedUser, get_current_user
 from app.services import workspace_service
 
 router = APIRouter()
-
-DEFAULT_USER_ID = "usr_alex"
-DEFAULT_WORKSPACE_ID = "ws_default_01"
-
-def get_auth_headers(
-    x_user_id: Optional[str] = Header(None),
-    x_workspace_id: Optional[str] = Header(None)
-) -> Tuple[str, str]:
-    user_id = x_user_id or DEFAULT_USER_ID
-    workspace_id = x_workspace_id or DEFAULT_WORKSPACE_ID
-    return user_id, workspace_id
 
 class WorkspaceSummary(BaseModel):
     id: str
@@ -35,10 +25,12 @@ class UpdateRolePayload(BaseModel):
     role: str = Field(..., description="New role: owner, admin, member, viewer")
 
 @router.get("/workspaces", response_model=List[WorkspaceSummary])
-async def list_workspaces() -> List[WorkspaceSummary]:
+async def list_workspaces(
+    user: AuthenticatedUser = Depends(get_current_user)
+) -> List[WorkspaceSummary]:
     return [
         WorkspaceSummary(
-            id="ws_default_01",
+            id=user.workspace_id,
             name="Vapor Core Engine",
             root_path="c:\\Users\\pc\\OneDrive\\Desktop\\Hack vibe"
         )
@@ -47,26 +39,24 @@ async def list_workspaces() -> List[WorkspaceSummary]:
 @router.get("/workspaces/{id}/members")
 async def list_workspace_members(
     id: str,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[dict]:
+    if ws_ctx.workspace_id != id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-workspace access denied.")
     return await workspace_service.list_workspace_members(db, id)
 
 @router.post("/workspaces/{id}/invitations", status_code=status.HTTP_201_CREATED)
 async def invite_member(
     id: str,
     payload: InviteMemberPayload,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> dict:
-    user_id, _ = auth
-    # Verify actor is owner or admin
-    actor = await workspace_service.get_workspace_member(db, id, user_id)
-    if not actor or actor.get("role") not in ["owner", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owners and admins can invite new members.")
-
+    if ws_ctx.workspace_id != id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-workspace access denied.")
     try:
-        inv = await workspace_service.invite_workspace_member(db, id, email=payload.email, role=payload.role, invited_by=user_id)
+        inv = await workspace_service.invite_workspace_member(db, id, email=payload.email, role=payload.role, invited_by=ws_ctx.user_id)
         return inv
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -75,12 +65,11 @@ async def invite_member(
 async def accept_invitation(
     id: str,
     payload: AcceptInvitationPayload,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    user: AuthenticatedUser = Depends(get_current_user),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> dict:
-    user_id, _ = auth
     try:
-        member = await workspace_service.accept_workspace_invitation(db, id, token=payload.token, user_id=user_id)
+        member = await workspace_service.accept_workspace_invitation(db, id, token=payload.token, user_id=user.id)
         return member
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
@@ -90,20 +79,18 @@ async def update_member_role(
     id: str,
     member_user_id: str,
     payload: UpdateRolePayload,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> dict:
-    user_id, _ = auth
-    actor = await workspace_service.get_workspace_member(db, id, user_id)
-    if not actor or actor.get("role") not in ["owner", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owners and admins can modify member roles.")
+    if ws_ctx.workspace_id != id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-workspace access denied.")
 
     # Self-role escalation prevention
-    if member_user_id == user_id and actor.get("role") != "owner":
+    if member_user_id == ws_ctx.user_id and ws_ctx.role != "owner":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Users cannot escalate their own role.")
 
     try:
-        return await workspace_service.update_member_role(db, id, member_user_id, payload.role, actor_id=user_id)
+        return await workspace_service.update_member_role(db, id, member_user_id, payload.role, actor_id=ws_ctx.user_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
@@ -111,16 +98,13 @@ async def update_member_role(
 async def suspend_member(
     id: str,
     member_user_id: str,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> dict:
-    user_id, _ = auth
-    actor = await workspace_service.get_workspace_member(db, id, user_id)
-    if not actor or actor.get("role") not in ["owner", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owners and admins can suspend members.")
-
+    if ws_ctx.workspace_id != id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-workspace access denied.")
     try:
-        return await workspace_service.suspend_workspace_member(db, id, member_user_id, actor_id=user_id)
+        return await workspace_service.suspend_workspace_member(db, id, member_user_id, actor_id=ws_ctx.user_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
@@ -128,15 +112,12 @@ async def suspend_member(
 async def remove_member(
     id: str,
     member_user_id: str,
-    auth: Tuple[str, str] = Depends(get_auth_headers),
+    ws_ctx: WorkspaceContext = Depends(require_admin),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> dict:
-    user_id, _ = auth
-    actor = await workspace_service.get_workspace_member(db, id, user_id)
-    if not actor or actor.get("role") not in ["owner", "admin"]:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only owners and admins can remove members.")
-
+    if ws_ctx.workspace_id != id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-workspace access denied.")
     try:
-        return await workspace_service.remove_workspace_member(db, id, member_user_id, actor_id=user_id)
+        return await workspace_service.remove_workspace_member(db, id, member_user_id, actor_id=ws_ctx.user_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
