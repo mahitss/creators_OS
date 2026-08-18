@@ -1,5 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.model_gateway import (
@@ -19,6 +20,7 @@ from app.dependencies.db import get_db
 router = APIRouter(prefix="/ai", tags=["Enterprise AI Model Gateway & Intelligent Model Routing"])
 
 @router.post("/routing/infer", response_model=ModelGatewayResponse)
+@router.post("/respond", response_model=ModelGatewayResponse)
 async def execute_inference(
     req: ModelGatewayRequest,
     workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
@@ -33,6 +35,37 @@ async def execute_inference(
         return resp
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
+
+@router.post("/stream")
+async def stream_inference(
+    req: ModelGatewayRequest,
+    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
+    organization_id: str = Header("org_default_creator", alias="X-Organization-Id")
+):
+    """Server-Sent Events (SSE) AI streaming endpoint via OpenRouter."""
+    async def sse_generator():
+        async for chunk in model_gateway_service.stream_model_inference(req):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(sse_generator(), media_type="text/event-stream")
+
+@router.post("/tool-call")
+async def execute_tool_call(
+    prompt: str = Query(..., description="User prompt"),
+    tools: List[Dict[str, Any]] = [],
+    model: Optional[str] = Query(None, description="Target model key")
+):
+    """Executes policy-governed tool calling via OpenRouter."""
+    try:
+        return await model_gateway_service.execute_model_tool_call(prompt=prompt, tools=tools, model_key=model)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/health")
+async def get_ai_health():
+    """Live internal AI gateway health verification for OpenRouter."""
+    return await model_gateway_service.get_gateway_health()
 
 @router.get("/models", response_model=List[ModelRegistryRead])
 async def list_models(

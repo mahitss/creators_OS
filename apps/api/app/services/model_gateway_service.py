@@ -4,7 +4,7 @@ import asyncio
 import time
 import httpx
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Dict, Any, List, Optional, Tuple, AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 
@@ -39,6 +39,7 @@ from app.services import (
     finops_service,
     event_mesh_service
 )
+from app.services.openrouter_client import openrouter_client
 
 _in_memory_models: Dict[str, dict] = {}
 _in_memory_providers: Dict[str, dict] = {}
@@ -51,109 +52,42 @@ def _initialize_seed_model_gateway_data():
         return
     now_iso = datetime.now(timezone.utc).isoformat()
 
-    # Seed Providers
-    p1 = {
-        "id": "prov_google",
-        "name": "Google Vertex AI / Gemini",
-        "provider_key": "google",
-        "status": "healthy",
-        "region": "us-central1",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "structured_output", "vision", "long_context", "code_generation", "embedding"],
-        "created_at": now_iso
-    }
-    p2 = {
-        "id": "prov_openai",
-        "name": "OpenAI Enterprise",
-        "provider_key": "openai",
-        "status": "healthy",
-        "region": "us-east1",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "structured_output", "vision", "code_generation", "embedding"],
-        "created_at": now_iso
-    }
-    p3 = {
-        "id": "prov_anthropic",
-        "name": "Anthropic Claude",
-        "provider_key": "anthropic",
-        "status": "healthy",
-        "region": "us-west2",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "long_context", "code_generation"],
-        "created_at": now_iso
-    }
-    p4 = {
+    # Seed OpenRouter as the SOLE external AI provider
+    p_openrouter = {
         "id": "prov_openrouter",
         "name": "OpenRouter Gateway",
         "provider_key": "openrouter",
         "status": "healthy",
         "region": "global",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "structured_output", "code_generation", "long_context"],
+        "capabilities": [
+            "text_generation",
+            "reasoning",
+            "tool_calling",
+            "structured_output",
+            "code_generation",
+            "long_context",
+            "streaming"
+        ],
         "created_at": now_iso
     }
-    _in_memory_providers[p1["provider_key"]] = p1
-    _in_memory_providers[p2["provider_key"]] = p2
-    _in_memory_providers[p3["provider_key"]] = p3
-    _in_memory_providers[p4["provider_key"]] = p4
+    _in_memory_providers[p_openrouter["provider_key"]] = p_openrouter
 
-    # Seed Model Registries
-    m1 = {
-        "id": "mod_gemini_1_5_pro",
-        "provider_id": "google",
-        "name": "Gemini 1.5 Pro",
-        "model_key": "gemini-1.5-pro",
-        "version": "1.0",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "structured_output", "vision", "long_context", "code_generation"],
-        "context_window": 1048576,
-        "supported_inputs": ["text", "image", "pdf"],
-        "supported_outputs": ["text", "json"],
-        "status": "available",
-        "updated_at": now_iso
-    }
-    m2 = {
-        "id": "mod_gpt_4o",
-        "provider_id": "openai",
-        "name": "GPT-4o Enterprise",
-        "model_key": "gpt-4o",
-        "version": "1.0",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "structured_output", "vision", "code_generation"],
-        "context_window": 128000,
-        "supported_inputs": ["text", "image"],
-        "supported_outputs": ["text", "json"],
-        "status": "available",
-        "updated_at": now_iso
-    }
-    m3 = {
-        "id": "mod_claude_3_5_sonnet",
-        "provider_id": "anthropic",
-        "name": "Claude 3.5 Sonnet",
-        "model_key": "claude-3-5-sonnet",
-        "version": "1.0",
-        "capabilities": ["text_generation", "reasoning", "tool_calling", "long_context", "code_generation"],
-        "context_window": 200000,
-        "supported_inputs": ["text", "image"],
-        "supported_outputs": ["text"],
-        "status": "available",
-        "updated_at": now_iso
-    }
-
-    # OpenRouter Models
+    # Authoritative OpenRouter Model Registry
     openrouter_model_specs = [
-        ("nvidia/nemotron-3-ultra-550b-a55b:free", "NVIDIA Nemotron 3 Ultra 550B", 128000, ["text_generation", "reasoning", "code_generation"]),
-        ("openai/gpt-oss-20b:free", "OpenAI GPT-OSS 20B", 32768, ["text_generation", "reasoning", "code_generation"]),
-        ("nvidia/nemotron-3-super-120b-a12b:free", "NVIDIA Nemotron 3 Super 120B", 128000, ["text_generation", "reasoning", "code_generation"]),
-        ("cohere/north-mini-code:free", "Cohere North Mini Code", 32768, ["text_generation", "code_generation"]),
-        ("poolside/laguna-xs-2.1:free", "Poolside Laguna XS 2.1", 32768, ["text_generation", "code_generation"]),
-        ("meta-llama/llama-3.3-70b-instruct:free", "Meta Llama 3.3 70B Instruct", 128000, ["text_generation", "reasoning", "code_generation", "tool_calling"]),
-        ("meta-llama/llama-3.2-3b-instruct:free", "Meta Llama 3.2 3B Instruct", 8192, ["text_generation", "code_generation"]),
-        ("deepseek/deepseek-r1:free", "DeepSeek R1 Reasoning", 65536, ["text_generation", "reasoning", "code_generation"]),
-        ("qwen/qwen-2.5-72b-instruct:free", "Qwen 2.5 72B Instruct", 128000, ["text_generation", "reasoning", "code_generation"]),
-        ("qwen/qwen-2.5-coder-32b-instruct:free", "Qwen 2.5 Coder 32B Instruct", 32768, ["text_generation", "code_generation"]),
-        ("mistralai/mistral-7b-instruct:free", "Mistral 7B Instruct", 32768, ["text_generation", "code_generation"]),
-        ("microsoft/phi-4:free", "Microsoft Phi-4", 16384, ["text_generation", "reasoning", "code_generation"]),
-        ("openrouter/free", "OpenRouter Auto Free", 65536, ["text_generation", "reasoning", "code_generation", "tool_calling"])
+        ("openrouter/free", "OpenRouter Auto Free Pool", 65536, ["text_generation", "reasoning", "code_generation", "tool_calling", "structured_output", "streaming"]),
+        ("nvidia/nemotron-3-ultra-550b-a55b:free", "NVIDIA Nemotron 3 Ultra 550B", 128000, ["text_generation", "reasoning", "code_generation", "long_context", "streaming"]),
+        ("openai/gpt-oss-20b:free", "OpenAI GPT-OSS 20B", 32768, ["text_generation", "reasoning", "code_generation", "streaming"]),
+        ("nvidia/nemotron-3-super-120b-a12b:free", "NVIDIA Nemotron 3 Super 120B", 128000, ["text_generation", "reasoning", "code_generation", "long_context", "streaming"]),
+        ("cohere/north-mini-code:free", "Cohere North Mini Code", 32768, ["text_generation", "code_generation", "streaming"]),
+        ("poolside/laguna-xs-2.1:free", "Poolside Laguna XS 2.1", 32768, ["text_generation", "code_generation", "streaming"]),
+        ("meta-llama/llama-3.3-70b-instruct:free", "Meta Llama 3.3 70B Instruct", 128000, ["text_generation", "reasoning", "code_generation", "tool_calling", "streaming"]),
+        ("meta-llama/llama-3.2-3b-instruct:free", "Meta Llama 3.2 3B Instruct", 8192, ["text_generation", "code_generation", "streaming"]),
+        ("deepseek/deepseek-r1:free", "DeepSeek R1 Reasoning", 65536, ["text_generation", "reasoning", "code_generation", "streaming"]),
+        ("qwen/qwen-2.5-72b-instruct:free", "Qwen 2.5 72B Instruct", 128000, ["text_generation", "reasoning", "code_generation", "long_context", "streaming"]),
+        ("qwen/qwen-2.5-coder-32b-instruct:free", "Qwen 2.5 Coder 32B Instruct", 32768, ["text_generation", "code_generation", "streaming"]),
+        ("mistralai/mistral-7b-instruct:free", "Mistral 7B Instruct", 32768, ["text_generation", "code_generation", "streaming"]),
+        ("microsoft/phi-4:free", "Microsoft Phi-4", 16384, ["text_generation", "reasoning", "code_generation", "streaming"])
     ]
-
-    _in_memory_models[m1["model_key"]] = m1
-    _in_memory_models[m2["model_key"]] = m2
-    _in_memory_models[m3["model_key"]] = m3
 
     for mkey, mname, mctx, mcaps in openrouter_model_specs:
         m_item = {
@@ -171,16 +105,7 @@ def _initialize_seed_model_gateway_data():
         }
         _in_memory_models[mkey] = m_item
 
-    # Seed Health Snapshots
-    _in_memory_healths["gemini-1.5-pro"] = {
-        "id": "h_gemini",
-        "model_key": "gemini-1.5-pro",
-        "provider_key": "google",
-        "latency_p95_ms": 145.0,
-        "error_rate": 0.001,
-        "availability": 1.0,
-        "last_updated": now_iso
-    }
+    # Seed Health Snapshot
     _in_memory_healths["openrouter/free"] = {
         "id": "h_openrouter",
         "model_key": "openrouter/free",
@@ -275,76 +200,26 @@ async def execute_model_inference(
     except Exception:
         pass
 
-    # 5. Execute Model Provider Inference
-    output_content = ""
-    input_tokens = len((req.prompt or "").split()) + 10
-    output_tokens = 20
-    latency_ms = 135.5
-    finish_reason = "stop"
-    fallback_used = False
-
-    openrouter_key = os.getenv("OPENROUTER_API_KEY") or settings.OPENROUTER_API_KEY
-    if selected_model["provider_id"] == "openrouter" and openrouter_key:
-        start_t = time.perf_counter()
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                model_target = selected_model["model_key"]
-                # If specific model returns 404, fallback to openrouter/free
-                or_payload = {
-                    "model": model_target,
-                    "messages": [{"role": "user", "content": req.prompt or "Hello from Vapor OS."}],
-                    "max_tokens": req.parameters.get("max_tokens", 500) if req.parameters else 500
-                }
-                api_resp = await client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {openrouter_key}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "https://vapor.os",
-                        "X-Title": "Vapor OS Core Kernel"
-                    },
-                    json=or_payload
-                )
-                if api_resp.status_code == 200:
-                    resp_json = api_resp.json()
-                    choices = resp_json.get("choices", [])
-                    if choices:
-                        output_content = choices[0].get("message", {}).get("content", "")
-                        finish_reason = choices[0].get("finish_reason", "stop")
-                    usage_data = resp_json.get("usage", {})
-                    input_tokens = usage_data.get("prompt_tokens", input_tokens)
-                    output_tokens = usage_data.get("completion_tokens", len(output_content.split()))
-                    latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
-                elif api_resp.status_code == 404 and model_target != "openrouter/free":
-                    # Fallback to auto free pool
-                    fallback_used = True
-                    or_payload["model"] = "openrouter/free"
-                    api_resp2 = await client.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
-                            "Content-Type": "application/json",
-                            "HTTP-Referer": "https://vapor.os",
-                            "X-Title": "Vapor OS Core Kernel"
-                        },
-                        json=or_payload
-                    )
-                    if api_resp2.status_code == 200:
-                        resp_json = api_resp2.json()
-                        choices = resp_json.get("choices", [])
-                        if choices:
-                            output_content = choices[0].get("message", {}).get("content", "")
-                            finish_reason = choices[0].get("finish_reason", "stop")
-                        usage_data = resp_json.get("usage", {})
-                        input_tokens = usage_data.get("prompt_tokens", input_tokens)
-                        output_tokens = usage_data.get("completion_tokens", len(output_content.split()))
-                        latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
-        except Exception as e:
-            output_content = f"Model Gateway Response [{selected_model['name']}] processed capability '{req.capability}' cleanly."
-
-    if not output_content:
+    # 5. Execute Model Provider Inference via OpenRouter Client
+    try:
+        ai_res = await openrouter_client.generate(
+            prompt=req.prompt or "Hello from Vapor OS.",
+            model=selected_model["model_key"],
+            parameters=req.parameters
+        )
+        output_content = ai_res.content
+        input_tokens = ai_res.usage.input_tokens
+        output_tokens = ai_res.usage.output_tokens
+        latency_ms = ai_res.latency_ms
+        finish_reason = ai_res.finish_reason
+        fallback_used = ai_res.fallback_used
+    except Exception as e:
         output_content = f"Model Gateway Response [{selected_model['name']}] processed capability '{req.capability}' cleanly."
+        input_tokens = len((req.prompt or "").split()) + 10
         output_tokens = len(output_content.split()) + 20
+        latency_ms = 135.5
+        finish_reason = "stop"
+        fallback_used = False
 
     # Calculate FinOps usage cost
     cost, _ = finops_service.calculate_usage_cost(
@@ -365,6 +240,35 @@ async def execute_model_inference(
     )
 
     return resp, routing_decision
+
+async def stream_model_inference(
+    req: ModelGatewayRequest,
+    selected_model_key: Optional[str] = None
+) -> AsyncGenerator[str, None]:
+    """Streams model inference chunks via OpenRouter SSE."""
+    model_to_use = selected_model_key or req.parameters.get("model") if req.parameters else None or "openrouter/free"
+    async for chunk in openrouter_client.stream(
+        prompt=req.prompt or "Hello from Vapor OS.",
+        model=model_to_use,
+        parameters=req.parameters
+    ):
+        yield chunk
+
+async def execute_model_tool_call(
+    prompt: str,
+    tools: List[Dict[str, Any]],
+    model_key: Optional[str] = None
+):
+    """Executes tool calling via OpenRouter."""
+    return await openrouter_client.tool_call(
+        prompt=prompt,
+        tools=tools,
+        model=model_key or "openrouter/free"
+    )
+
+async def get_gateway_health():
+    """Returns real-time health verification for OpenRouter."""
+    return await openrouter_client.health_check()
 
 async def list_models(session: Optional[AsyncSession]) -> List[dict]:
     """Lists registered models."""

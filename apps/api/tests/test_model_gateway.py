@@ -22,8 +22,18 @@ def test_model_gateway_inference_execution():
         resp, decision = await model_gateway_service.execute_model_inference(
             None, workspace_id="ws_test_01", req=req, organization_id="org_test_01"
         )
-        assert resp.selected_model in ["gemini-1.5-pro", "gpt-4o", "claude-3-5-sonnet"]
-        assert resp.selected_provider in ["google", "openai", "anthropic"]
+        assert resp.selected_provider == "openrouter"
+        assert resp.selected_model in [
+            "openrouter/free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "deepseek/deepseek-r1:free",
+            "qwen/qwen-2.5-coder-32b-instruct:free",
+            "openai/gpt-oss-20b:free",
+            "nvidia/nemotron-3-ultra-550b-a55b:free",
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "mistralai/mistral-7b-instruct:free",
+            "microsoft/phi-4:free"
+        ]
         assert resp.usage["total_tokens"] > 0
         assert resp.estimated_cost >= 0.0
         assert decision["policy_result"]["status"] == "allowed"
@@ -83,11 +93,11 @@ def test_model_status_admin_actions():
         models = await model_gateway_service.list_models(None)
         assert len(models) >= 3
 
-        updated, err = await model_gateway_service.set_model_status(None, "gemini-1.5-pro", "disabled")
+        updated, err = await model_gateway_service.set_model_status(None, "openrouter/free", "disabled")
         assert err is None
         assert updated["status"] == "disabled"
 
-        updated, err = await model_gateway_service.set_model_status(None, "gemini-1.5-pro", "available")
+        updated, err = await model_gateway_service.set_model_status(None, "openrouter/free", "available")
         assert err is None
         assert updated["status"] == "available"
     asyncio.run(_test())
