@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Cryptographically secure secret key loaded from env with fallback
     SECRET_KEY: str = "super_secret_vapor_kernel_jwt_key_change_in_production_32bytes!"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 # 24 hours
 
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
@@ -25,6 +25,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000",
         "https://vapor.os"
     ]
+
+    # Google Identity Services / OAuth 2.0 Credentials (Server-Side Only)
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/login"
 
     FAILOVER_TELEMETRY_BUFFER_SECONDS: int = 30
     OPENROUTER_API_KEY: str = ""

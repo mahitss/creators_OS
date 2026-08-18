@@ -1,33 +1,37 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PROTECTED_PREFIXES = [
-  '/workspace',
-  '/settings',
-  '/admin',
-  '/security',
-  '/governance'
+const PUBLIC_PATHS = [
+  '/login',
+  '/api/v1/auth/google/verify',
+  '/api/v1/auth/passkey',
+  '/api/v1/auth/logout',
+  '/api/v1/health',
+  '/_next',
+  '/favicon.ico'
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('vapor_session_token')?.value || request.headers.get('authorization');
+  const isPublic = PUBLIC_PATHS.some(pub => pathname.startsWith(pub));
 
-  // Check if accessing a protected enterprise path without session credentials
-  const isProtectedPath = PROTECTED_PREFIXES.some(prefix => pathname.startsWith(prefix));
-
-  if (isProtectedPath && !token) {
-    // In local dev/testing with x-test-mode allow bypass, otherwise enforce redirect to authentication
-    const isTestMode = request.headers.get('x-test-mode') === 'true' || process.env.NODE_ENV === 'test';
-    if (!isTestMode) {
-      const loginUrl = new URL('/', request.url);
-      loginUrl.searchParams.set('auth_required', 'true');
-      loginUrl.searchParams.set('redirect_to', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+  if (isPublic) {
+    return NextResponse.next();
   }
 
-  // Inject security response headers
+  const token = request.cookies.get('vapor_session_token')?.value || request.headers.get('authorization');
+  const isTestMode = request.headers.get('x-test-mode') === 'true' || process.env.NODE_ENV === 'test';
+
+  // If unauthenticated and accessing protected routes, redirect to /login
+  if (!token && !isTestMode) {
+    const loginUrl = new URL('/login', request.url);
+    if (pathname !== '/') {
+      loginUrl.searchParams.set('redirect_to', pathname);
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Inject enterprise security response headers
   const response = NextResponse.next();
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -37,10 +41,13 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/workspace/:path*',
-    '/settings/:path*',
-    '/admin/:path*',
-    '/security/:path*',
-    '/governance/:path*'
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

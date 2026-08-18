@@ -98,6 +98,7 @@ export async function apiClient<T = any>(
     res = await fetch(url, {
       ...options,
       headers,
+      credentials: options.credentials || 'include',
       cache: options.cache || 'no-store',
     });
   } catch (networkErr: any) {
