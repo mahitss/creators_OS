@@ -16,6 +16,7 @@ from app.schemas.model_gateway import (
 )
 from app.services import model_gateway_service
 from app.dependencies.db import get_db
+from app.dependencies.auth import get_current_user, AuthenticatedUser
 
 router = APIRouter(prefix="/ai", tags=["Enterprise AI Model Gateway & Intelligent Model Routing"])
 
@@ -23,14 +24,14 @@ router = APIRouter(prefix="/ai", tags=["Enterprise AI Model Gateway & Intelligen
 @router.post("/respond", response_model=ModelGatewayResponse)
 async def execute_inference(
     req: ModelGatewayRequest,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     organization_id: str = Header("org_default_creator", alias="X-Organization-Id"),
     db: AsyncSession = Depends(get_db)
 ):
     """Capability-aware, policy-governed Model Gateway inference endpoint."""
     try:
         resp, _ = await model_gateway_service.execute_model_inference(
-            db, workspace_id=workspace_id, req=req, organization_id=organization_id
+            db, workspace_id=current_user.workspace_id, req=req, organization_id=organization_id
         )
         return resp
     except ValueError as ve:
@@ -39,7 +40,7 @@ async def execute_inference(
 @router.post("/stream")
 async def stream_inference(
     req: ModelGatewayRequest,
-    workspace_id: str = Header("ws_default_01", alias="X-Workspace-Id"),
+    current_user: AuthenticatedUser = Depends(get_current_user),
     organization_id: str = Header("org_default_creator", alias="X-Organization-Id")
 ):
     """Server-Sent Events (SSE) AI streaming endpoint via OpenRouter."""
@@ -54,7 +55,8 @@ async def stream_inference(
 async def execute_tool_call(
     prompt: str = Query(..., description="User prompt"),
     tools: List[Dict[str, Any]] = [],
-    model: Optional[str] = Query(None, description="Target model key")
+    model: Optional[str] = Query(None, description="Target model key"),
+    current_user: AuthenticatedUser = Depends(get_current_user)
 ):
     """Executes policy-governed tool calling via OpenRouter."""
     try:
