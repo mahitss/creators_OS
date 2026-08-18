@@ -61,8 +61,8 @@ export const QuietHomeState: React.FC = () => {
             <span>AI GATEWAY</span>
             <span className="text-emerald-400 font-semibold">ONLINE</span>
           </div>
-          <div className="text-sm font-bold text-slate-200">Provider Ready</div>
-          <div className="text-[11px] text-slate-500">Deterministic mock & provider fallback active</div>
+          <div className="text-sm font-bold text-slate-200">OpenRouter Active</div>
+          <div className="text-[11px] text-slate-500">OpenRouter gateway & model fallback active</div>
         </div>
 
         <div className="p-3.5 rounded-lg bg-slate-900/60 border border-slate-800/80 flex flex-col gap-1">
