@@ -1,5 +1,5 @@
 import os
-from typing import Optional, List, Tuple
+from typing import Optional, List, Dict, Any
 from fastapi import Header, Cookie, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,18 +16,24 @@ class AuthenticatedUser(BaseModel):
     role: str = "member"
     workspace_id: str
 
-class WorkspaceContext(BaseModel):
-    workspace_id: str
+class AuthenticatedContext(BaseModel):
     user_id: str
-    role: str
+    workspace_id: str
+    role: str = "member"
     permissions: List[str] = []
+    email: str = ""
+    session_id: Optional[str] = None
+
+# Backward compatibility alias
+WorkspaceContext = AuthenticatedContext
 
 async def get_current_user(
     authorization: Optional[str] = Header(None, alias="Authorization"),
     session_cookie: Optional[str] = Cookie(None, alias="vapor_session_token"),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> AuthenticatedUser:
-    """Resolves authenticated identity strictly from verified JWT bearer token, SCIM token, or secure session cookie."""
+    """Resolves authenticated identity strictly from verified JWT bearer token, SCIM token, or secure session cookie.
+    Client headers (X-User-Id, X-User-Role) are NEVER used to establish identity."""
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]
@@ -79,67 +85,67 @@ async def get_current_user(
         detail="Authentication required. Provide a valid Authorization Bearer token or session cookie."
     )
 
-async def get_current_workspace(
+async def get_authenticated_context(
     x_workspace_id: Optional[str] = Header(None, alias="X-Workspace-Id"),
     current_user: AuthenticatedUser = Depends(get_current_user),
     db: Optional[AsyncSession] = Depends(get_db)
-) -> WorkspaceContext:
-    """Verifies that the authenticated user is an authorized member of the requested workspace."""
+) -> AuthenticatedContext:
+    """Resolves authoritative user_id, workspace_id, role, and permissions strictly from verified authentication
+    and server-side WorkspaceMembership. A client-supplied X-Workspace-Id is only a selector and is verified
+    against server-side memberships."""
     target_ws = x_workspace_id or current_user.workspace_id
 
-    # In test mode allow workspace resolution if matched or verify membership
-    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("VAPOR_TEST_MODE") == "true":
-        if target_ws == current_user.workspace_id or not x_workspace_id:
-            return WorkspaceContext(
-                workspace_id=target_ws,
-                user_id=current_user.id,
-                role=current_user.role,
-                permissions=["read", "write", "admin"] if current_user.role in ["owner", "admin"] else ["read", "write"]
-            )
-
+    # 1. Lookup server-side active membership
     membership = await identity_service.verify_user_workspace_membership(db, current_user.id, target_ws)
-    if not membership:
-        # Check if user's primary workspace matches
-        if target_ws == current_user.workspace_id:
-            return WorkspaceContext(
-                workspace_id=target_ws,
-                user_id=current_user.id,
-                role=current_user.role,
-                permissions=["read", "write", "admin"] if current_user.role in ["owner", "admin"] else ["read", "write"]
-            )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Access denied: User '{current_user.id}' is not an authorized member of workspace '{target_ws}'."
+    if membership:
+        return AuthenticatedContext(
+            user_id=current_user.id,
+            workspace_id=target_ws,
+            role=membership.get("role", current_user.role),
+            permissions=membership.get("permissions", ["read", "write"]),
+            email=current_user.email
         )
 
-    return WorkspaceContext(
-        workspace_id=target_ws,
-        user_id=current_user.id,
-        role=membership.get("role", current_user.role),
-        permissions=membership.get("permissions", ["read", "write"])
+    # 2. Check if target matches token's primary workspace
+    if target_ws == current_user.workspace_id:
+        return AuthenticatedContext(
+            user_id=current_user.id,
+            workspace_id=target_ws,
+            role=current_user.role,
+            permissions=["read", "write", "admin"] if current_user.role in ["owner", "admin"] else ["read", "write"],
+            email=current_user.email
+        )
+
+    # 3. User is not authorized for requested workspace -> Fail closed
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Access denied: User '{current_user.id}' is not an authorized member of workspace '{target_ws}'."
     )
 
+# Backward-compatibility alias
+get_current_workspace = get_authenticated_context
+
 async def require_admin(
-    ws_ctx: WorkspaceContext = Depends(get_current_workspace)
-) -> WorkspaceContext:
+    auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)
+) -> AuthenticatedContext:
     """Enforces that the authenticated user holds 'admin' or 'owner' role within the target workspace."""
-    if ws_ctx.role not in ["admin", "owner"]:
+    if auth_ctx.role not in ["admin", "owner"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Administrative privileges required. Current role: '{ws_ctx.role}'."
+            detail=f"Administrative privileges required. Current role: '{auth_ctx.role}'."
         )
-    return ws_ctx
+    return auth_ctx
 
 async def require_owner(
-    ws_ctx: WorkspaceContext = Depends(get_current_workspace)
-) -> WorkspaceContext:
+    auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)
+) -> AuthenticatedContext:
     """Enforces that the authenticated user is the 'owner' of the target workspace."""
-    if ws_ctx.role != "owner":
+    if auth_ctx.role != "owner":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Workspace owner privileges required. Current role: '{ws_ctx.role}'."
+            detail=f"Workspace owner privileges required. Current role: '{auth_ctx.role}'."
         )
-    return ws_ctx
+    return auth_ctx
 
 def get_current_user_optional(
     authorization: Optional[str] = Header(None, alias="Authorization"),

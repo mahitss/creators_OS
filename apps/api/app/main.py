@@ -15,10 +15,14 @@ from app.api.routers import health, auth, workspace, home, missions, memories, c
 
 setup_logging()
 
+is_production = settings.ENVIRONMENT == "production"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=None if is_production else f"{settings.API_V1_STR}/openapi.json",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc"
 )
 
 # Standardized Exception Handler for VaporException
@@ -53,9 +57,15 @@ async def global_exception_handler(request: Request, exc: Exception):
         }
     )
 
-from app.core.security_middleware import SecurityHeadersMiddleware, RateLimitMiddleware, CSRFProtectionMiddleware
+from app.core.security_middleware import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    CSRFProtectionMiddleware,
+    AuthenticationEnforcementMiddleware
+)
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AuthenticationEnforcementMiddleware)
 app.add_middleware(CSRFProtectionMiddleware)
 app.add_middleware(RateLimitMiddleware, requests_per_minute=300)
 app.add_middleware(RequestLoggingMiddleware)

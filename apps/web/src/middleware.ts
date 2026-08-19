@@ -20,10 +20,10 @@ export function middleware(request: NextRequest) {
   }
 
   const token = request.cookies.get('vapor_session_token')?.value || request.headers.get('authorization');
-  const isTestMode = request.headers.get('x-test-mode') === 'true' || process.env.NODE_ENV === 'test';
+  const isTestEnv = process.env.NODE_ENV === 'test';
 
   // If unauthenticated and accessing protected routes, redirect to /login
-  if (!token && !isTestMode) {
+  if (!token && !isTestEnv) {
     const loginUrl = new URL('/login', request.url);
     if (pathname !== '/') {
       loginUrl.searchParams.set('redirect_to', pathname);
