@@ -77,8 +77,13 @@ function LoginContent() {
       if (!isMounted) return;
       const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
       if (googleApi?.accounts?.id && !isGisInitializedRef.current) {
+        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        if (!clientId || clientId.trim() === '') {
+          setErrorMsg('Google authentication is not configured for this environment.');
+          return;
+        }
+
         isGisInitializedRef.current = true;
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '381940932694-o2q57f2bhp8sjbt9r6fgm240q4jknmfa.apps.googleusercontent.com';
 
         googleApi.accounts.id.initialize({
           client_id: clientId,
