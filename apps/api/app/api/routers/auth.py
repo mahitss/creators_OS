@@ -217,7 +217,18 @@ async def get_current_session(
         )
 
     claims = verify_jwt_token(token)
-    user_id = claims.get("sub", "usr_unknown")
+    user_id = claims.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session token: Missing subject claim."
+        )
+    ws_id = claims.get("workspace_id")
+    if not ws_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid session token: Missing workspace claim."
+        )
     ws_list = await identity_service.get_user_workspaces(db, user_id)
     
     return AuthMeResponse(
@@ -226,7 +237,7 @@ async def get_current_session(
         name=claims.get("name"),
         avatar_url=claims.get("avatar_url"),
         role=claims.get("role", "member"),
-        workspace_id=claims.get("workspace_id", "ws_default_01"),
+        workspace_id=ws_id,
         workspaces=[WorkspaceSummary(**w) for w in ws_list],
         authenticated=True
     )

@@ -37,8 +37,7 @@ export const AgentLibrary: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const headers = { 'X-User-Id': 'usr_alex', 'X-Workspace-Id': 'ws_default_01' };
-      const aRes = await fetch('/api/v1/agents', { headers });
+      const aRes = await fetch('/api/v1/agents', { credentials: 'include' });
       if (aRes.ok) setAgents(await aRes.json());
     } catch (err) {
       console.error("Failed to load agent library:", err);
@@ -52,11 +51,8 @@ export const AgentLibrary: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/agents/${selectedAgent.id}/delegations`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'usr_alex',
-          'X-Workspace-Id': 'ws_default_01'
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           scope,
           allowed_tools: allowedTools,
@@ -79,7 +75,7 @@ export const AgentLibrary: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/delegations/${delId}/revoke`, {
         method: 'POST',
-        headers: { 'X-User-Id': 'usr_alex', 'X-Workspace-Id': 'ws_default_01' }
+        credentials: 'include'
       });
       if (res.ok) fetchData();
     } catch (err) {

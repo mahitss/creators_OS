@@ -61,16 +61,14 @@ export const AgentControlCenter: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const headers = { 'X-User-Id': 'usr_admin_01', 'X-Workspace-Id': 'ws_default_01' };
-
-      const ovRes = await fetch('/api/v1/admin/agents/overview', { headers });
+      const ovRes = await fetch('/api/v1/admin/agents/overview', { credentials: 'include' });
       if (ovRes.ok) setOverview(await ovRes.json());
 
       const url = statusFilter !== 'all' ? `/api/v1/admin/agents?status=${statusFilter}` : '/api/v1/admin/agents';
-      const agRes = await fetch(url, { headers });
+      const agRes = await fetch(url, { credentials: 'include' });
       if (agRes.ok) setAgents(await agRes.json());
 
-      const stRes = await fetch('/api/v1/admin/agents/stuck', { headers });
+      const stRes = await fetch('/api/v1/admin/agents/stuck', { credentials: 'include' });
       if (stRes.ok) setStuckList(await stRes.json());
     } catch (err) {
       console.error("Control Center fetch failed:", err);
@@ -101,7 +99,8 @@ export const AgentControlCenter: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/admin/agents/${runId}/action`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-User-Id': 'usr_admin_01' },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ action, reason: 'Operator manual override via Control Center' })
       });
       if (res.ok) {

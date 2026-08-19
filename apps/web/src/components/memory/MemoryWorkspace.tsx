@@ -31,12 +31,11 @@ export const MemoryWorkspace: React.FC = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const headers = { 'X-Workspace-Id': 'ws_default_01', 'X-User-Id': 'usr_alex' };
       if (activeTab === 'conflicts') {
-        const res = await fetch('/api/v1/memories/conflicts', { headers });
+        const res = await fetch('/api/v1/memories/conflicts', { credentials: 'include' });
         if (res.ok) setConflicts(await res.json());
       } else {
-        const res = await fetch('/api/v1/memories', { headers });
+        const res = await fetch('/api/v1/memories', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           setMemories(data.memories || []);
@@ -57,7 +56,7 @@ export const MemoryWorkspace: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/memories/candidates/${id}/approve`, {
         method: 'POST',
-        headers: { 'X-Workspace-Id': 'ws_default_01', 'X-User-Id': 'usr_alex' }
+        credentials: 'include'
       });
       if (res.ok) fetchData();
     } catch (err) {
@@ -69,7 +68,8 @@ export const MemoryWorkspace: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/memories/conflicts/${id}/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Workspace-Id': 'ws_default_01', 'X-User-Id': 'usr_alex' },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ choice })
       });
       if (res.ok) fetchData();
@@ -81,7 +81,7 @@ export const MemoryWorkspace: React.FC = () => {
   const fetchProvenance = async (id: string) => {
     try {
       const res = await fetch(`/api/v1/memories/${id}/provenance`, {
-        headers: { 'X-Workspace-Id': 'ws_default_01', 'X-User-Id': 'usr_alex' }
+        credentials: 'include'
       });
       if (res.ok) setSelectedProvenance(await res.json());
     } catch (err) {

@@ -28,7 +28,7 @@ function LoginContent() {
   useEffect(() => {
     async function checkExistingSession() {
       try {
-        const res = await fetch('/api/v1/auth/me');
+        const res = await fetch('/api/v1/auth/me', { credentials: 'include' });
         if (res.ok) {
           router.replace(redirectTo);
         }
@@ -52,6 +52,7 @@ function LoginContent() {
       const res = await fetch('/api/v1/auth/google/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ credential: response.credential })
       });
 

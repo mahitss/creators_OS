@@ -62,7 +62,12 @@ async def get_current_user(
             name = claims.get("name")
             avatar_url = claims.get("avatar_url")
             role = claims.get("role", "member")
-            ws_id = claims.get("workspace_id", "ws_default_01")
+            ws_id = claims.get("workspace_id")
+            if not ws_id:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid session token: Missing workspace claim."
+                )
             
             return AuthenticatedUser(
                 id=user_id,
@@ -165,7 +170,8 @@ def get_current_user_optional(
 
         claims = verify_jwt_token(token)
         user_id = claims.get("sub")
-        if not user_id:
+        ws_id = claims.get("workspace_id")
+        if not user_id or not ws_id:
             return None
 
         return AuthenticatedUser(
@@ -174,7 +180,7 @@ def get_current_user_optional(
             name=claims.get("name"),
             avatar_url=claims.get("avatar_url"),
             role=claims.get("role", "member"),
-            workspace_id=claims.get("workspace_id", "ws_default_01")
+            workspace_id=ws_id
         )
     except Exception:
         return None

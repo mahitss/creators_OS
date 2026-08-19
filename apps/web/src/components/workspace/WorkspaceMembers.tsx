@@ -18,14 +18,32 @@ export const WorkspaceMembers: React.FC = () => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [workspaceId, setWorkspaceId] = useState<string>('');
+
   useEffect(() => {
-    fetchMembers();
+    async function init() {
+      try {
+        const meRes = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          if (meData?.workspace_id) {
+            setWorkspaceId(meData.workspace_id);
+            fetchMembers(meData.workspace_id);
+          }
+        }
+      } catch {
+        // quiet
+      }
+    }
+    init();
   }, []);
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (wsId?: string) => {
+    const targetWs = wsId || workspaceId;
+    if (!targetWs) return;
     try {
-      const res = await fetch('/api/v1/workspaces/ws_default_01/members', {
-        headers: { 'X-User-Id': 'usr_alex', 'X-Workspace-Id': 'ws_default_01' }
+      const res = await fetch(`/api/v1/workspaces/${targetWs}/members`, {
+        credentials: 'include'
       });
       if (res.ok) {
         setMembers(await res.json());
@@ -37,15 +55,13 @@ export const WorkspaceMembers: React.FC = () => {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!workspaceId) return;
     setError(null);
     try {
-      const res = await fetch('/api/v1/workspaces/ws_default_01/invitations', {
+      const res = await fetch(`/api/v1/workspaces/${workspaceId}/invitations`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'usr_alex',
-          'X-Workspace-Id': 'ws_default_01'
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email: inviteEmail, role: inviteRole })
       });
       if (res.ok) {
@@ -62,15 +78,13 @@ export const WorkspaceMembers: React.FC = () => {
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
+    if (!workspaceId) return;
     setError(null);
     try {
-      const res = await fetch(`/api/v1/workspaces/ws_default_01/members/${userId}/role`, {
+      const res = await fetch(`/api/v1/workspaces/${workspaceId}/members/${userId}/role`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': 'usr_alex',
-          'X-Workspace-Id': 'ws_default_01'
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ role: newRole })
       });
       if (res.ok) {
@@ -85,11 +99,12 @@ export const WorkspaceMembers: React.FC = () => {
   };
 
   const handleSuspend = async (userId: string) => {
+    if (!workspaceId) return;
     setError(null);
     try {
-      const res = await fetch(`/api/v1/workspaces/ws_default_01/members/${userId}/suspend`, {
+      const res = await fetch(`/api/v1/workspaces/${workspaceId}/members/${userId}/suspend`, {
         method: 'POST',
-        headers: { 'X-User-Id': 'usr_alex', 'X-Workspace-Id': 'ws_default_01' }
+        credentials: 'include'
       });
       if (res.ok) {
         fetchMembers();

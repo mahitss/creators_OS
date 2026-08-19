@@ -62,7 +62,7 @@ export const EvaluationDashboard: React.FC = () => {
     setLoading(true);
     try {
       const res = await fetch('/api/v1/evaluations/suites', {
-        headers: { 'X-User-Id': 'usr_admin_01' }
+        credentials: 'include'
       });
       if (res.ok) {
         const data = await res.json();
@@ -80,7 +80,7 @@ export const EvaluationDashboard: React.FC = () => {
     try {
       const res = await fetch(`/api/v1/evaluations/suites/${suiteId}/run`, {
         method: 'POST',
-        headers: { 'X-User-Id': 'usr_admin_01' }
+        credentials: 'include'
       });
       if (res.ok) {
         const runData: EvalRun = await res.json();
@@ -89,7 +89,7 @@ export const EvaluationDashboard: React.FC = () => {
         // Poll for completion
         const interval = setInterval(async () => {
           const runRes = await fetch(`/api/v1/evaluations/runs/${runData.id}`, {
-            headers: { 'X-User-Id': 'usr_admin_01' }
+            credentials: 'include'
           });
           if (runRes.ok) {
             const updatedRun: EvalRun = await runRes.json();
@@ -111,7 +111,7 @@ export const EvaluationDashboard: React.FC = () => {
   const fetchResults = async (runId: string) => {
     try {
       const res = await fetch(`/api/v1/evaluations/runs/${runId}/results`, {
-        headers: { 'X-User-Id': 'usr_admin_01' }
+        credentials: 'include'
       });
       if (res.ok) {
         const data = await res.json();

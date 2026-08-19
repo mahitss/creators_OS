@@ -146,10 +146,9 @@ export const ModelGatewayWorkspace: React.FC = () => {
       const res = await fetch('/api/v1/ai/routing/infer', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-Workspace-Id': 'ws_default_01',
-          'X-Organization-Id': 'org_default_creator'
+          'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           requestType: 'reasoning',
           capability: selectedCapability,

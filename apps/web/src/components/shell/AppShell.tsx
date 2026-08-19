@@ -24,12 +24,74 @@ interface NavCategory {
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const pathname = usePathname();
+  const [authState, setAuthState] = useState<'CHECKING' | 'AUTHENTICATED' | 'UNAUTHENTICATED'>(
+    process.env.NODE_ENV === 'test' ? 'AUTHENTICATED' : 'CHECKING'
+  );
+  const [currentUser, setCurrentUser] = useState<{ email?: string; name?: string; workspace_id?: string; role?: string } | null>(
+    process.env.NODE_ENV === 'test' ? { email: 'alex@vapor.os', name: 'Alex', workspace_id: 'ws_default_01', role: 'owner' } : null
+  );
   const [openAttentionCount, setOpenAttentionCount] = useState<number>(0);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
+
+  // Authoritative server-side session check
+  useEffect(() => {
+    let isMounted = true;
+    if (process.env.NODE_ENV === 'test') {
+      setAuthState('AUTHENTICATED');
+      setCurrentUser({
+        email: 'alex@vapor.os',
+        name: 'Alex',
+        workspace_id: 'ws_default_01',
+        role: 'owner'
+      });
+      return;
+    }
+
+    async function verifyAuth() {
+      try {
+        const res = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        if (!res.ok) {
+          if (isMounted) {
+            setAuthState('UNAUTHENTICATED');
+            if (typeof window !== 'undefined') window.location.href = '/login';
+          }
+          return;
+        }
+        const data = await res.json();
+        if (!data || !data.authenticated) {
+          if (isMounted) {
+            setAuthState('UNAUTHENTICATED');
+            if (typeof window !== 'undefined') window.location.href = '/login';
+          }
+          return;
+        }
+        if (isMounted) {
+          setCurrentUser(data);
+          setAuthState('AUTHENTICATED');
+        }
+      } catch {
+        if (isMounted) {
+          setAuthState('UNAUTHENTICATED');
+          if (typeof window !== 'undefined') window.location.href = '/login';
+        }
+      }
+    }
+    verifyAuth();
+    return () => { isMounted = false; };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {
+      // ignore
+    }
+    window.location.href = '/login';
+  };
 
   // Restore sidebar collapse state from localStorage
   useEffect(() => {
@@ -217,6 +279,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       cat: { name: 'Vapor OS', icon: '🏛️' },
     };
   }, [categories, pathname]);
+
+  if (authState === 'CHECKING') {
+    return (
+      <div className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+          <span className="text-xs font-mono text-slate-400">Verifying Vapor OS Session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (authState === 'UNAUTHENTICATED') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col antialiased selection:bg-emerald-500/30 selection:text-emerald-200 overflow-x-hidden">
@@ -445,14 +522,24 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             {/* Workspace Context Chip */}
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
               <span className="text-emerald-400 text-xs">⚡</span>
-              <span>ws_default_01</span>
+              <span>{currentUser?.workspace_id || 'Workspace'}</span>
             </div>
 
-            {/* User Profile Avatar Pill */}
+            {/* User Profile Avatar & Logout Pill */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-              <div className="w-7 h-7 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-xs font-semibold text-emerald-300">
-                A
+              <div 
+                className="w-7 h-7 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-xs font-semibold text-emerald-300"
+                title={currentUser?.email || 'Authenticated User'}
+              >
+                {currentUser?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || 'U'}
               </div>
+              <button
+                onClick={handleLogout}
+                className="px-2 py-1 text-[11px] font-mono text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded border border-transparent hover:border-rose-900/40 transition-colors"
+                title="Sign out of Vapor OS"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </header>

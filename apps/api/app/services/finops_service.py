@@ -30,13 +30,15 @@ _in_memory_reservations: Dict[str, dict] = {}
 _in_memory_anomalies: Dict[str, dict] = {}
 _in_memory_incidents: Dict[str, dict] = {}
 
-# Standard OpenRouter Model Pricing (USD per 1,000 units)
+# Standard Model & OpenRouter Pricing (USD per 1,000 units)
 PRICING_TABLE = {
     ("openrouter", "openrouter/free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
     ("openrouter", "openrouter/auto"): {"input": 0.001, "output": 0.002, "cached": 0.0005, "reasoning": 0.0, "version": 1},
     ("openrouter", "meta-llama/llama-3.3-70b-instruct:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
     ("openrouter", "deepseek/deepseek-r1:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
     ("openrouter", "qwen/qwen-2.5-72b-instruct:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
+    ("openai", "gpt-4o"): {"input": 0.005, "output": 0.015, "cached": 0.0025, "reasoning": 0.0, "version": 1},
+    ("openai", "gpt-4o-mini"): {"input": 0.00015, "output": 0.00060, "cached": 0.000075, "reasoning": 0.0, "version": 1},
 }
 
 def calculate_usage_cost(provider: str, model: str, input_units: int, output_units: int, cached_units: int = 0) -> Tuple[float, int]:
