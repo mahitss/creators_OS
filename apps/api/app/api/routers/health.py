@@ -1,13 +1,17 @@
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, Response, status
+import json
+import logging
+
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.dependencies.db import get_db
-from app.schemas.health import HealthResponse, ServiceHealthStatus
+from app.schemas.health import HealthResponse, ServiceHealthStatus, WebVitalsPayload
 from app.services.health_service import get_system_health
 
 router = APIRouter()
+logger = logging.getLogger("vapor.telemetry")
 
 @router.get("/health", response_model=HealthResponse)
 async def check_health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
@@ -51,12 +55,28 @@ async def get_prometheus_metrics():
     content = await get_redis_queue_metrics(settings.REDIS_URL)
     return Response(content=content, media_type="text/plain; version=0.0.4")
 
-@router.post("/telemetry/web-vitals")
-async def record_web_vitals_telemetry(payload: dict):
+@router.post("/telemetry/web-vitals", status_code=status.HTTP_202_ACCEPTED)
+async def record_web_vitals_telemetry(request: Request):
     """Ingests client Real User Monitoring (RUM) Web Vitals performance metrics (GAP-04)."""
-    import logging
-    logger = logging.getLogger("vapor.telemetry")
-    logger.info(f"[Web Vitals RUM] metric={payload.get('name')} value={payload.get('value')}ms rating={payload.get('rating')} url={payload.get('url')}")
+    raw_data: dict = {}
+    try:
+        content_type = request.headers.get("content-type", "")
+        if "application/json" in content_type:
+            raw_data = await request.json()
+        else:
+            body_bytes = await request.body()
+            raw_data = json.loads(body_bytes.decode("utf-8")) if body_bytes else {}
+    except Exception:
+        raw_data = {}
+
+    try:
+        payload = WebVitalsPayload.model_validate(raw_data)
+        logger.info(f"[Web Vitals RUM] metric={payload.name} value={payload.value}ms rating={payload.rating} url={payload.url}")
+    except Exception:
+        name = str(raw_data.get("name", "unknown"))
+        value = raw_data.get("value", 0)
+        rating = str(raw_data.get("rating", "good"))
+        url = str(raw_data.get("url", ""))
+        logger.info(f"[Web Vitals RUM] metric={name} value={value}ms rating={rating} url={url}")
+
     return {"status": "accepted", "timestamp": datetime.now(timezone.utc).isoformat()}
-
-

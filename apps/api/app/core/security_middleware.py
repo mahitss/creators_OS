@@ -21,7 +21,8 @@ PUBLIC_API_ALLOWLIST: Set[str] = {
     "/api/v1/auth/passkey/register/options",
     "/api/v1/auth/passkey/register/verify",
     "/api/v1/auth/passkey/verify",
-    "/api/v1/integrations/google/callback"
+    "/api/v1/integrations/google/callback",
+    "/api/v1/telemetry/web-vitals"
 }
 
 class AuthenticationEnforcementMiddleware(BaseHTTPMiddleware):

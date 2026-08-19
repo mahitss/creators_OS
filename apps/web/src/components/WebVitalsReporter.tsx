@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface WebVitalsPayload {
   name: string;
@@ -13,11 +13,17 @@ export interface WebVitalsPayload {
 }
 
 export function WebVitalsReporter() {
+  const reportedMetricsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (typeof window === 'undefined' || !('performance' in window)) return;
 
     // Report Core Web Vitals (FCP, LCP, TTFB, CLS, FID)
     const reportMetric = (name: string, value: number) => {
+      // Prevent duplicate reporting of the same metric for the current page lifecycle
+      if (reportedMetricsRef.current.has(name)) return;
+      reportedMetricsRef.current.add(name);
+
       const rating = value < 1000 ? 'good' : value < 2500 ? 'needs-improvement' : 'poor';
       const payload: WebVitalsPayload = {
         name,
@@ -30,13 +36,24 @@ export function WebVitalsReporter() {
       };
 
       try {
-        if (navigator.sendBeacon) {
-          navigator.sendBeacon('/api/v1/telemetry/web-vitals', JSON.stringify(payload));
+        const jsonPayload = JSON.stringify(payload);
+        if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+          const blob = new Blob([jsonPayload], { type: 'application/json' });
+          const sent = navigator.sendBeacon('/api/v1/telemetry/web-vitals', blob);
+          if (!sent) {
+            // Fallback to fetch if sendBeacon queue was full
+            fetch('/api/v1/telemetry/web-vitals', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: jsonPayload,
+              keepalive: true
+            }).catch(() => {});
+          }
         } else {
           fetch('/api/v1/telemetry/web-vitals', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: jsonPayload,
             keepalive: true
           }).catch(() => {});
         }
@@ -47,10 +64,15 @@ export function WebVitalsReporter() {
 
     // Performance observer for Navigation Timing (TTFB, FCP)
     try {
-      const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      if (navEntry) {
-        reportMetric('TTFB', navEntry.responseStart);
-        reportMetric('FCP', navEntry.domContentLoadedEventEnd);
+      const navEntries = performance.getEntriesByType('navigation');
+      if (navEntries && navEntries.length > 0) {
+        const navEntry = navEntries[0] as PerformanceNavigationTiming;
+        if (navEntry.responseStart > 0) {
+          reportMetric('TTFB', navEntry.responseStart);
+        }
+        if (navEntry.domContentLoadedEventEnd > 0) {
+          reportMetric('FCP', navEntry.domContentLoadedEventEnd);
+        }
       }
     } catch {
       // Observer fallback
