@@ -74,8 +74,8 @@ export default function Home() {
                 <span>SYSTEM STATUS</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               </div>
-              <div className="text-base sm:text-lg font-bold text-emerald-400 font-sans">OPTIMAL</div>
-              <div className="text-[10px] font-mono text-slate-400">No Active Outages</div>
+              <div className="text-base sm:text-lg font-bold text-emerald-400 font-sans">OPERATIONAL</div>
+              <div className="text-[10px] font-mono text-slate-400">Neon DB & Redis Active</div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
@@ -84,10 +84,10 @@ export default function Home() {
                 <span className="text-amber-400 text-xs">🔔</span>
               </div>
               <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {data.needs_attention?.length ? `${data.needs_attention.length} Pending` : 'All Cleared'}
+                {data.needs_attention?.length ? `${data.needs_attention.length} Pending` : 'All Clear (0)'}
               </div>
               <div className="text-[10px] font-mono text-slate-400">
-                {data.needs_attention?.length ? 'Review Required' : 'Sentinels Standing By'}
+                {data.needs_attention?.length ? 'Review Required' : '0 Items Pending'}
               </div>
             </div>
 
@@ -97,9 +97,11 @@ export default function Home() {
                 <span className="text-emerald-400 text-xs">⚡</span>
               </div>
               <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {data.recent_activity?.length ? `${data.recent_activity.length} Running` : 'Autonomous'}
+                {data.recent_activity?.length ? `${data.recent_activity.length} Active` : 'No Active Missions'}
               </div>
-              <div className="text-[10px] font-mono text-emerald-400">Continuous Observation</div>
+              <div className="text-[10px] font-mono text-slate-400">
+                {data.recent_activity?.length ? 'In Progress' : 'Idle Workspace'}
+              </div>
             </div>
 
             <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
@@ -107,8 +109,8 @@ export default function Home() {
                 <span>AI GATEWAY</span>
                 <span className="text-cyan-400 text-xs">🤖</span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">ONLINE</div>
-              <div className="text-[10px] font-mono text-cyan-400">Deterministic Engine Active</div>
+              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">OpenRouter</div>
+              <div className="text-[10px] font-mono text-cyan-400">openrouter/auto Active</div>
             </div>
 
             <div className="hidden lg:flex p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex-col gap-1 shadow-sm">
@@ -116,8 +118,8 @@ export default function Home() {
                 <span>COST ATTRIBUTION</span>
                 <span className="text-slate-400 text-xs">💰</span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">ACTIVE</div>
-              <div className="text-[10px] font-mono text-slate-400">Workspace Scoped</div>
+              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">No Usage</div>
+              <div className="text-[10px] font-mono text-slate-400">Zero Token Spend</div>
             </div>
           </div>
 

@@ -64,40 +64,27 @@ export const ModelGatewayWorkspace: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'models' | 'providers' | 'routing' | 'capabilities' | 'experiments'>('models');
   const [models, setModels] = useState<ModelRegistryItem[]>([
     {
-      id: 'mod_gemini_1_5_pro',
-      providerId: 'google',
-      name: 'Gemini 1.5 Pro',
-      modelKey: 'gemini-1.5-pro',
+      id: 'mod_openrouter_auto',
+      providerId: 'openrouter',
+      name: 'OpenRouter Auto Router',
+      modelKey: 'openrouter/auto',
       version: '1.0',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'vision', 'long_context', 'code_generation'],
-      contextWindow: 1048576,
-      supportedInputs: ['text', 'image', 'pdf'],
-      supportedOutputs: ['text', 'json'],
-      status: 'available',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'mod_gpt_4o',
-      providerId: 'openai',
-      name: 'GPT-4o Enterprise',
-      modelKey: 'gpt-4o',
-      version: '1.0',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'vision', 'code_generation'],
+      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'code_generation'],
       contextWindow: 128000,
-      supportedInputs: ['text', 'image'],
+      supportedInputs: ['text'],
       supportedOutputs: ['text', 'json'],
       status: 'available',
       updatedAt: new Date().toISOString()
     },
     {
-      id: 'mod_claude_3_5_sonnet',
-      providerId: 'anthropic',
-      name: 'Claude 3.5 Sonnet',
-      modelKey: 'claude-3-5-sonnet',
+      id: 'mod_openrouter_free',
+      providerId: 'openrouter',
+      name: 'OpenRouter Free Tier',
+      modelKey: 'openrouter/free',
       version: '1.0',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'long_context', 'code_generation'],
-      contextWindow: 200000,
-      supportedInputs: ['text', 'image'],
+      capabilities: ['text_generation', 'reasoning', 'code_generation'],
+      contextWindow: 32768,
+      supportedInputs: ['text'],
       supportedOutputs: ['text'],
       status: 'available',
       updatedAt: new Date().toISOString()
@@ -106,30 +93,12 @@ export const ModelGatewayWorkspace: React.FC = () => {
 
   const [providers, setProviders] = useState<ModelProviderItem[]>([
     {
-      id: 'prov_google',
-      name: 'Google Vertex AI / Gemini',
-      providerKey: 'google',
+      id: 'prov_openrouter',
+      name: 'OpenRouter Unified Gateway',
+      providerKey: 'openrouter',
       status: 'healthy',
-      region: 'us-central1',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'vision', 'long_context', 'code_generation', 'embedding'],
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'prov_openai',
-      name: 'OpenAI Enterprise',
-      providerKey: 'openai',
-      status: 'healthy',
-      region: 'us-east1',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'vision', 'code_generation', 'embedding'],
-      createdAt: new Date().toISOString()
-    },
-    {
-      id: 'prov_anthropic',
-      name: 'Anthropic Claude',
-      providerKey: 'anthropic',
-      status: 'healthy',
-      region: 'us-west2',
-      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'long_context', 'code_generation'],
+      region: 'global',
+      capabilities: ['text_generation', 'reasoning', 'tool_calling', 'structured_output', 'code_generation'],
       createdAt: new Date().toISOString()
     }
   ]);

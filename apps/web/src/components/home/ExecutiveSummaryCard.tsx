@@ -22,10 +22,10 @@ export const ExecutiveSummaryCard: React.FC<ExecutiveSummaryCardProps> = ({ summ
         </div>
         <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
           <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400 font-semibold">
-            AI CONFIDENCE: 99.4%
+            LIVE BRIEF
           </span>
           <span className="text-slate-600 hidden sm:inline">•</span>
-          <span className="text-slate-500 hidden sm:inline">AUTONOMOUS HARVEST</span>
+          <span className="text-slate-400 hidden sm:inline">OpenRouter Gateway</span>
         </div>
       </div>
 
@@ -34,8 +34,8 @@ export const ExecutiveSummaryCard: React.FC<ExecutiveSummaryCardProps> = ({ summ
       </Typography>
 
       <div className="flex items-center justify-between pt-2 text-[11px] font-mono text-slate-500 border-t border-slate-800/40">
-        <span>Model: Claude 3.5 Sonnet / Multi-Gateway Synthesizer</span>
-        <span>Zero Latency Cache Active</span>
+        <span>AI Gateway: OpenRouter (openrouter/auto)</span>
+        <span>Storage: Neon PostgreSQL • Redis Connected</span>
       </div>
     </Card>
   );
