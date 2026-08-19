@@ -1,5 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NEXT_PUBLIC_APP_URL",
+    "NEXT_PUBLIC_API_URL",
+    "NEXT_PUBLIC_GOOGLE_CLIENT_ID"
+  ],
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
