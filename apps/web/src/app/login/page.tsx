@@ -73,38 +73,50 @@ function LoginContent() {
   useEffect(() => {
     let isMounted = true;
 
-    const initGis = () => {
+    const setupGis = () => {
       if (!isMounted) return;
       const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
-      if (googleApi?.accounts?.id && !isGisInitializedRef.current) {
-        const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-        if (!clientId || clientId.trim() === '') {
-          setErrorMsg('Google authentication is not configured for this environment.');
-          return;
-        }
+      if (!googleApi?.accounts?.id) return;
 
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+      const isValidFormat = Boolean(clientId && typeof clientId === 'string' && clientId.includes('.apps.googleusercontent.com'));
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[VAPOR OIDC Config]', {
+          GOOGLE_CLIENT_ID_PRESENT: Boolean(clientId),
+          GOOGLE_CLIENT_ID_FORMAT_VALID: isValidFormat
+        });
+      }
+
+      if (!clientId || !isValidFormat) {
+        setErrorMsg('Google authentication is not configured for this environment (missing or invalid NEXT_PUBLIC_GOOGLE_CLIENT_ID).');
+        return;
+      }
+
+      // Initialize GIS strictly once
+      if (!isGisInitializedRef.current) {
         isGisInitializedRef.current = true;
-
         googleApi.accounts.id.initialize({
           client_id: clientId,
           callback: handleGoogleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: true
         });
+      }
 
-        const btnContainer = document.getElementById('google-signin-btn');
-        if (btnContainer) {
-          btnContainer.innerHTML = '';
-          googleApi.accounts.id.renderButton(btnContainer, {
-            type: 'standard',
-            theme: 'filled_black',
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular',
-            logo_alignment: 'left',
-            width: 320
-          });
-        }
+      // Render button into target if Google tab is active
+      const btnContainer = document.getElementById('google-signin-btn');
+      if (btnContainer && activeTab === 'google') {
+        btnContainer.innerHTML = '';
+        googleApi.accounts.id.renderButton(btnContainer, {
+          type: 'standard',
+          theme: 'filled_black',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: 320
+        });
         setIsGisReady(true);
       }
     };
@@ -115,10 +127,10 @@ function LoginContent() {
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
-      script.onload = initGis;
+      script.onload = setupGis;
       document.body.appendChild(script);
     } else {
-      initGis();
+      setupGis();
     }
 
     return () => {
@@ -128,7 +140,7 @@ function LoginContent() {
 
   const handleManualGooglePrompt = () => {
     const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
-    if (googleApi?.accounts?.id) {
+    if (googleApi?.accounts?.id && isGisInitializedRef.current) {
       googleApi.accounts.id.prompt();
     } else {
       setErrorMsg('Google Sign-In SDK is initializing. Please click again in a moment.');
