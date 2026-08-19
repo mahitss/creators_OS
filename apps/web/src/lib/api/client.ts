@@ -25,12 +25,11 @@ export class ApiConnectionError extends ApiError {
 }
 
 export function getApiBaseUrl(): string {
-  // If explicitly configured with absolute or relative URL
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  // In browser, default to '/api/v1' so Next.js proxy rewrites route seamlessly
+  // In browser, use relative path so Next.js proxy rewrites route seamlessly and preserves cookies
   if (typeof window !== 'undefined') {
+    if (process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.startsWith('/')) {
+      return process.env.NEXT_PUBLIC_API_URL;
+    }
     return '/api/v1';
   }
   // In SSR / server context, connect to internal backend target
@@ -38,9 +37,8 @@ export function getApiBaseUrl(): string {
 }
 
 /**
- * Dynamically resolves authentication and tenant headers from session context.
- * In development / test mode, defaults to developer test identities if not set.
- * In production mode, extracts exclusively from authenticated user session.
+ * Dynamically resolves headers from session context.
+ * Relies on HttpOnly session cookies for authoritative identity.
  */
 export function getDefaultHeaders(): Record<string, string> {
   const headers: Record<string, string> = {
@@ -48,37 +46,23 @@ export function getDefaultHeaders(): Record<string, string> {
   };
 
   if (typeof window !== 'undefined') {
-    const isDev = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
-    
-    // Dynamically derive from active authenticated session / storage
-    const activeWorkspace = window.sessionStorage?.getItem('vapor_workspace_id') || 
-                            window.localStorage?.getItem('vapor_workspace_id') ||
-                            (isDev ? 'ws_default_01' : undefined);
-                            
-    const activeUser = window.sessionStorage?.getItem('vapor_user_id') || 
-                       window.localStorage?.getItem('vapor_user_id') ||
-                       (isDev ? 'usr_alex' : undefined);
-                       
     const authToken = window.sessionStorage?.getItem('vapor_auth_token') || 
                       window.localStorage?.getItem('vapor_auth_token');
-
-    if (activeWorkspace) headers['X-Workspace-Id'] = activeWorkspace;
-    if (activeUser) headers['X-User-Id'] = activeUser;
-    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-  } else {
-    // SSR fallback for development / test builds
-    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
-      headers['X-Workspace-Id'] = process.env.DEFAULT_WORKSPACE_ID || 'ws_default_01';
-      headers['X-User-Id'] = process.env.DEFAULT_USER_ID || 'usr_alex';
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
     }
   }
 
   return headers;
 }
 
+export interface ApiClientOptions extends RequestInit {
+  timeout?: number;
+}
+
 export async function apiClient<T = any>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiClientOptions = {}
 ): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -93,6 +77,10 @@ export async function apiClient<T = any>(
     ...(options.headers as Record<string, string> || {}),
   };
 
+  const timeoutMs = options.timeout || 10000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   let res: Response;
   try {
     res = await fetch(url, {
@@ -100,10 +88,16 @@ export async function apiClient<T = any>(
       headers,
       credentials: options.credentials || 'include',
       cache: options.cache || 'no-store',
+      signal: options.signal || controller.signal,
     });
   } catch (networkErr: any) {
+    if (networkErr?.name === 'AbortError') {
+      throw new ApiConnectionError(`Request timed out for ${normalizedEndpoint}. Backend took longer than ${timeoutMs}ms.`);
+    }
     console.error(`[API Network Error] ${options.method || 'GET'} ${url}:`, networkErr);
     throw new ApiConnectionError(`Connection failed for ${normalizedEndpoint}. Verify backend is operational.`);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!res.ok) {
@@ -113,7 +107,7 @@ export async function apiClient<T = any>(
     } catch {
       // Body not JSON
     }
-    const message = errorData?.message || `HTTP ${res.status}: ${res.statusText || 'API Request Failed'}`;
+    const message = errorData?.detail || errorData?.message || `HTTP ${res.status}: ${res.statusText || 'API Request Failed'}`;
     const code = errorData?.error_code || `HTTP_${res.status}`;
     throw new ApiError(message, res.status, code, errorData?.details);
   }

@@ -26,7 +26,20 @@ export default function Home() {
     setIsLoading(true);
     setIsError(false);
     try {
-      const result = await fetchExecutiveBrief('Alex');
+      let userName = 'Alex';
+      try {
+        const meRes = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        if (meRes.ok) {
+          const meData = await meRes.json();
+          if (meData?.name) {
+            userName = meData.name;
+          }
+        }
+      } catch {
+        // Fall back to default brief query
+      }
+
+      const result = await fetchExecutiveBrief(userName);
       setData(result);
     } catch (err: any) {
       setIsError(true);
