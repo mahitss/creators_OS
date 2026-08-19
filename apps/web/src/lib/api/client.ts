@@ -41,19 +41,9 @@ export function getApiBaseUrl(): string {
  * Relies on HttpOnly session cookies for authoritative identity.
  */
 export function getDefaultHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
+  return {
     'Content-Type': 'application/json',
   };
-
-  if (typeof window !== 'undefined') {
-    const authToken = window.sessionStorage?.getItem('vapor_auth_token') || 
-                      window.localStorage?.getItem('vapor_auth_token');
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-  }
-
-  return headers;
 }
 
 export interface ApiClientOptions extends RequestInit {

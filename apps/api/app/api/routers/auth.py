@@ -183,16 +183,38 @@ async def verify_google_identity(
 @router.post("/auth/logout")
 async def logout(response: Response):
     """Invalidates the active VAPOR session and removes auth cookies."""
-    response.delete_cookie(key="vapor_session_token", path="/")
+    is_prod = settings.ENVIRONMENT == "production"
+    response.delete_cookie(
+        key="vapor_session_token",
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=is_prod
+    )
+    response.set_cookie(
+        key="vapor_session_token",
+        value="",
+        max_age=0,
+        expires=0,
+        path="/",
+        httponly=True,
+        samesite="lax",
+        secure=is_prod
+    )
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
     return {"status": "logged_out", "message": "Vapor session successfully terminated."}
 
 @router.get("/auth/me", response_model=AuthMeResponse)
 async def get_current_session(
+    response: Response,
     authorization: Optional[str] = Header(None, alias="Authorization"),
     session_cookie: Optional[str] = Cookie(None, alias="vapor_session_token"),
     db: Optional[AsyncSession] = Depends(get_db)
 ):
     """Returns the authenticated identity, avatar, active workspace, and accessible workspaces."""
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
     token = None
     if authorization and authorization.startswith("Bearer "):
         token = authorization.split(" ")[1]

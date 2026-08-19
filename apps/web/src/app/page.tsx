@@ -28,17 +28,19 @@ export default function Home() {
     setIsLoading(true);
     setIsError(false);
     try {
-      let userName = 'Alex';
+      let userName = '';
       try {
-        const meRes = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        const meRes = await fetch('/api/v1/auth/me', {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-store, no-cache' }
+        });
         if (meRes.ok) {
           const meData = await meRes.json();
-          if (meData?.name) {
-            userName = meData.name;
-          }
+          userName = meData?.name || meData?.email?.split('@')[0] || '';
         }
       } catch {
-        // Fall back to default brief query
+        // quiet
       }
 
       // Fetch brief, AI health, and FinOps overview concurrently

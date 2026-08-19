@@ -53,11 +53,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
     async function verifyAuth() {
       try {
-        const res = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        const res = await fetch('/api/v1/auth/me', {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-store, no-cache' }
+        });
         if (!res.ok) {
           if (isMounted) {
             setAuthState('UNAUTHENTICATED');
-            if (typeof window !== 'undefined') window.location.href = '/login';
+            if (typeof window !== 'undefined') window.location.replace('/login');
           }
           return;
         }
@@ -65,7 +69,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         if (!data || !data.authenticated) {
           if (isMounted) {
             setAuthState('UNAUTHENTICATED');
-            if (typeof window !== 'undefined') window.location.href = '/login';
+            if (typeof window !== 'undefined') window.location.replace('/login');
           }
           return;
         }
@@ -76,7 +80,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       } catch {
         if (isMounted) {
           setAuthState('UNAUTHENTICATED');
-          if (typeof window !== 'undefined') window.location.href = '/login';
+          if (typeof window !== 'undefined') window.location.replace('/login');
         }
       }
     }
@@ -85,12 +89,29 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }, []);
 
   const handleLogout = async () => {
+    setAuthState('UNAUTHENTICATED');
+    setCurrentUser(null);
     try {
-      await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'include' });
+      localStorage.removeItem('vapor_session_active');
+      localStorage.removeItem('vapor_user_id');
+      localStorage.removeItem('vapor_workspace_id');
+      localStorage.removeItem('vapor_auth_token');
+      sessionStorage.clear();
     } catch {
       // ignore
     }
-    window.location.href = '/login';
+    try {
+      await fetch('/api/v1/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store'
+      });
+    } catch {
+      // ignore
+    }
+    if (typeof window !== 'undefined') {
+      window.location.replace('/login');
+    }
   };
 
   // Restore sidebar collapse state from localStorage

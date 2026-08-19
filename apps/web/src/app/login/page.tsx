@@ -28,12 +28,29 @@ function LoginContent() {
   useEffect(() => {
     async function checkExistingSession() {
       try {
-        const res = await fetch('/api/v1/auth/me', { credentials: 'include' });
+        const res = await fetch('/api/v1/auth/me', {
+          credentials: 'include',
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-store, no-cache' }
+        });
         if (res.ok) {
-          router.replace(redirectTo);
+          const data = await res.json();
+          if (data?.authenticated) {
+            router.replace(redirectTo);
+            return;
+          }
         }
       } catch {
         // Unauthenticated - stay on login
+      }
+      try {
+        localStorage.removeItem('vapor_session_active');
+        localStorage.removeItem('vapor_user_id');
+        localStorage.removeItem('vapor_workspace_id');
+        localStorage.removeItem('vapor_auth_token');
+        sessionStorage.clear();
+      } catch {
+        // quiet
       }
     }
     checkExistingSession();
@@ -61,13 +78,7 @@ function LoginContent() {
         throw new Error(errData.detail || 'Google sign-in verification failed.');
       }
 
-      const data = await res.json();
-      if (typeof window !== 'undefined' && data.access_token) {
-        localStorage.setItem('vapor_session_active', 'true');
-        localStorage.setItem('vapor_user_id', data.user_id);
-        localStorage.setItem('vapor_workspace_id', data.workspace_id);
-      }
-
+      await res.json();
       router.push(redirectTo);
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication service is unavailable. Please try again.');
@@ -230,13 +241,7 @@ function LoginContent() {
         throw new Error(errData.detail || 'Sign-in failed.');
       }
 
-      const data = await res.json();
-      if (typeof window !== 'undefined' && data.access_token) {
-        localStorage.setItem('vapor_session_active', 'true');
-        localStorage.setItem('vapor_user_id', data.user_id);
-        localStorage.setItem('vapor_workspace_id', data.workspace_id);
-      }
-
+      await res.json();
       router.push(redirectTo);
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');

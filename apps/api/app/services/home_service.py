@@ -27,8 +27,9 @@ def get_time_of_day_greeting(user_name: str) -> str:
 
 async def build_executive_brief(
     db: Optional[AsyncSession] = None,
-    user_name: str = "Alex",
-    workspace_id: str = "ws_default_01"
+    user_name: str = "Operator",
+    workspace_id: str = "",
+    user_id: str = ""
 ) -> ExecutiveBriefResponse:
     greeting = get_time_of_day_greeting(user_name)
     
@@ -42,9 +43,10 @@ async def build_executive_brief(
     ]
 
     # Use Unified Context Engine for Executive Brief Context Retrieval
+    resolved_user = user_id or "usr_operator"
     ctx_req = ContextRequest(
         workspace_id=workspace_id,
-        user_id="usr_alex",
+        user_id=resolved_user,
         purpose=ContextPurpose.EXECUTIVE_BRIEF,
         allowed_sources=[SourceType.MISSION, SourceType.MEMORY, SourceType.CALENDAR, SourceType.ATTENTION]
     )

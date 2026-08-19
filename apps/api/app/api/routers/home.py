@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/home/brief", response_model=ExecutiveBriefResponse)
 async def get_home_executive_brief(
-    user_name: str = Query("Alex", description="Name of the authenticated user"),
+    user_name: Optional[str] = Query(None, description="Name of the authenticated user"),
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db)
 ) -> ExecutiveBriefResponse:
@@ -18,4 +18,10 @@ async def get_home_executive_brief(
     Returns the Executive Brief for the authenticated workspace context.
     Determines attention items, primary recommendations, learned memories, and quiet states.
     """
-    return await build_executive_brief(db=db, user_name=user_name, workspace_id=ws_ctx.workspace_id)
+    resolved_name = user_name or "Operator"
+    return await build_executive_brief(
+        db=db,
+        user_name=resolved_name,
+        workspace_id=ws_ctx.workspace_id,
+        user_id=ws_ctx.user_id
+    )
