@@ -2,6 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@vapor/ui', '@vapor/types', '@vapor/ai', '@vapor/utils'],
+  env: {
+    NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '381940932694-o2q57f2bhp8sjbt9r6fgm240q4jknmfa.apps.googleusercontent.com',
+  },
   async redirects() {
     return [
       { source: '/queue', destination: '/work', permanent: false },
