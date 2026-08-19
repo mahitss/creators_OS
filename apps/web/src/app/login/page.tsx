@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+
+type GisStatus = 'SDK_LOADING' | 'SDK_READY' | 'SDK_ERROR';
 
 function LoginContent() {
   const router = useRouter();
@@ -10,7 +12,8 @@ function LoginContent() {
   const isAuthRequired = searchParams.get('auth_required') === 'true';
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isGisReady, setIsGisReady] = useState(false);
+  const [gisStatus, setGisStatus] = useState<GisStatus>('SDK_LOADING');
+  const [gisErrorMessage, setGisErrorMessage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(
     isAuthRequired ? 'Authentication required. Please sign in to access your Vapor OS workspace.' : null
   );
@@ -18,9 +21,11 @@ function LoginContent() {
   const [activeTab, setActiveTab] = useState<'google' | 'passkey'>('google');
 
   const isGisInitializedRef = useRef(false);
+  const googleBtnContainerRef = useRef<HTMLDivElement | null>(null);
+  const retryCountRef = useRef(0);
 
+  // Check if session already exists
   useEffect(() => {
-    // Check if session already exists
     async function checkExistingSession() {
       try {
         const res = await fetch('/api/v1/auth/me');
@@ -34,7 +39,7 @@ function LoginContent() {
     checkExistingSession();
   }, [router, redirectTo]);
 
-  const handleGoogleCredentialResponse = React.useCallback(async (response: { credential?: string }) => {
+  const handleGoogleCredentialResponse = useCallback(async (response: { credential?: string }) => {
     if (!response?.credential) {
       setErrorMsg('Google authentication did not return a credential.');
       return;
@@ -51,7 +56,7 @@ function LoginContent() {
       });
 
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({ detail: 'Google authentication could not be verified.' }));
+        const errData = await res.json().catch(() => ({ detail: 'Google authentication was rejected.' }));
         throw new Error(errData.detail || 'Google sign-in verification failed.');
       }
 
@@ -64,51 +69,120 @@ function LoginContent() {
 
       router.push(redirectTo);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Unable to reach the authentication service. Please try again.');
+      setErrorMsg(err.message || 'Authentication service is unavailable. Please try again.');
     } finally {
       setIsLoading(false);
     }
   }, [redirectTo, router]);
 
+  const initializeAndRenderGis = useCallback(() => {
+    const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
+    if (!googleApi?.accounts?.id) {
+      setGisStatus('SDK_ERROR');
+      setGisErrorMessage('Google Identity Services SDK is unavailable.');
+      return;
+    }
+
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const isValidFormat = Boolean(clientId && typeof clientId === 'string' && clientId.includes('.apps.googleusercontent.com'));
+
+    if (!clientId || !isValidFormat) {
+      setGisStatus('SDK_ERROR');
+      setGisErrorMessage('Google authentication is not configured for this environment (missing or invalid NEXT_PUBLIC_GOOGLE_CLIENT_ID).');
+      return;
+    }
+
+    // Call initialize at most once per page lifecycle
+    if (!isGisInitializedRef.current) {
+      isGisInitializedRef.current = true;
+      googleApi.accounts.id.initialize({
+        client_id: clientId,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+    }
+
+    // Render button into target container if available
+    const container = googleBtnContainerRef.current || document.getElementById('google-signin-btn');
+    if (container) {
+      container.innerHTML = '';
+      googleApi.accounts.id.renderButton(container, {
+        type: 'standard',
+        theme: 'filled_black',
+        size: 'large',
+        text: 'signin_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: 320
+      });
+    }
+
+    setGisStatus('SDK_READY');
+    setGisErrorMessage(null);
+  }, [handleGoogleCredentialResponse]);
+
+  const loadAndInitGis = useCallback(() => {
+    setGisStatus('SDK_LOADING');
+    setGisErrorMessage(null);
+
+    const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
+    if (googleApi?.accounts?.id) {
+      initializeAndRenderGis();
+      return;
+    }
+
+    let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
+
+    const onScriptLoad = () => {
+      initializeAndRenderGis();
+    };
+
+    const onScriptError = () => {
+      setGisStatus('SDK_ERROR');
+      setGisErrorMessage('Google Sign-In is blocked or unavailable. If using an ad-blocker or Brave Shields, please allow accounts.google.com.');
+    };
+
+    if (!script) {
+      script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = onScriptLoad;
+      script.onerror = onScriptError;
+      document.head.appendChild(script);
+    } else {
+      script.addEventListener('load', onScriptLoad, { once: true });
+      script.addEventListener('error', onScriptError, { once: true });
+    }
+
+    // Timeout guard in case of silent network blocking
+    const timeoutId = setTimeout(() => {
+      const gApi = typeof window !== 'undefined' ? (window as any).google : null;
+      if (!gApi?.accounts?.id && isGisInitializedRef.current === false) {
+        setGisStatus('SDK_ERROR');
+        setGisErrorMessage('Google Sign-In took too long to load. Please check your connection or ad-blocker.');
+      }
+    }, 8000);
+
+    return () => clearTimeout(timeoutId);
+  }, [initializeAndRenderGis]);
+
   useEffect(() => {
-    let isMounted = true;
+    const cleanup = loadAndInitGis();
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, [loadAndInitGis]);
 
-    const setupGis = () => {
-      if (!isMounted) return;
+  // Re-render button if user switches back to Google tab while SDK is ready
+  useEffect(() => {
+    if (activeTab === 'google' && gisStatus === 'SDK_READY') {
       const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
-      if (!googleApi?.accounts?.id) return;
-
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-      const isValidFormat = Boolean(clientId && typeof clientId === 'string' && clientId.includes('.apps.googleusercontent.com'));
-
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[VAPOR OIDC Config]', {
-          GOOGLE_CLIENT_ID_PRESENT: Boolean(clientId),
-          GOOGLE_CLIENT_ID_FORMAT_VALID: isValidFormat
-        });
-      }
-
-      if (!clientId || !isValidFormat) {
-        setErrorMsg('Google authentication is not configured for this environment (missing or invalid NEXT_PUBLIC_GOOGLE_CLIENT_ID).');
-        return;
-      }
-
-      // Initialize GIS strictly once
-      if (!isGisInitializedRef.current) {
-        isGisInitializedRef.current = true;
-        googleApi.accounts.id.initialize({
-          client_id: clientId,
-          callback: handleGoogleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true
-        });
-      }
-
-      // Render button into target if Google tab is active
-      const btnContainer = document.getElementById('google-signin-btn');
-      if (btnContainer && activeTab === 'google') {
-        btnContainer.innerHTML = '';
-        googleApi.accounts.id.renderButton(btnContainer, {
+      const container = googleBtnContainerRef.current || document.getElementById('google-signin-btn');
+      if (googleApi?.accounts?.id && container) {
+        container.innerHTML = '';
+        googleApi.accounts.id.renderButton(container, {
           type: 'standard',
           theme: 'filled_black',
           size: 'large',
@@ -117,34 +191,14 @@ function LoginContent() {
           logo_alignment: 'left',
           width: 320
         });
-        setIsGisReady(true);
       }
-    };
-
-    let script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]') as HTMLScriptElement;
-    if (!script) {
-      script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      script.onload = setupGis;
-      document.body.appendChild(script);
-    } else {
-      setupGis();
     }
+  }, [activeTab, gisStatus]);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [handleGoogleCredentialResponse, activeTab]);
-
-  const handleManualGooglePrompt = () => {
-    const googleApi = typeof window !== 'undefined' ? (window as any).google : null;
-    if (googleApi?.accounts?.id && isGisInitializedRef.current) {
-      googleApi.accounts.id.prompt();
-    } else {
-      setErrorMsg('Google Sign-In SDK is initializing. Please click again in a moment.');
-    }
+  const handleRetryGis = () => {
+    retryCountRef.current += 1;
+    isGisInitializedRef.current = false;
+    loadAndInitGis();
   };
 
   const handlePasskeyOrDirectLogin = async (e: React.FormEvent) => {
@@ -247,23 +301,51 @@ function LoginContent() {
                 Sign in with your verified Google Account. Identity is validated server-side via OpenID Connect.
               </p>
 
-              {/* Google GIS Render Target */}
-              <div id="google-signin-btn" className="w-full flex justify-center py-2 min-h-[44px]">
-                {!isGisReady && (
+              {/* Dynamic GIS Container / Loading / Error State Machine */}
+              <div className="w-full flex justify-center py-2 min-h-[44px]">
+                {gisStatus === 'SDK_LOADING' && (
                   <button
                     type="button"
-                    onClick={handleManualGooglePrompt}
-                    disabled={isLoading}
-                    className="w-full max-w-[320px] flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-slate-900 border border-slate-700 hover:bg-slate-800 hover:border-slate-600 text-sm font-medium text-white transition-all shadow-sm active:scale-[0.98]"
+                    disabled
+                    className="w-full max-w-[320px] flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-800 text-sm font-medium text-slate-400 cursor-not-allowed opacity-75 shadow-sm"
                   >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    <svg className="animate-spin w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    {isLoading ? 'Verifying Google Identity...' : 'Sign in with Google'}
+                    {isLoading ? 'Verifying Identity...' : 'Loading Google Sign-In...'}
                   </button>
+                )}
+
+                {gisStatus === 'SDK_READY' && (
+                  <div
+                    id="google-signin-btn"
+                    ref={googleBtnContainerRef}
+                    className="w-full flex justify-center min-h-[44px]"
+                  />
+                )}
+
+                {gisStatus === 'SDK_ERROR' && (
+                  <div className="w-full flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleRetryGis}
+                      className="w-full max-w-[320px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rose-950/40 border border-rose-800/60 hover:bg-rose-900/50 text-sm font-medium text-rose-200 transition-all shadow-sm active:scale-[0.98]"
+                    >
+                      <svg className="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                        <path d="M16 21h5v-5" />
+                      </svg>
+                      Retry Google Sign-In
+                    </button>
+                    {gisErrorMessage && (
+                      <p className="text-[11px] text-rose-400/90 text-center leading-normal max-w-[320px]">
+                        {gisErrorMessage}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 
