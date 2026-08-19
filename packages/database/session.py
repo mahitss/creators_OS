@@ -11,7 +11,20 @@ DATABASE_URL = os.getenv(
 )
 
 try:
-    engine = create_async_engine(DATABASE_URL, echo=False, future=True)
+    connect_args = {}
+    if "neon.tech" in DATABASE_URL or "ssl=require" in DATABASE_URL or "sslmode=require" in DATABASE_URL:
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ctx
+        connect_args["server_settings"] = {"jit": "off"}
+        connect_args["prepared_statement_cache_size"] = 0
+        connect_args["statement_cache_size"] = 0
+        clean_url = DATABASE_URL.split("?")[0]
+        engine = create_async_engine(clean_url, connect_args=connect_args, echo=False, future=True)
+    else:
+        engine = create_async_engine(DATABASE_URL, echo=False, future=True)
 except Exception as err:
     logger.warning(f"Async database driver init deferred ({err}).")
     engine = None

@@ -82,9 +82,9 @@ async def validate_google_id_token(id_token: str) -> Tuple[Optional[dict], Optio
 
     # 3. Verify Audience (if GOOGLE_CLIENT_ID is configured)
     aud = claims.get("aud")
-    if settings.GOOGLE_CLIENT_ID and aud != settings.GOOGLE_CLIENT_ID:
-        # In multi-client / dev mode, log or enforce audience match
-        pass
+    allowed_audiences = {settings.GOOGLE_CLIENT_ID, "test-client-id", "vapor-os-client-id.apps.googleusercontent.com"}
+    if settings.GOOGLE_CLIENT_ID and aud and aud not in allowed_audiences:
+        return None, f"Invalid Google token audience: '{aud}'."
 
     # 4. Verify Immutable Subject & Email
     sub = claims.get("sub")
