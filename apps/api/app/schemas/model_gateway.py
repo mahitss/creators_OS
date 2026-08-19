@@ -17,6 +17,7 @@ class ModelGatewayResponse(BaseModel):
     id: str
     selected_provider: str = Field(..., alias="selectedProvider")
     selected_model: str = Field(..., alias="selectedModel")
+    actual_model: Optional[str] = Field(None, alias="actualModel")
     content: str
     usage: Dict[str, int]
     latency_ms: float = Field(..., alias="latencyMs")

@@ -30,19 +30,20 @@ _in_memory_reservations: Dict[str, dict] = {}
 _in_memory_anomalies: Dict[str, dict] = {}
 _in_memory_incidents: Dict[str, dict] = {}
 
-# Standard Default Model Pricing (USD per 1,000 units)
+# Standard OpenRouter Model Pricing (USD per 1,000 units)
 PRICING_TABLE = {
-    ("openai", "gpt-4o"): {"input": 0.005, "output": 0.015, "cached": 0.0025, "reasoning": 0.0, "version": 1},
-    ("openai", "gpt-4o-mini"): {"input": 0.00015, "output": 0.0006, "cached": 0.000075, "reasoning": 0.0, "version": 1},
-    ("anthropic", "claude-3-5-sonnet"): {"input": 0.003, "output": 0.015, "cached": 0.0015, "reasoning": 0.0, "version": 1},
-    ("google", "gemini-1.5-pro"): {"input": 0.00125, "output": 0.005, "cached": 0.0003, "reasoning": 0.0, "version": 1}
+    ("openrouter", "openrouter/free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
+    ("openrouter", "openrouter/auto"): {"input": 0.001, "output": 0.002, "cached": 0.0005, "reasoning": 0.0, "version": 1},
+    ("openrouter", "meta-llama/llama-3.3-70b-instruct:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
+    ("openrouter", "deepseek/deepseek-r1:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
+    ("openrouter", "qwen/qwen-2.5-72b-instruct:free"): {"input": 0.0, "output": 0.0, "cached": 0.0, "reasoning": 0.0, "version": 1},
 }
 
 def calculate_usage_cost(provider: str, model: str, input_units: int, output_units: int, cached_units: int = 0) -> Tuple[float, int]:
     """Calculates estimated usage cost based on versioned pricing rates."""
     rates = PRICING_TABLE.get((provider.lower(), model.lower()))
     if not rates:
-        rates = {"input": 0.002, "output": 0.006, "cached": 0.001, "version": 1}
+        rates = {"input": 0.001, "output": 0.002, "cached": 0.0005, "version": 1}
 
     cost = ((input_units / 1000.0) * rates["input"]) + ((output_units / 1000.0) * rates["output"]) + ((cached_units / 1000.0) * rates["cached"])
     return round(cost, 6), rates["version"]
@@ -59,91 +60,94 @@ async def record_usage(session: Optional[AsyncSession], usage_in: UsageRecordCre
         usage_in.cached_units
     )
 
+    u_dict = {
+        "id": rec_id,
+        "workspace_id": usage_in.workspace_id,
+        "trace_id": usage_in.trace_id,
+        "span_id": usage_in.span_id,
+        "parent_span_id": usage_in.parent_span_id,
+        "user_id": usage_in.user_id,
+        "mission_id": usage_in.mission_id,
+        "agent_run_id": usage_in.agent_run_id,
+        "workflow_id": usage_in.workflow_id,
+        "workflow_run_id": usage_in.workflow_run_id,
+        "node_id": usage_in.node_id,
+        "provider": usage_in.provider,
+        "model": usage_in.model,
+        "resource_type": usage_in.resource_type,
+        "input_units": usage_in.input_units,
+        "output_units": usage_in.output_units,
+        "cached_units": usage_in.cached_units,
+        "reasoning_units": usage_in.reasoning_units,
+        "cost": cost,
+        "currency": "USD",
+        "pricing_version": pricing_ver,
+        "status": "error" if usage_in.error_code else "success",
+        "duration_ms": usage_in.duration_ms,
+        "error_code": usage_in.error_code,
+        "timestamp": now.isoformat()
+    }
+    _in_memory_usage[rec_id] = u_dict
+
     if session:
-        rec = UsageRecord(
-            id=uuid.UUID(rec_id),
-            workspace_id=usage_in.workspace_id,
-            trace_id=usage_in.trace_id,
-            span_id=usage_in.span_id,
-            parent_span_id=usage_in.parent_span_id,
-            user_id=usage_in.user_id,
-            mission_id=usage_in.mission_id,
-            agent_run_id=usage_in.agent_run_id,
-            workflow_id=usage_in.workflow_id,
-            workflow_run_id=usage_in.workflow_run_id,
-            node_id=usage_in.node_id,
-            provider=usage_in.provider,
-            model=usage_in.model,
-            resource_type=usage_in.resource_type,
-            input_units=usage_in.input_units,
-            output_units=usage_in.output_units,
-            cached_units=usage_in.cached_units,
-            reasoning_units=usage_in.reasoning_units,
-            cost=cost,
-            currency="USD",
-            pricing_version=pricing_ver,
-            status="error" if usage_in.error_code else "success",
-            duration_ms=usage_in.duration_ms,
-            error_code=usage_in.error_code,
-            timestamp=now
-        )
-        session.add(rec)
+        try:
+            rec = UsageRecord(
+                id=uuid.UUID(rec_id),
+                workspace_id=usage_in.workspace_id,
+                trace_id=usage_in.trace_id,
+                span_id=usage_in.span_id,
+                parent_span_id=usage_in.parent_span_id,
+                user_id=usage_in.user_id,
+                mission_id=usage_in.mission_id,
+                agent_run_id=usage_in.agent_run_id,
+                workflow_id=usage_in.workflow_id,
+                workflow_run_id=usage_in.workflow_run_id,
+                node_id=usage_in.node_id,
+                provider=usage_in.provider,
+                model=usage_in.model,
+                resource_type=usage_in.resource_type,
+                input_units=usage_in.input_units,
+                output_units=usage_in.output_units,
+                cached_units=usage_in.cached_units,
+                reasoning_units=usage_in.reasoning_units,
+                cost=cost,
+                currency="USD",
+                pricing_version=pricing_ver,
+                status="error" if usage_in.error_code else "success",
+                duration_ms=usage_in.duration_ms,
+                error_code=usage_in.error_code,
+                timestamp=now
+            )
+            session.add(rec)
 
-        # Update budget used amount
-        b_stmt = select(Budget).where(and_(Budget.workspace_id == usage_in.workspace_id, Budget.scope_type == "workspace"))
-        b_res = await session.execute(b_stmt)
-        b_rec = b_res.scalar_one_or_none()
-        if b_rec:
-            b_rec.used_amount += cost
-            if b_rec.used_amount >= b_rec.limit_amount:
-                b_rec.status = "exhausted"
-            elif b_rec.used_amount >= (b_rec.limit_amount * (b_rec.warning_threshold_pct / 100.0)):
-                b_rec.status = "warning"
+            # Update budget used amount
+            b_stmt = select(Budget).where(and_(Budget.workspace_id == usage_in.workspace_id, Budget.scope_type == "workspace"))
+            b_res = await session.execute(b_stmt)
+            b_rec = b_res.scalar_one_or_none()
+            if b_rec:
+                b_rec.used_amount += cost
+                if b_rec.used_amount >= b_rec.limit_amount:
+                    b_rec.status = "exhausted"
+                elif b_rec.used_amount >= (b_rec.limit_amount * (b_rec.warning_threshold_pct / 100.0)):
+                    b_rec.status = "warning"
 
-        await session.commit()
-        await session.refresh(rec)
-        return _usage_to_dict(rec)
-    else:
-        u_dict = {
-            "id": rec_id,
-            "workspace_id": usage_in.workspace_id,
-            "trace_id": usage_in.trace_id,
-            "span_id": usage_in.span_id,
-            "parent_span_id": usage_in.parent_span_id,
-            "user_id": usage_in.user_id,
-            "mission_id": usage_in.mission_id,
-            "agent_run_id": usage_in.agent_run_id,
-            "workflow_id": usage_in.workflow_id,
-            "workflow_run_id": usage_in.workflow_run_id,
-            "node_id": usage_in.node_id,
-            "provider": usage_in.provider,
-            "model": usage_in.model,
-            "resource_type": usage_in.resource_type,
-            "input_units": usage_in.input_units,
-            "output_units": usage_in.output_units,
-            "cached_units": usage_in.cached_units,
-            "reasoning_units": usage_in.reasoning_units,
-            "cost": cost,
-            "currency": "USD",
-            "pricing_version": pricing_ver,
-            "status": "error" if usage_in.error_code else "success",
-            "duration_ms": usage_in.duration_ms,
-            "error_code": usage_in.error_code,
-            "timestamp": now.isoformat()
-        }
-        _in_memory_usage[rec_id] = u_dict
+            await session.commit()
+            await session.refresh(rec)
+            return _usage_to_dict(rec)
+        except Exception:
+            pass
 
-        # In-memory budget update
-        b_key = f"b_{usage_in.workspace_id}"
-        if b_key in _in_memory_budgets:
-            b = _in_memory_budgets[b_key]
-            b["used_amount"] += cost
-            if b["used_amount"] >= b["limit_amount"]:
-                b["status"] = "exhausted"
-            elif b["used_amount"] >= (b["limit_amount"] * (b["warning_threshold_pct"] / 100.0)):
-                b["status"] = "warning"
+    # In-memory budget update
+    b_key = f"b_{usage_in.workspace_id}"
+    if b_key in _in_memory_budgets:
+        b = _in_memory_budgets[b_key]
+        b["used_amount"] += cost
+        if b["used_amount"] >= b["limit_amount"]:
+            b["status"] = "exhausted"
+        elif b["used_amount"] >= (b["limit_amount"] * (b["warning_threshold_pct"] / 100.0)):
+            b["status"] = "warning"
 
-        return u_dict
+    return u_dict
 
 async def check_and_reserve_budget(
     session: Optional[AsyncSession],
@@ -308,21 +312,27 @@ async def get_finops_overview(session: Optional[AsyncSession], workspace_id: str
     limit = 100.0
     used = 0.0
 
+    db_queried = False
     if session:
-        u_stmt = select(func.sum(UsageRecord.cost)).where(UsageRecord.workspace_id == workspace_id)
-        u_res = await session.execute(u_stmt)
-        sum_cost = u_res.scalar() or 0.0
-        today_cost = sum_cost * 0.15
-        last_7d = sum_cost * 0.45
-        last_30d = sum_cost
+        try:
+            u_stmt = select(func.sum(UsageRecord.cost)).where(UsageRecord.workspace_id == workspace_id)
+            u_res = await session.execute(u_stmt)
+            sum_cost = u_res.scalar() or 0.0
+            today_cost = sum_cost * 0.15
+            last_7d = sum_cost * 0.45
+            last_30d = sum_cost
 
-        b_stmt = select(Budget).where(and_(Budget.workspace_id == workspace_id, Budget.scope_type == "workspace"))
-        b_res = await session.execute(b_stmt)
-        b = b_res.scalar_one_or_none()
-        if b:
-            limit = b.limit_amount
-            used = b.used_amount
-    else:
+            b_stmt = select(Budget).where(and_(Budget.workspace_id == workspace_id, Budget.scope_type == "workspace"))
+            b_res = await session.execute(b_stmt)
+            b = b_res.scalar_one_or_none()
+            if b:
+                limit = b.limit_amount
+                used = b.used_amount
+            db_queried = True
+        except Exception:
+            db_queried = False
+
+    if not db_queried:
         items = [u for u in _in_memory_usage.values() if u["workspace_id"] == workspace_id]
         last_30d = sum(u["cost"] for u in items)
         today_cost = last_30d * 0.15
@@ -332,7 +342,10 @@ async def get_finops_overview(session: Optional[AsyncSession], workspace_id: str
             limit = _in_memory_budgets[b_key]["limit_amount"]
             used = _in_memory_budgets[b_key]["used_amount"]
 
-    anomalies = await detect_cost_anomalies(session, workspace_id)
+    try:
+        anomalies = await detect_cost_anomalies(session, workspace_id)
+    except Exception:
+        anomalies = []
 
     return FinOpsOverviewResponse(
         workspace_id=workspace_id,
@@ -363,9 +376,9 @@ async def get_finops_forecast(session: Optional[AsyncSession], workspace_id: str
 
 async def get_model_health_snapshots() -> List[ModelHealthSnapshot]:
     return [
-        ModelHealthSnapshot(provider="openai", model="gpt-4o", status="healthy", latency_p50_ms=420, latency_p95_ms=1150, success_rate=0.994, total_calls_24h=1420, estimated_cost_24h=14.50),
-        ModelHealthSnapshot(provider="anthropic", model="claude-3-5-sonnet", status="healthy", latency_p50_ms=480, latency_p95_ms=1320, success_rate=0.991, total_calls_24h=850, estimated_cost_24h=9.20),
-        ModelHealthSnapshot(provider="google", model="gemini-1.5-pro", status="healthy", latency_p50_ms=390, latency_p95_ms=980, success_rate=0.997, total_calls_24h=2100, estimated_cost_24h=8.10)
+        ModelHealthSnapshot(provider="openrouter", model="openrouter/auto", status="healthy", latency_p50_ms=350, latency_p95_ms=920, success_rate=0.998, total_calls_24h=1420, estimated_cost_24h=2.84),
+        ModelHealthSnapshot(provider="openrouter", model="openrouter/free", status="healthy", latency_p50_ms=410, latency_p95_ms=1100, success_rate=0.995, total_calls_24h=850, estimated_cost_24h=0.0),
+        ModelHealthSnapshot(provider="openrouter", model="meta-llama/llama-3.3-70b-instruct:free", status="healthy", latency_p50_ms=380, latency_p95_ms=960, success_rate=0.997, total_calls_24h=2100, estimated_cost_24h=0.0)
     ]
 
 def _usage_to_dict(rec: UsageRecord) -> dict:

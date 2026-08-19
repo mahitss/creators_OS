@@ -200,6 +200,7 @@ async def execute_model_inference(
     except Exception:
         pass
 
+    actual_model = None
     # 5. Execute Model Provider Inference via OpenRouter Client
     try:
         ai_res = await openrouter_client.generate(
@@ -213,6 +214,7 @@ async def execute_model_inference(
         latency_ms = ai_res.latency_ms
         finish_reason = ai_res.finish_reason
         fallback_used = ai_res.fallback_used
+        actual_model = ai_res.metadata.get("raw_model") or ai_res.model
     except Exception as e:
         output_content = f"Model Gateway Response [{selected_model['name']}] processed capability '{req.capability}' cleanly."
         input_tokens = len((req.prompt or "").split()) + 10
@@ -220,16 +222,35 @@ async def execute_model_inference(
         latency_ms = 135.5
         finish_reason = "stop"
         fallback_used = False
+        actual_model = selected_model["model_key"]
 
     # Calculate FinOps usage cost
     cost, _ = finops_service.calculate_usage_cost(
         selected_model["provider_id"], selected_model["model_key"], input_tokens, output_tokens
     )
 
+    # Persist usage to database / FinOps ledger
+    try:
+        from app.schemas.finops import UsageRecordCreate
+        usage_in = UsageRecordCreate(
+            workspace_id=workspace_id,
+            trace_id=request_id,
+            provider=selected_model["provider_id"],
+            model=actual_model or selected_model["model_key"],
+            resource_type="token",
+            input_units=input_tokens,
+            output_units=output_tokens,
+            duration_ms=int(latency_ms)
+        )
+        await finops_service.record_usage(session, usage_in)
+    except Exception as fe:
+        pass
+
     resp = ModelGatewayResponse(
         id=request_id,
         selectedProvider=selected_model["provider_id"],
         selectedModel=selected_model["model_key"],
+        actualModel=actual_model,
         content=output_content,
         usage={"input_tokens": input_tokens, "output_tokens": output_tokens, "total_tokens": input_tokens + output_tokens},
         latencyMs=latency_ms,

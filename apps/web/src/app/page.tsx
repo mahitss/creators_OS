@@ -18,6 +18,8 @@ import { Card, Typography } from '@vapor/ui';
 
 export default function Home() {
   const [data, setData] = useState<ExecutiveBriefResponse | null>(null);
+  const [aiHealth, setAiHealth] = useState<{ status: string; provider: string; default_model?: string } | null>(null);
+  const [finopsData, setFinopsData] = useState<{ today_cost: number; last_30d_cost: number } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -39,8 +41,25 @@ export default function Home() {
         // Fall back to default brief query
       }
 
-      const result = await fetchExecutiveBrief(userName);
-      setData(result);
+      // Fetch brief, AI health, and FinOps overview concurrently
+      const [briefResult, healthResult, finopsResult] = await Promise.allSettled([
+        fetchExecutiveBrief(userName),
+        fetch('/api/v1/ai/health', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+        fetch('/api/v1/finops/overview', { credentials: 'include' }).then(r => r.ok ? r.json() : null),
+      ]);
+
+      if (briefResult.status === 'fulfilled') {
+        setData(briefResult.value);
+      } else {
+        throw briefResult.reason;
+      }
+
+      if (healthResult.status === 'fulfilled' && healthResult.value) {
+        setAiHealth(healthResult.value);
+      }
+      if (finopsResult.status === 'fulfilled' && finopsResult.value) {
+        setFinopsData(finopsResult.value);
+      }
     } catch (err: any) {
       setIsError(true);
       setErrorMessage(err?.message || 'Something went wrong loading your brief.');
@@ -109,8 +128,12 @@ export default function Home() {
                 <span>AI GATEWAY</span>
                 <span className="text-cyan-400 text-xs">🤖</span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">OpenRouter</div>
-              <div className="text-[10px] font-mono text-cyan-400">openrouter/auto Active</div>
+              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
+                {aiHealth?.status === 'AVAILABLE' ? 'OpenRouter' : 'OpenRouter'}
+              </div>
+              <div className="text-[10px] font-mono text-cyan-400">
+                {aiHealth?.status === 'DEGRADED' ? 'DEGRADED' : `${aiHealth?.default_model || 'openrouter/auto'} Active`}
+              </div>
             </div>
 
             <div className="hidden lg:flex p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex-col gap-1 shadow-sm">
@@ -118,8 +141,12 @@ export default function Home() {
                 <span>COST ATTRIBUTION</span>
                 <span className="text-slate-400 text-xs">💰</span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">No Usage</div>
-              <div className="text-[10px] font-mono text-slate-400">Zero Token Spend</div>
+              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
+                {finopsData && finopsData.today_cost > 0 ? `$${finopsData.today_cost.toFixed(4)}` : 'No Usage'}
+              </div>
+              <div className="text-[10px] font-mono text-slate-400">
+                {finopsData && finopsData.today_cost > 0 ? 'Today Spend' : 'Zero Token Spend'}
+              </div>
             </div>
           </div>
 
