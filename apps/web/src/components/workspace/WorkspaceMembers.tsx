@@ -20,6 +20,21 @@ export const WorkspaceMembers: React.FC = () => {
 
   const [workspaceId, setWorkspaceId] = useState<string>('');
 
+  const fetchMembers = React.useCallback(async (wsId?: string) => {
+    const targetWs = wsId || workspaceId;
+    if (!targetWs) return;
+    try {
+      const res = await fetch(`/api/v1/workspaces/${targetWs}/members`, {
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setMembers(await res.json());
+      }
+    } catch (err) {
+      console.error("Failed to fetch workspace members:", err);
+    }
+  }, [workspaceId]);
+
   useEffect(() => {
     async function init() {
       try {
@@ -36,22 +51,7 @@ export const WorkspaceMembers: React.FC = () => {
       }
     }
     init();
-  }, []);
-
-  const fetchMembers = async (wsId?: string) => {
-    const targetWs = wsId || workspaceId;
-    if (!targetWs) return;
-    try {
-      const res = await fetch(`/api/v1/workspaces/${targetWs}/members`, {
-        credentials: 'include'
-      });
-      if (res.ok) {
-        setMembers(await res.json());
-      }
-    } catch (err) {
-      console.error("Failed to fetch workspace members:", err);
-    }
-  };
+  }, [fetchMembers]);
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
