@@ -112,11 +112,14 @@ body {
   position: absolute;
   left: 50%;
   top: calc(1 * var(--u));
-  width: calc(1492 * var(--u));
-  height: calc(1054 * var(--u));
+  width: calc(1492 * var(--u)) !important;
+  max-width: none !important;
+  height: calc(1054 * var(--u)) !important;
+  max-height: none !important;
   transform: translateX(calc(-50% - calc(0.5 * var(--u))));
   object-fit: cover;
   pointer-events: none;
+  display: block;
 }
 
 .plate::after {
