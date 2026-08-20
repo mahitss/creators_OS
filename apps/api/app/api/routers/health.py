@@ -62,15 +62,20 @@ async def get_prometheus_metrics():
 @router.post("/telemetry/web-vitals", status_code=status.HTTP_202_ACCEPTED)
 async def record_web_vitals_telemetry(request: Request):
     """Ingests client Real User Monitoring (RUM) Web Vitals performance metrics (GAP-04)."""
-    raw_data: dict = {}
+    raw_data = {}
     try:
         content_type = request.headers.get("content-type", "")
         if "application/json" in content_type:
             raw_data = await request.json()
         else:
             body_bytes = await request.body()
-            raw_data = json.loads(body_bytes.decode("utf-8")) if body_bytes else {}
-    except Exception:
+            if body_bytes:
+                raw_data = json.loads(body_bytes.decode("utf-8", errors="ignore"))
+    except Exception as e:
+        logger.debug(f"[Web Vitals RUM] Payload parse error: {e}")
+        raw_data = {}
+
+    if not isinstance(raw_data, dict):
         raw_data = {}
 
     try:

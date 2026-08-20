@@ -16,14 +16,20 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some(pub => pathname.startsWith(pub));
 
-  if (isPublic) {
-    return NextResponse.next();
+  // Allow all API routes to be handled by backend with proper JSON 401/403/200 responses
+  if (isPublic || pathname.startsWith('/api/')) {
+    const response = NextResponse.next();
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+    return response;
   }
 
-  const token = request.cookies.get('vapor_session_token')?.value || request.headers.get('authorization');
+  const token = request.cookies.get('vapor_session_token')?.value;
   const isTestEnv = process.env.NODE_ENV === 'test';
 
-  // If unauthenticated and accessing protected routes, redirect to /login
+  // If unauthenticated and accessing protected page routes, redirect to /login
   if (!token && !isTestEnv) {
     const loginUrl = new URL('/login', request.url);
     if (pathname !== '/') {
@@ -37,6 +43,7 @@ export function middleware(request: NextRequest) {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   return response;
 }
 

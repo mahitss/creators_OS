@@ -222,17 +222,6 @@ async def get_current_session(
         token = session_cookie
 
     if not token:
-        # Development / Test fallback
-        if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("VAPOR_TEST_MODE") == "true":
-            return AuthMeResponse(
-                user_id="usr_test_01",
-                email="test@vapor.os",
-                name="Test User",
-                role="admin",
-                workspace_id="ws_test_01",
-                workspaces=[WorkspaceSummary(id="ws_test_01", name="Test Workspace", role="owner", status="active")],
-                authenticated=True
-            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Unauthenticated: No active session token found."
@@ -252,7 +241,14 @@ async def get_current_session(
             detail="Invalid session token: Missing workspace claim."
         )
     ws_list = await identity_service.get_user_workspaces(db, user_id)
-    
+    if not ws_list:
+        ws_list = [{
+            "id": ws_id,
+            "name": f"{claims.get('name', 'User')}'s Workspace",
+            "role": claims.get("role", "member"),
+            "status": "active"
+        }]
+
     return AuthMeResponse(
         user_id=user_id,
         email=claims.get("email", ""),

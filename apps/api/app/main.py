@@ -1,3 +1,15 @@
+import os
+import sys
+from pathlib import Path
+
+# Ensure repo root and apps/api are in sys.path
+_repo_root = str(Path(__file__).resolve().parent.parent.parent.parent)
+_apps_api = str(Path(__file__).resolve().parent.parent)
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+if _apps_api not in sys.path:
+    sys.path.insert(0, _apps_api)
+
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware

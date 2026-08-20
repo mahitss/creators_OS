@@ -14,6 +14,8 @@ PUBLIC_API_ALLOWLIST: Set[str] = {
     "/api/v1/auth/login",
     "/api/v1/auth/logout",
     "/api/v1/auth/session",
+    "/api/v1/auth/me",
+    "/api/v1/auth/workspaces",
     "/api/v1/auth/google/url",
     "/api/v1/auth/google/verify",
     "/api/v1/auth/passkey/login/options",
@@ -88,16 +90,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+        response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
         
         is_prod = settings.ENVIRONMENT == "production"
         if is_prod:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self'; "
-                "style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data: https:; "
+                "script-src 'self' https://accounts.google.com/gsi/client https://apis.google.com; "
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; "
+                "frame-src 'self' https://accounts.google.com/gsi/ https://accounts.google.com/; "
+                "img-src 'self' data: https: https://lh3.googleusercontent.com; "
                 "font-src 'self' data:; "
-                "connect-src 'self' https://openrouter.ai; "
+                "connect-src 'self' https://accounts.google.com/gsi/ https://openrouter.ai; "
                 "object-src 'none'; "
                 "base-uri 'self'; "
                 "frame-ancestors 'none';"
@@ -105,11 +109,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         else:
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self'; "
-                "script-src 'self' 'unsafe-inline'; "
-                "style-src 'self' 'unsafe-inline'; "
-                "img-src 'self' data: https:; "
+                "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client https://apis.google.com; "
+                "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; "
+                "frame-src 'self' https://accounts.google.com/gsi/ https://accounts.google.com/; "
+                "img-src 'self' data: https: https://lh3.googleusercontent.com; "
                 "font-src 'self' data:; "
-                "connect-src 'self' http://localhost:* http://127.0.0.1:* https://openrouter.ai; "
+                "connect-src 'self' http://localhost:* http://127.0.0.1:* https://accounts.google.com/gsi/ https://openrouter.ai; "
                 "object-src 'none'; "
                 "base-uri 'self';"
             )

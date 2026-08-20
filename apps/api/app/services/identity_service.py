@@ -80,10 +80,11 @@ async def validate_google_id_token(id_token: str) -> Tuple[Optional[dict], Optio
     if exp < now:
         return None, "Google ID Token has expired."
 
-    # 3. Verify Audience (if GOOGLE_CLIENT_ID is configured)
+    # 3. Verify Audience
     aud = claims.get("aud")
-    allowed_audiences = {settings.GOOGLE_CLIENT_ID, "test-client-id", "vapor-os-client-id.apps.googleusercontent.com"}
-    if settings.GOOGLE_CLIENT_ID and aud and aud not in allowed_audiences:
+    configured_cid = settings.GOOGLE_CLIENT_ID or "381940932694-o2q57f2bhp8sjbt9r6fgm240q4jknmfa.apps.googleusercontent.com"
+    allowed_audiences = {configured_cid, "381940932694-o2q57f2bhp8sjbt9r6fgm240q4jknmfa.apps.googleusercontent.com", "test-client-id", "vapor-os-client-id.apps.googleusercontent.com"}
+    if aud and aud not in allowed_audiences:
         return None, f"Invalid Google token audience: '{aud}'."
 
     # 4. Verify Immutable Subject & Email
@@ -132,7 +133,7 @@ async def authenticate_or_provision_google_user(
                 "email": email,
                 "name": name,
                 "avatar_url": avatar_url,
-                "role": "admin" if "admin" in email else "member",
+                "role": "member",
                 "organization_id": "org_default_creator",
                 "created_at": now_iso,
                 "updated_at": now_iso
@@ -183,6 +184,18 @@ async def authenticate_or_provision_google_user(
             "created_at": now_iso
         }
         _in_memory_workspace_memberships[f"{user_id}:{ws_id}"] = primary_mem
+
+    # Sync membership to workspace_service
+    from app.services import workspace_service
+    workspace_service._in_memory_members[f"{workspace['id']}_{user_id}"] = {
+        "id": primary_mem["id"],
+        "workspace_id": workspace["id"],
+        "user_id": user_id,
+        "email": email,
+        "role": primary_mem["role"],
+        "status": "active",
+        "joined_at": now_iso
+    }
 
     # Record login audit event
     await record_audit_event(
