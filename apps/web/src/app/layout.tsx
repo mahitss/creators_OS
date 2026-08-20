@@ -4,13 +4,13 @@ import { ThemeProvider } from './providers';
 import { WebVitalsReporter } from '../components/WebVitalsReporter';
 
 export const metadata: Metadata = {
-  title: 'KINETIQ — Intelligence Operating Layer',
+  title: 'The Next Layer of Intelligence',
   description:
-    'Kinetiq is an autonomous enterprise intelligence operating layer connecting AI, agents, workflows, knowledge, decisions, and secure execution.',
+    'A unified infrastructure platform to help teams build, ship, and scale AI systems with confidence.',
   openGraph: {
-    title: 'KINETIQ — Intelligence Operating Layer',
+    title: 'The Next Layer of Intelligence',
     description:
-      'Kinetiq is an autonomous enterprise intelligence operating layer connecting AI, agents, workflows, knowledge, decisions, and secure execution.',
+      'A unified infrastructure platform to help teams build, ship, and scale AI systems with confidence.',
     type: 'website',
   },
 };
@@ -22,7 +22,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark h-full">
-      <body className="h-full bg-[#050505] text-[#F5F7FA] antialiased flex flex-col selection:bg-[#7CF7C5]/30 selection:text-[#7CF7C5]">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="h-full bg-[#050505] text-[#fafafa] antialiased flex flex-col font-['Manrope',system-ui,sans-serif]">
         <ThemeProvider>
           <WebVitalsReporter />
           {children}
@@ -31,4 +39,3 @@ export default function RootLayout({
     </html>
   );
 }
-
