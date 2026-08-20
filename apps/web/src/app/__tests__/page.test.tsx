@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import Home from '../page';
+import LandingPage from '../page';
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock next/navigation
@@ -10,10 +10,11 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-describe('Vapor Authenticated Application Shell', () => {
-  it('renders application shell with sidebar and topbar title without errors', () => {
-    render(<Home />);
-    expect(screen.getByText(/VAPOR/i)).toBeInTheDocument();
-    expect(screen.getByText(/Executive Brief/i)).toBeInTheDocument();
+describe('Kinetiq Public Landing Page', () => {
+  it('renders landing page with Kinetiq branding, hero headline, and CTA', () => {
+    render(<LandingPage />);
+    expect(screen.getAllByText(/KINETIQ/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/Spatial AI Operating System/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Enter Kinetiq/i).length).toBeGreaterThan(0);
   });
 });

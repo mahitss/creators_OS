@@ -54,11 +54,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
       >
         {/* Header / Brand Logo */}
         <div className="flex items-center justify-between h-14 px-4 border-b border-slate-800/80">
-          <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+          <Link href="/home" className="flex items-center gap-2.5 overflow-hidden">
+            <span className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.8)] shrink-0" />
             {(!isCollapsed || isMobileOpen) && (
-              <span className="font-semibold tracking-wide text-slate-100 text-sm font-sans">
-                VAPOR <span className="text-xs font-mono text-emerald-400 font-normal">OS</span>
+              <span className="font-semibold tracking-wider text-slate-100 text-sm font-sans uppercase">
+                KINETIQ
               </span>
             )}
           </Link>

@@ -21,12 +21,12 @@ export const TopBar: React.FC<TopBarProps> = ({
   const pathname = usePathname();
 
   const getPageTitle = (path: string) => {
-    if (path === '/') return 'Workspace Home';
+    if (path === '/' || path === '/home' || path === '/workspace') return 'Workspace Home';
     if (path.startsWith('/missions')) return 'Missions Orchestration';
     if (path.startsWith('/content')) return 'Studio Content';
     if (path.startsWith('/memory')) return 'Context Vault Memory';
     if (path.startsWith('/settings')) return 'System Settings';
-    return 'Vapor OS';
+    return 'Kinetiq';
   };
 
   return (

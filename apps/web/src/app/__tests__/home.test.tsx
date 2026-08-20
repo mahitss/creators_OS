@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import Home from '../page';
+import Home from '../home/page';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock next/navigation

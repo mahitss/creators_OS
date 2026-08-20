@@ -2,7 +2,6 @@
   "name": "vapor-web",
   "version": "1.0.0",
   "private": true,
-
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@types/three": "^0.185.4",
     "@vapor/ai": "workspace:*",
     "@vapor/types": "workspace:*",
     "@vapor/ui": "workspace:*",
@@ -20,6 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.8.1",
+    "three": "^0.185.1",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

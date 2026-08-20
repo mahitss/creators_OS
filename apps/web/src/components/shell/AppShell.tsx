@@ -337,11 +337,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       >
         {/* Brand Header */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-slate-800/80 shrink-0 bg-[#0D0F17]">
-          <Link href="/" className="flex items-center gap-2.5 group overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] group-hover:scale-110 transition-transform shrink-0" />
+          <Link href="/home" className="flex items-center gap-2.5 group overflow-hidden">
+            <span className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.8)] group-hover:scale-110 transition-transform shrink-0" />
             {(!isSidebarCollapsed || isMobileMenuOpen) && (
               <span className="font-bold tracking-widest text-sm text-slate-100 uppercase font-mono truncate">
-                VAPOR_OS
+                KINETIQ
               </span>
             )}
           </Link>

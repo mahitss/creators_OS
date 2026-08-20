@@ -8,14 +8,15 @@ type GisStatus = 'SDK_LOADING' | 'SDK_READY' | 'SDK_ERROR';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirect_to') || '/';
+  const rawRedirect = searchParams.get('redirect_to');
+  const redirectTo = rawRedirect && rawRedirect !== '/' ? rawRedirect : '/home';
   const isAuthRequired = searchParams.get('auth_required') === 'true';
 
   const [isLoading, setIsLoading] = useState(false);
   const [gisStatus, setGisStatus] = useState<GisStatus>('SDK_LOADING');
   const [gisErrorMessage, setGisErrorMessage] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(
-    isAuthRequired ? 'Authentication required. Please sign in to access your Vapor OS workspace.' : null
+    isAuthRequired ? 'Authentication required. Please sign in to access your Kinetiq workspace.' : null
   );
   const [emailInput, setEmailInput] = useState('');
   const [activeTab, setActiveTab] = useState<'google' | 'passkey'>('google');
@@ -260,15 +261,17 @@ function LoginContent() {
       <div className="w-full max-w-md z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-indigo-500 to-indigo-700 shadow-xl shadow-indigo-500/20 border border-indigo-400/30 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-cyan-500 to-blue-700 shadow-xl shadow-cyan-500/20 border border-cyan-400/30 mb-4">
             <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2">
-            VAPOR <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 tracking-widest">OS</span>
+          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2 font-mono">
+            KINETIQ
           </h1>
-          <p className="text-sm text-slate-400 mt-1">Autonomous Enterprise AI Operating Kernel</p>
+          <p className="text-sm text-slate-400 mt-1 font-sans">Spatial AI Operating System for Enterprise</p>
         </div>
 
         {/* Auth Box */}

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const PUBLIC_PATHS = [
+  '/',
   '/login',
   '/api/v1/auth/google/verify',
   '/api/v1/auth/passkey',
@@ -14,9 +15,9 @@ const PUBLIC_PATHS = [
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PATHS.some(pub => pathname.startsWith(pub));
+  const isPublic = pathname === '/' || PUBLIC_PATHS.some(pub => pub !== '/' && pathname.startsWith(pub));
 
-  // Allow all API routes to be handled by backend with proper JSON 401/403/200 responses
+  // Allow all public routes and all API routes to be handled without redirect
   if (isPublic || pathname.startsWith('/api/')) {
     const response = NextResponse.next();
     response.headers.set('X-Frame-Options', 'DENY');
@@ -32,9 +33,7 @@ export function middleware(request: NextRequest) {
   // If unauthenticated and accessing protected page routes, redirect to /login
   if (!token && !isTestEnv) {
     const loginUrl = new URL('/login', request.url);
-    if (pathname !== '/') {
-      loginUrl.searchParams.set('redirect_to', pathname);
-    }
+    loginUrl.searchParams.set('redirect_to', pathname);
     return NextResponse.redirect(loginUrl);
   }
 

@@ -44,7 +44,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   );
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} title="Vapor Command Palette">
+    <Dialog isOpen={isOpen} onClose={onClose} title="Kinetiq Command Palette">
       <div className="flex flex-col gap-3">
         <Input
           placeholder="Search commands or navigate workspace..."
