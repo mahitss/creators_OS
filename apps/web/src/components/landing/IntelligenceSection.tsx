@@ -4,7 +4,7 @@ import React from 'react';
 
 export function IntelligenceSection() {
   return (
-    <section id="intelligence" className="relative min-h-[90svh] py-28 lg:py-36 bg-[#050505] border-t border-[rgba(255,255,255,0.08)]">
+    <section id="intelligence" className="relative py-24 sm:py-28 lg:py-32 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] overflow-hidden">
       <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
           {/* Left Column: Contextual Intelligence Overview */}

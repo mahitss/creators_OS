@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export function FinalCtaSection() {
   return (
-    <section className="relative min-h-[70svh] py-28 lg:py-36 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] flex items-center justify-center overflow-hidden text-center">
+    <section className="relative py-24 sm:py-28 lg:py-32 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] flex items-center justify-center overflow-hidden text-center">
       {/* Background Ambient Glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-[#7CF7C5]/10 blur-[140px] pointer-events-none rounded-full" />
 

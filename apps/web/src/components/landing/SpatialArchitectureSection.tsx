@@ -92,8 +92,8 @@ export function SpatialArchitectureSection() {
   const activeNode = SYSTEM_NODES.find(n => n.id === activeNodeId) || SYSTEM_NODES[0];
 
   return (
-    <section id="system" className="relative min-h-[90svh] py-28 lg:py-36 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)]">
-      {/* Ambient glow */}
+    <section id="system" className="relative py-24 sm:py-28 lg:py-32 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)] overflow-hidden">
+      {/* Ambient glow bounded inside section */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#7CF7C5]/5 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 relative z-10">
@@ -162,8 +162,8 @@ export function SpatialArchitectureSection() {
             })}
           </div>
 
-          {/* Right: Technical Subsystem Inspector Panel (5 cols) */}
-          <div className="lg:col-span-5 p-7 sm:p-8 rounded-2xl bg-[#050505] border border-[rgba(255,255,255,0.10)] shadow-2xl relative flex flex-col gap-6 sticky top-28 backdrop-blur-md">
+          {/* Right: Technical Subsystem Inspector Panel (5 cols) - In normal document flow (NO sticky) */}
+          <div className="lg:col-span-5 p-7 sm:p-8 rounded-2xl bg-[#050505] border border-[rgba(255,255,255,0.10)] shadow-2xl relative flex flex-col gap-6 backdrop-blur-md">
             {/* Header Badge */}
             <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
               <div className="flex items-center gap-2">

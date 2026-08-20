@@ -9,14 +9,14 @@ const KinetiqCanvas = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full min-h-[380px] sm:min-h-[440px] lg:min-h-[500px] flex items-center justify-center" />
+      <div className="w-full h-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] flex items-center justify-center" />
     ),
   }
 );
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center pt-32 lg:pt-36 pb-16 lg:pb-24 overflow-hidden bg-[#050505] text-[#F5F7FA]">
+    <section className="relative flex items-center justify-center pt-32 lg:pt-36 pb-20 lg:pb-28 overflow-hidden bg-[#050505] text-[#F5F7FA]">
       {/* Background ambient lighting */}
       <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[450px] bg-gradient-to-tr from-[#7CF7C5]/10 via-[#9BB7FF]/5 to-transparent blur-[140px] pointer-events-none rounded-full" />
       <div className="absolute bottom-10 right-1/4 w-[450px] h-[350px] bg-[#7CF7C5]/5 blur-[120px] pointer-events-none rounded-full" />
@@ -92,14 +92,14 @@ export function HeroSection() {
         </div>
 
         {/* Right Column: 3D Distributed Intelligence Topology & Telemetry */}
-        <div className="lg:col-span-5 flex flex-col items-center justify-center relative w-full">
+        <div className="lg:col-span-5 flex flex-col items-center justify-center relative w-full gap-4">
           {/* 3D Execution Topology Container */}
-          <div className="w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[500px] relative flex items-center justify-center">
+          <div className="w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[480px] relative flex items-center justify-center">
             <KinetiqCanvas />
           </div>
 
-          {/* Real-time System Telemetry Panel */}
-          <div className="w-full max-w-[440px] bg-[#0A0C0F]/95 backdrop-blur-md border border-[rgba(255,255,255,0.12)] rounded-xl p-4 shadow-xl -mt-6 relative z-20">
+          {/* Real-time System Telemetry Panel in normal flow */}
+          <div className="w-full max-w-[440px] bg-[#0A0C0F]/95 backdrop-blur-md border border-[rgba(255,255,255,0.12)] rounded-xl p-4 shadow-xl relative z-20">
             <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-2 mb-3">
               <span className="text-[10px] font-mono tracking-widest text-[#7CF7C5] uppercase font-semibold flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#7CF7C5] animate-pulse" />

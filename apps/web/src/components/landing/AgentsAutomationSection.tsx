@@ -4,7 +4,7 @@ import React from 'react';
 
 export function AgentsAutomationSection() {
   return (
-    <section id="automation" className="relative min-h-[85svh] py-28 lg:py-36 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)]">
+    <section id="automation" className="relative py-24 sm:py-28 lg:py-32 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)] overflow-hidden">
       <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
         <div className="max-w-3xl flex flex-col items-start text-left gap-3">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
