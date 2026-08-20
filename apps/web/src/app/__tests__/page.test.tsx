@@ -10,15 +10,17 @@ vi.mock('next/navigation', () => ({
   }),
 }));
 
-describe('Kinetiq Public Landing Page', () => {
-  it('renders landing page with Kinetiq branding, hero headline, 7 sections, and CTA', () => {
+describe('KINETIQ — The Next Layer of Intelligence Landing Page', () => {
+  it('renders single-screen cinematic landing page with exact headline, navigation, CTAs, and partner marks', () => {
     render(<LandingPage />);
-    expect(screen.getAllByText(/KINETIQ/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/THE INTELLIGENCE/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/ENTER KINETIQ/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/ONE SYSTEM/i)).toBeInTheDocument();
-    expect(screen.getByText(/FROM DECISION/i)).toBeInTheDocument();
-    expect(screen.getByText(/AUTONOMY/i)).toBeInTheDocument();
-    expect(screen.getByText(/THE ENTERPRISE/i)).toBeInTheDocument();
+    expect(screen.getByText(/The Next Layer/i)).toBeInTheDocument();
+    expect(screen.getByText(/of Intelligence/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Get Started/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/View Architecture/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/About/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Features/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/FAQ/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Contact/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/logoipsum/i).length).toBe(4);
   });
 });
