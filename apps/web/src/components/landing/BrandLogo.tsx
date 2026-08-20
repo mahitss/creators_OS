@@ -2,11 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import styles from './landing.module.css';
 
 export function BrandLogo() {
   return (
-    <Link href="/" className={styles.brand} aria-label="Home">
+    <Link href="/" className="brand" aria-label="Home">
       <svg viewBox="0 0 31.5 48.5" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="bg1" x1="8" y1="0" x2="34.1" y2="28.9" gradientUnits="userSpaceOnUse">

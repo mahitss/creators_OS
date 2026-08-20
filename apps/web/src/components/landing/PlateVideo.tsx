@@ -1,13 +1,12 @@
 'use client';
 
 import React from 'react';
-import styles from './landing.module.css';
 
 export function PlateVideo() {
   return (
-    <div className={styles.plate}>
+    <div className="plate">
       <video
-        className={styles.plateVideo}
+        className="plate-video"
         autoPlay
         muted
         loop

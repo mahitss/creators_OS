@@ -6,7 +6,6 @@ import { Topbar } from './Topbar';
 import { MobileMenu } from './MobileMenu';
 import { HeroContent } from './HeroContent';
 import { PartnerLogos } from './PartnerLogos';
-import styles from './landing.module.css';
 
 export function LandingExperience() {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,7 +32,7 @@ export function LandingExperience() {
   }, []);
 
   return (
-    <div className={`${styles.stageWrapper} ${isOpen ? styles.isOpen : ''}`}>
+    <div className={`stage ${isOpen ? 'is-open' : ''}`}>
       {/* Background CloudFront Video Plate */}
       <PlateVideo />
 

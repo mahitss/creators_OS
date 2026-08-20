@@ -1,13 +1,12 @@
 'use client';
 
 import React from 'react';
-import styles from './landing.module.css';
 
 export function PartnerLogos() {
   return (
-    <div className={styles.logos}>
+    <div className="logos">
       {/* LG 1 */}
-      <div className={`${styles.lg} ${styles.lg1}`}>
+      <div className="lg lg1">
         <svg viewBox="0 0 30 31" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             fillRule="evenodd"
@@ -16,11 +15,11 @@ export function PartnerLogos() {
             fill="currentColor"
           />
         </svg>
-        <span className={styles.lgWord}>logoipsum</span>
+        <span className="lg-word">logoipsum</span>
       </div>
 
       {/* LG 2 */}
-      <div className={`${styles.lg} ${styles.lg2}`}>
+      <div className="lg lg2">
         <svg viewBox="0 0 25 30" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 0H7.5V30H0V0Z" fill="currentColor" />
           <path
@@ -28,13 +27,13 @@ export function PartnerLogos() {
             fill="currentColor"
           />
         </svg>
-        <span className={styles.lgWord}>
-          logoipsum<span className={styles.dot} />
+        <span className="lg-word">
+          logoipsum<span className="dot" />
         </span>
       </div>
 
       {/* LG 3 */}
-      <div className={`${styles.lg} ${styles.lg3}`}>
+      <div className="lg lg3">
         <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="14" cy="14" r="12.35" stroke="currentColor" strokeWidth="3.1" />
           <path
@@ -50,11 +49,11 @@ export function PartnerLogos() {
             strokeLinecap="round"
           />
         </svg>
-        <span className={styles.lgWord}>logoipsum</span>
+        <span className="lg-word">logoipsum</span>
       </div>
 
       {/* LG 4 */}
-      <div className={`${styles.lg} ${styles.lg4}`}>
+      <div className="lg lg4">
         <svg viewBox="0 0 28 25.5" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0 8.5C4.66667 3 9.33333 0 14 0C18.6667 0 23.3333 3 28 8.5H0Z" fill="currentColor" />
           <path
@@ -70,7 +69,7 @@ export function PartnerLogos() {
             strokeLinecap="round"
           />
         </svg>
-        <span className={styles.lgWord}>logoipsum</span>
+        <span className="lg-word">logoipsum</span>
       </div>
     </div>
   );

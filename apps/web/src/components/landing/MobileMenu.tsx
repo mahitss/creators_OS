@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import styles from './landing.module.css';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -11,10 +10,10 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   return (
-    <nav className={styles.menu} id="menu" aria-hidden={!isOpen}>
-      <div className={styles.menuInner}>
-        <p className={styles.menuEyebrow}>Menu</p>
-        <ul className={styles.menuList}>
+    <nav className="menu" id="menu" aria-hidden={!isOpen}>
+      <div className="menu-inner">
+        <p className="menu-eyebrow">Menu</p>
+        <ul className="menu-list">
           <li>
             <a href="#about" onClick={onClose}>About</a>
           </li>
@@ -29,11 +28,11 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
           </li>
         </ul>
       </div>
-      <div className={styles.menuFoot}>
-        <Link href="/login" className={styles.pill} onClick={onClose}>
+      <div className="menu-foot">
+        <Link href="/login" className="pill" onClick={onClose}>
           <span>Get Started</span>
         </Link>
-        <a href="#architecture" className={styles.ghost} onClick={onClose}>
+        <a href="#architecture" className="ghost" onClick={onClose}>
           View Architecture
         </a>
       </div>
