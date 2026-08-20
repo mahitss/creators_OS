@@ -177,62 +177,10 @@ app.include_router(transformation_resilience_optimization.router, prefix=setting
 app.include_router(transformation_resilience_learning.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Learning 2.0"])
 app.include_router(transformation_resilience_governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Governance 2.0"])
 
-app.include_router(security.router, prefix=settings.API_V1_STR, tags=["Enterprise Agent Security & Threat Intelligence Fabric"])
-app.include_router(secops.router, prefix=settings.API_V1_STR, tags=["Enterprise AI Security Operations & Controlled Incident Response"])
-app.include_router(resilience.router, prefix=settings.API_V1_STR, tags=["Enterprise AI Resilience & Business Continuity Fabric"])
-app.include_router(finops_v2.router, prefix=settings.API_V1_STR, tags=["Enterprise AI FinOps & Capacity Intelligence 2.0"])
-app.include_router(collaboration_v2.router, prefix=settings.API_V1_STR, tags=["Enterprise Human-AI Collaboration & Workforce Intelligence 2.0"])
-app.include_router(operating_graph.router, prefix=settings.API_V1_STR, tags=["Enterprise Organizational Intelligence & Operating Graph 2.0"])
-app.include_router(strategic_planning.router, prefix=settings.API_V1_STR, tags=["Enterprise Strategic Planning & Scenario Intelligence 2.0"])
-app.include_router(portfolio_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Portfolio Intelligence & Investment Optimization 2.0"])
-app.include_router(execution_governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Execution Governance & Benefits Realization 2.0"])
-app.include_router(performance_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Performance Intelligence & KPI Operating System 2.0"])
-app.include_router(predictive_operations.router, prefix=settings.API_V1_STR, tags=["Enterprise Predictive Operations & Forecast Intelligence 2.0"])
-app.include_router(execution_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Strategic Execution Intelligence 2.0"])
-app.include_router(operating_model.router, prefix=settings.API_V1_STR, tags=["Enterprise Organizational Operating Intelligence 2.0"])
-app.include_router(transformation.router, prefix=settings.API_V1_STR, tags=["Enterprise Operating Model Transformation 2.0"])
-app.include_router(transformation_portfolio.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Portfolio Intelligence 2.0"])
-app.include_router(transformation_control.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Control Tower 2.0"])
-app.include_router(transformation_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Intelligence Fabric 2.0"])
-app.include_router(transformation_foresight.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Foresight 2.0"])
-app.include_router(transformation_decisions.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Decision Intelligence 3.0"])
-app.include_router(transformation_decision_learning.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Decision Lifecycle & Closed-Loop Decision Learning 2.0"])
-app.include_router(transformation_governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Adaptive Governance 2.0"])
-app.include_router(transformation_simulation.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Governance Digital Twin & Multi-Layer Simulation 2.0"])
-app.include_router(transformation_war_room.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation War Room 2.0"])
-app.include_router(transformation_recovery.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Recovery 2.0"])
-app.include_router(transformation_resilience_engineering.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Engineering 2.0"])
-app.include_router(transformation_resilience_portfolio.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Portfolio 2.0"])
-app.include_router(transformation_resilience_sensing.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Sensing 2.0"])
-app.include_router(transformation_resilience_command_center.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Command Center 2.0"])
-app.include_router(transformation_resilience_decision_lifecycle.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Decision Lifecycle 2.0"])
-app.include_router(transformation_resilience_decision_learning.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Decision Learning 2.0"])
-app.include_router(transformation_resilience_decision_knowledge.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Decision Knowledge 2.0"])
-app.include_router(transformation_resilience_knowledge_governance.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Knowledge Governance 2.0"])
-app.include_router(transformation_resilience_knowledge_operations.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Knowledge Operations 2.0"])
-app.include_router(transformation_resilience_knowledge_assurance_planning.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Knowledge Assurance Planning 2.0"])
-app.include_router(transformation_resilience_knowledge_assurance_control.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Adaptive Knowledge Assurance & Control 2.0"])
-app.include_router(transformation_resilience_knowledge_assurance_coordination.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Assurance Coordination 2.0"])
-app.include_router(transformation_resilience_knowledge_assurance_conflicts.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Assurance Conflict Intelligence 2.0"])
-app.include_router(transformation_resilience_assurance_intelligence.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Assurance Decision Intelligence 2.0"])
-app.include_router(transformation_resilience_assurance_foresight.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Assurance Foresight 2.0"])
-app.include_router(transformation_resilience_assurance_interventions.router, prefix=settings.API_V1_STR, tags=["Enterprise Transformation Resilience Assurance Intervention Orchestration 2.0"])
-
-
-
-
-
-
-
-
-
-
-
-
 @app.get("/")
 async def root():
     return {
         "message": "Vapor OS Core Kernel API",
-        "docs": f"{settings.API_V1_STR}/docs",
+        "docs": f"{settings.API_V1_STR}/docs" if not is_production else None,
         "health": f"{settings.API_V1_STR}/health"
     }

@@ -24,7 +24,7 @@ async def create_agent_run(
 ) -> AgentRunResponse:
     try:
         run = await agent_runtime.create_agent_run(
-            db, ws_ctx.workspace_id, mission_id=id, goal=payload.goal, max_iterations=payload.max_iterations or 20
+            db, ws_ctx.workspace_id, mission_id=id, goal=payload.goal, max_iterations=payload.max_iterations or 20, user_id=ws_ctx.user_id
         )
         return AgentRunResponse(**run)
     except ValueError as exc:

@@ -26,7 +26,8 @@ async def create_agent_run(
     goal: str,
     max_iterations: int = MAX_DEFAULT_ITERATIONS,
     initial_tool: Optional[str] = None,
-    initial_input: Optional[dict] = None
+    initial_input: Optional[dict] = None,
+    user_id: str = "usr_agent_runner"
 ) -> dict:
     mission = await mission_service.get_mission_by_id(session, workspace_id, mission_id)
     if not mission:
@@ -41,6 +42,7 @@ async def create_agent_run(
         "mission_id": mission_id,
         "status": "running",
         "goal": goal,
+        "initiated_by": user_id,
         "current_step_id": None,
         "iteration_count": 0,
         "max_iterations": min(max_iterations, MAX_DEFAULT_ITERATIONS),
@@ -120,10 +122,12 @@ async def step_agent_run(
     run["budget_state"]["iteration_count"] = run["iteration_count"]
     now_iso = datetime.now(timezone.utc).isoformat()
 
+    init_user = run.get("initiated_by", "usr_agent_runner")
+
     # 1. Retrieve Bounded Context via Unified Context Engine
     ctx_req = ContextRequest(
         workspace_id=workspace_id,
-        user_id="usr_alex",
+        user_id=init_user,
         purpose=ContextPurpose.MISSION_EXECUTION,
         allowed_sources=[SourceType.MISSION, SourceType.MEMORY, SourceType.DRIVE, SourceType.CALENDAR, SourceType.GMAIL],
         mission_id=run["mission_id"]
@@ -146,7 +150,6 @@ async def step_agent_run(
     step_id = f"step_{len(_in_memory_steps.get(run_id, []))+1}_{run_id}"
 
     # Fetch user member role and status
-    init_user = run.get("initiated_by", "usr_alex")
     mem = await workspace_service.get_workspace_member(session, workspace_id, init_user)
 
     # 3. Central Policy Engine Evaluation

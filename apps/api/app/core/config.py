@@ -42,11 +42,13 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
+import sys
+
 def validate_production_secrets():
     """Fails fast on startup if production environment uses an empty or default secret key."""
-    if settings.ENVIRONMENT == "production" and not (os.getenv("PYTEST_CURRENT_TEST") or os.getenv("VAPOR_TEST_MODE") == "true"):
+    if settings.ENVIRONMENT == "production" and not (os.getenv("PYTEST_CURRENT_TEST") or os.getenv("VAPOR_TEST_MODE") == "true" or "pytest" in sys.modules):
         insecure_keys = ["secret", "changeme", "dev-secret", "123456", "password"]
-        if not settings.SECRET_KEY or len(settings.SECRET_KEY) < 16 or any(settings.SECRET_KEY == k for k in insecure_keys):
+        if not settings.SECRET_KEY or len(settings.SECRET_KEY) < 32 or any(k in settings.SECRET_KEY.lower() for k in insecure_keys):
             raise RuntimeError("CRITICAL SECURITY ERROR: Insecure or default SECRET_KEY detected in production.")
 
 validate_production_secrets()

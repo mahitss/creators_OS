@@ -155,10 +155,27 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         client_ip = request.headers.get("X-Forwarded-For") or (request.client.host if request.client else "127.0.0.1")
-        auth_header = request.headers.get("Authorization") or ""
-        
-        # Dimension key: combines IP + auth token signature to avoid header spoofing
-        rate_key = f"{client_ip}:{auth_header[:32]}" if auth_header else client_ip
+        auth_header = request.headers.get("authorization") or request.headers.get("Authorization") or ""
+        session_cookie = request.cookies.get("vapor_session_token")
+
+        user_id = ""
+        workspace_id = ""
+        token = ""
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+        elif session_cookie:
+            token = session_cookie
+
+        if token and not token.startswith("scim_secret_"):
+            try:
+                claims = verify_jwt_token(token)
+                user_id = claims.get("sub", "")
+                workspace_id = claims.get("workspace_id", "")
+            except Exception:
+                pass
+
+        # Dimension key: combines IP + verified User + Workspace dimensions
+        rate_key = f"{client_ip}:{user_id}:{workspace_id}" if user_id else f"{client_ip}:anon"
 
         now = time.time()
         window_start = now - 60.0

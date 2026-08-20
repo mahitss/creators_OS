@@ -20,6 +20,15 @@ from app.services.policy_engine import PolicyContext, evaluate_policy
 client = TestClient(app)
 HEADERS_OWNER = {"X-User-Id": "usr_alex", "X-Workspace-Id": "ws_del_test"}
 
+_in_memory_members["ws_del_test_usr_alex"] = {
+    "id": "mem_del_01",
+    "workspace_id": "ws_del_test",
+    "user_id": "usr_alex",
+    "email": "alex@vapor.internal",
+    "role": "owner",
+    "status": "active"
+}
+
 def test_delegation_creation_and_tool_whitelisting():
     async def _test():
         # 1. Create Agent Definition

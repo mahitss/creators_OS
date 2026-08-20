@@ -26,8 +26,19 @@ class UpdateRolePayload(BaseModel):
 
 @router.get("/workspaces", response_model=List[WorkspaceSummary])
 async def list_workspaces(
-    user: AuthenticatedUser = Depends(get_current_user)
+    user: AuthenticatedUser = Depends(get_current_user),
+    db: Optional[AsyncSession] = Depends(get_db)
 ) -> List[WorkspaceSummary]:
+    from app.services import identity_service
+    user_workspaces = await identity_service.get_user_workspaces(db, user.id)
+    if user_workspaces:
+        return [
+            WorkspaceSummary(
+                id=w["id"],
+                name=w["name"],
+                root_path="c:\\Users\\pc\\OneDrive\\Desktop\\Hack vibe"
+            ) for w in user_workspaces
+        ]
     return [
         WorkspaceSummary(
             id=user.workspace_id,

@@ -170,7 +170,8 @@ class CreateMissionTool(AgentTool):
             description=input_data.get("description", ""),
             priority=input_data.get("priority", "medium")
         )
-        m = await mission_service.create_mission(session, workspace_id, user_id="usr_alex", payload=payload)
+        user_id = input_data.get("user_id", "usr_agent_runner")
+        m = await mission_service.create_mission(session, workspace_id, user_id=user_id, payload=payload)
         return ToolExecutionResult(True, {"mission": m})
 
 class CreateContentTool(AgentTool):
@@ -188,7 +189,8 @@ class CreateContentTool(AgentTool):
             content=input_data.get("content", ""),
             mission_id=input_data.get("mission_id")
         )
-        c = await content_service.create_content_item(session, workspace_id, user_id="usr_alex", payload=payload)
+        user_id = input_data.get("user_id", "usr_agent_runner")
+        c = await content_service.create_content_item(session, workspace_id, user_id=user_id, payload=payload)
         # Force initial status to draft
         c["status"] = "draft"
         return ToolExecutionResult(True, {"content": c})

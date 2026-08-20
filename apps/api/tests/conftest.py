@@ -6,6 +6,8 @@ import jwt
 import pytest
 from starlette.testclient import TestClient
 
+os.environ["VAPOR_TEST_MODE"] = "true"
+
 # Ensure root and apps/api are in sys.path
 test_dir = Path(__file__).resolve().parent
 api_dir = test_dir.parent

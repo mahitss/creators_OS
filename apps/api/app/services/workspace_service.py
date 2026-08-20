@@ -4,27 +4,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-_in_memory_members: Dict[str, dict] = {
-    "ws_default_01_usr_alex": {
-        "id": "mem_01",
-        "workspace_id": "ws_default_01",
-        "user_id": "usr_alex",
-        "email": "alex@vapor.internal",
-        "role": "owner",
-        "status": "active",
-        "joined_at": datetime.now(timezone.utc).isoformat()
-    },
-    "ws_default_01_usr_admin_01": {
-        "id": "mem_02",
-        "workspace_id": "ws_default_01",
-        "user_id": "usr_admin_01",
-        "email": "admin@vapor.internal",
-        "role": "admin",
-        "status": "active",
-        "joined_at": datetime.now(timezone.utc).isoformat()
-    }
-}
+from app.services import identity_service
 
+_in_memory_members: Dict[str, dict] = {}
 _in_memory_invitations: Dict[str, dict] = {}
 _in_memory_mission_members: Dict[str, dict] = {}
 
@@ -36,24 +18,45 @@ async def get_workspace_member(session: Optional[AsyncSession], workspace_id: st
     if mem:
         return mem
 
-    # First user in a workspace or usr_alex is default owner
-    existing = [m for m in _in_memory_members.values() if m.get("workspace_id") == workspace_id]
-    role = "owner" if (len(existing) == 0 or user_id in ["usr_alex", "usr_admin_01"]) else "member"
+    # Also check identity_service store
+    id_mem = identity_service._in_memory_workspace_memberships.get(f"{user_id}:{workspace_id}")
+    if id_mem and id_mem.get("status") == "active":
+        mem_dict = {
+            "id": id_mem.get("id", f"mem_{uuid.uuid4().hex[:6]}"),
+            "workspace_id": workspace_id,
+            "user_id": user_id,
+            "email": f"{user_id}@vapor.internal",
+            "role": id_mem.get("role", "member"),
+            "status": id_mem.get("status", "active"),
+            "joined_at": id_mem.get("created_at", datetime.now(timezone.utc).isoformat())
+        }
+        _in_memory_members[key] = mem_dict
+        return mem_dict
 
-    default_mem = {
-        "id": f"mem_{uuid.uuid4().hex[:6]}",
-        "workspace_id": workspace_id,
-        "user_id": user_id,
-        "email": f"{user_id}@vapor.internal",
-        "role": role,
-        "status": "active",
-        "joined_at": datetime.now(timezone.utc).isoformat()
-    }
-    _in_memory_members[key] = default_mem
-    return default_mem
+    return None
 
 async def list_workspace_members(session: Optional[AsyncSession], workspace_id: str) -> List[dict]:
-    return [m for m in _in_memory_members.values() if m.get("workspace_id") == workspace_id and m.get("status") != "removed"]
+    # Aggregate from both stores
+    members_map: Dict[str, dict] = {}
+    for m in _in_memory_members.values():
+        if m.get("workspace_id") == workspace_id and m.get("status") != "removed":
+            members_map[m["user_id"]] = m
+
+    for k, im in identity_service._in_memory_workspace_memberships.items():
+        if im.get("workspace_id") == workspace_id and im.get("status") == "active":
+            uid = im.get("user_id")
+            if uid and uid not in members_map:
+                members_map[uid] = {
+                    "id": im.get("id", f"mem_{uuid.uuid4().hex[:6]}"),
+                    "workspace_id": workspace_id,
+                    "user_id": uid,
+                    "email": f"{uid}@vapor.internal",
+                    "role": im.get("role", "member"),
+                    "status": "active",
+                    "joined_at": im.get("created_at", datetime.now(timezone.utc).isoformat())
+                }
+
+    return list(members_map.values())
 
 async def invite_workspace_member(session: Optional[AsyncSession], workspace_id: str, email: str, role: str, invited_by: str) -> dict:
     if role not in VALID_ROLES:
@@ -105,10 +108,20 @@ async def accept_workspace_invitation(session: Optional[AsyncSession], workspace
         "joined_at": now_iso
     }
     _in_memory_members[key] = member
+    identity_service._in_memory_workspace_memberships[f"{user_id}:{workspace_id}"] = {
+        "id": member["id"],
+        "workspace_id": workspace_id,
+        "user_id": user_id,
+        "role": member["role"],
+        "status": "active",
+        "created_at": now_iso
+    }
     return member
 
 async def count_active_owners(workspace_id: str) -> int:
-    return sum(1 for m in _in_memory_members.values() if m.get("workspace_id") == workspace_id and m.get("role") == "owner" and m.get("status") == "active")
+    active_in_mem = sum(1 for m in _in_memory_members.values() if m.get("workspace_id") == workspace_id and m.get("role") == "owner" and m.get("status") == "active")
+    active_in_id = sum(1 for m in identity_service._in_memory_workspace_memberships.values() if m.get("workspace_id") == workspace_id and m.get("role") == "owner" and m.get("status") == "active")
+    return max(active_in_mem, active_in_id)
 
 async def update_member_role(session: Optional[AsyncSession], workspace_id: str, member_user_id: str, new_role: str, actor_id: str) -> dict:
     if new_role not in VALID_ROLES:
@@ -116,6 +129,20 @@ async def update_member_role(session: Optional[AsyncSession], workspace_id: str,
 
     key = f"{workspace_id}_{member_user_id}"
     mem = _in_memory_members.get(key)
+    if not mem:
+        id_mem = identity_service._in_memory_workspace_memberships.get(f"{member_user_id}:{workspace_id}")
+        if id_mem and id_mem.get("status") == "active":
+            mem = {
+                "id": id_mem.get("id", f"mem_{uuid.uuid4().hex[:6]}"),
+                "workspace_id": workspace_id,
+                "user_id": member_user_id,
+                "email": f"{member_user_id}@vapor.internal",
+                "role": id_mem.get("role", "member"),
+                "status": "active",
+                "joined_at": id_mem.get("created_at", datetime.now(timezone.utc).isoformat())
+            }
+            _in_memory_members[key] = mem
+
     if not mem:
         raise ValueError("Member not found in workspace.")
 
@@ -126,11 +153,27 @@ async def update_member_role(session: Optional[AsyncSession], workspace_id: str,
             raise ValueError("Cannot demote the last owner of the workspace.")
 
     mem["role"] = new_role
+    if f"{member_user_id}:{workspace_id}" in identity_service._in_memory_workspace_memberships:
+        identity_service._in_memory_workspace_memberships[f"{member_user_id}:{workspace_id}"]["role"] = new_role
     return mem
 
 async def suspend_workspace_member(session: Optional[AsyncSession], workspace_id: str, member_user_id: str, actor_id: str) -> dict:
     key = f"{workspace_id}_{member_user_id}"
     mem = _in_memory_members.get(key)
+    if not mem:
+        id_mem = identity_service._in_memory_workspace_memberships.get(f"{member_user_id}:{workspace_id}")
+        if id_mem:
+            mem = {
+                "id": id_mem.get("id", f"mem_{uuid.uuid4().hex[:6]}"),
+                "workspace_id": workspace_id,
+                "user_id": member_user_id,
+                "email": f"{member_user_id}@vapor.internal",
+                "role": id_mem.get("role", "member"),
+                "status": id_mem.get("status", "active"),
+                "joined_at": id_mem.get("created_at", datetime.now(timezone.utc).isoformat())
+            }
+            _in_memory_members[key] = mem
+
     if not mem:
         raise ValueError("Member not found in workspace.")
 
@@ -140,11 +183,27 @@ async def suspend_workspace_member(session: Optional[AsyncSession], workspace_id
             raise ValueError("Cannot suspend the last owner of the workspace.")
 
     mem["status"] = "suspended"
+    if f"{member_user_id}:{workspace_id}" in identity_service._in_memory_workspace_memberships:
+        identity_service._in_memory_workspace_memberships[f"{member_user_id}:{workspace_id}"]["status"] = "suspended"
     return mem
 
 async def remove_workspace_member(session: Optional[AsyncSession], workspace_id: str, member_user_id: str, actor_id: str) -> dict:
     key = f"{workspace_id}_{member_user_id}"
     mem = _in_memory_members.get(key)
+    if not mem:
+        id_mem = identity_service._in_memory_workspace_memberships.get(f"{member_user_id}:{workspace_id}")
+        if id_mem:
+            mem = {
+                "id": id_mem.get("id", f"mem_{uuid.uuid4().hex[:6]}"),
+                "workspace_id": workspace_id,
+                "user_id": member_user_id,
+                "email": f"{member_user_id}@vapor.internal",
+                "role": id_mem.get("role", "member"),
+                "status": id_mem.get("status", "active"),
+                "joined_at": id_mem.get("created_at", datetime.now(timezone.utc).isoformat())
+            }
+            _in_memory_members[key] = mem
+
     if not mem:
         raise ValueError("Member not found in workspace.")
 
@@ -154,6 +213,8 @@ async def remove_workspace_member(session: Optional[AsyncSession], workspace_id:
             raise ValueError("Cannot remove the last owner of the workspace.")
 
     mem["status"] = "removed"
+    if f"{member_user_id}:{workspace_id}" in identity_service._in_memory_workspace_memberships:
+        identity_service._in_memory_workspace_memberships[f"{member_user_id}:{workspace_id}"]["status"] = "removed"
     return mem
 
 async def add_mission_member(session: Optional[AsyncSession], mission_id: str, user_id: str, role: str = "contributor") -> dict:

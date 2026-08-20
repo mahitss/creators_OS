@@ -22,8 +22,10 @@ def test_01_v1_standardized_error_contract():
 def test_02_feature_freeze_and_post_v1_backlog():
     """Test #1: Feature Freeze - Confirm non-critical features are documented in post-V1 backlog."""
     import os
-    backlog_path = os.path.join("docs", "POST_V1_BACKLOG.md")
-    assert os.path.exists(backlog_path)
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent.parent.parent
+    backlog_path = root / "docs" / "POST_V1_BACKLOG.md"
+    assert backlog_path.exists()
     with open(backlog_path, "r", encoding="utf-8") as f:
         content = f.read()
     assert "Deferred Non-Critical Features" in content
@@ -101,10 +103,12 @@ def test_09_production_readiness_verdict():
 def test_10_v1_release_manifest_and_scorecard():
     """Test #65: Release Manifest - Manifest and Scorecard documentation exist."""
     import os
-    assert os.path.exists(os.path.join("docs", "V1_RELEASE_MANIFEST.md"))
-    assert os.path.exists(os.path.join("docs", "V1_SCORECARD.md"))
-    assert os.path.exists(os.path.join("docs", "V1_PRODUCTION_CHECKLIST.md"))
-    assert os.path.exists(os.path.join("docs", "V1_FINAL_RELEASE_REPORT.md"))
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent.parent.parent
+    assert (root / "docs" / "V1_RELEASE_MANIFEST.md").exists()
+    assert (root / "docs" / "V1_SCORECARD.md").exists()
+    assert (root / "docs" / "V1_PRODUCTION_CHECKLIST.md").exists()
+    assert (root / "docs" / "V1_FINAL_RELEASE_REPORT.md").exists()
 
 def test_25_opentelemetry_db_query_span_annotation():
     """Test Priority #1 (GAP-01): OpenTelemetry DB Query Span Annotation - Session tracer emits span metadata."""
