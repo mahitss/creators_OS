@@ -2,6 +2,17 @@
 
 import React from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+
+const KinetiqCanvas = dynamic(
+  () => import('./KinetiqCanvas').then((mod) => mod.KinetiqCanvas),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full min-h-[380px] sm:min-h-[440px] lg:min-h-[500px] flex items-center justify-center" />
+    ),
+  }
+);
 
 export function HeroSection() {
   return (
@@ -80,70 +91,40 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Right Column: Clean Dark Computational Topology Panel */}
+        {/* Right Column: 3D Distributed Intelligence Topology & Telemetry */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center relative w-full">
-          {/* Engineering Topology Structure (Non-3D Guaranteed Fallback) */}
-          <div className="w-full max-w-[460px] bg-[#0A0C0F] border border-[rgba(255,255,255,0.12)] rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-[rgba(255,255,255,0.08)] mb-5">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#7CF7C5] animate-pulse shadow-[0_0_8px_rgba(124,247,197,0.8)]" />
-                <span className="text-xs font-mono font-bold text-[#F5F7FA] tracking-wider uppercase">
-                  KINETIQ TOPOLOGY
-                </span>
-              </div>
-              <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)] uppercase">
-                CONTROL PLANE
+          {/* 3D Execution Topology Container */}
+          <div className="w-full min-h-[380px] sm:min-h-[440px] lg:min-h-[500px] relative flex items-center justify-center">
+            <KinetiqCanvas />
+          </div>
+
+          {/* Real-time System Telemetry Panel */}
+          <div className="w-full max-w-[440px] bg-[#0A0C0F]/95 backdrop-blur-md border border-[rgba(255,255,255,0.12)] rounded-xl p-4 shadow-xl -mt-6 relative z-20">
+            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-2 mb-3">
+              <span className="text-[10px] font-mono tracking-widest text-[#7CF7C5] uppercase font-semibold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#7CF7C5] animate-pulse" />
+                SYSTEM TELEMETRY
+              </span>
+              <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)]">
+                KINETIQ-RUNTIME-1.0
               </span>
             </div>
-
-            {/* Execution Graph Nodes */}
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="p-3 rounded-xl bg-[#12151B] border border-[rgba(255,255,255,0.08)] flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)]">01 INGEST</span>
-                <span className="text-xs font-mono font-bold text-[#9BB7FF]">DATA FABRIC</span>
-                <span className="text-[9px] font-mono text-[#7CF7C5]">STREAM ACTIVE</span>
+            <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-[11px] font-mono">
+              <div className="flex items-center justify-between">
+                <span className="text-[rgba(245,247,250,0.50)]">AI GATEWAY</span>
+                <span className="text-[#7CF7C5] font-semibold">ONLINE</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#12151B] border border-[rgba(255,255,255,0.08)] flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)]">02 ROUTER</span>
-                <span className="text-xs font-mono font-bold text-[#7CF7C5]">MODEL GATEWAY</span>
-                <span className="text-[9px] font-mono text-[#7CF7C5]">OPENROUTER READY</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[rgba(245,247,250,0.50)]">MODEL ROUTING</span>
+                <span className="text-[#9BB7FF] font-semibold">ACTIVE</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#12151B] border border-[rgba(255,255,255,0.08)] flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)]">03 GUARD</span>
-                <span className="text-xs font-mono font-bold text-[#7CF7C5]">POLICY ENGINE</span>
-                <span className="text-[9px] font-mono text-[#7CF7C5]">ZERO-TRUST ENFORCED</span>
+              <div className="flex items-center justify-between">
+                <span className="text-[rgba(245,247,250,0.50)]">POLICY ENGINE</span>
+                <span className="text-[#7CF7C5] font-semibold">ENFORCED</span>
               </div>
-              <div className="p-3 rounded-xl bg-[#12151B] border border-[rgba(255,255,255,0.08)] flex flex-col gap-1">
-                <span className="text-[10px] font-mono text-[rgba(245,247,250,0.45)]">04 RUNTIME</span>
-                <span className="text-xs font-mono font-bold text-[#9BB7FF]">AGENT MESH</span>
-                <span className="text-[9px] font-mono text-[#7CF7C5]">DETERMINISTIC</span>
-              </div>
-            </div>
-
-            {/* Live Telemetry Status Row */}
-            <div className="p-3.5 rounded-xl bg-[#050505] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2 font-mono text-[11px]">
-              <div className="flex items-center justify-between text-[10px] text-[rgba(245,247,250,0.45)] uppercase border-b border-[rgba(255,255,255,0.06)] pb-1.5">
-                <span>SYSTEM TELEMETRY</span>
-                <span className="text-[#7CF7C5]">STABLE</span>
-              </div>
-              <div className="grid grid-cols-2 gap-y-1.5 text-[10px]">
-                <div className="flex items-center justify-between">
-                  <span className="text-[rgba(245,247,250,0.55)]">GATEWAY</span>
-                  <span className="text-[#7CF7C5]">ONLINE</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[rgba(245,247,250,0.55)]">ROUTING</span>
-                  <span className="text-[#9BB7FF]">ACTIVE</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[rgba(245,247,250,0.55)]">POLICIES</span>
-                  <span className="text-[#7CF7C5]">ENFORCED</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[rgba(245,247,250,0.55)]">ISOLATION</span>
-                  <span className="text-[#7CF7C5]">CRYPTOGRAPHIC</span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[rgba(245,247,250,0.50)]">ISOLATION</span>
+                <span className="text-[#7CF7C5] font-semibold">CRYPTOGRAPHIC</span>
               </div>
             </div>
           </div>
