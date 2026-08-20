@@ -1,27 +1,27 @@
 export const tokens = {
   colors: {
     // Semantic Backgrounds
-    background: 'var(--vapor-bg, #090A0F)',
-    surface: 'var(--vapor-surface, #12141C)',
-    elevatedSurface: 'var(--vapor-elevated, #1C1F2B)',
+    background: 'var(--vapor-bg, #050607)',
+    surface: 'var(--vapor-surface, #090B0D)',
+    elevatedSurface: 'var(--vapor-elevated, #0C0F11)',
 
     // Semantic Text
-    primaryText: 'var(--vapor-text-primary, #F9FAFB)',
-    secondaryText: 'var(--vapor-text-secondary, #9CA3AF)',
-    mutedText: 'var(--vapor-text-muted, #6B7280)',
+    primaryText: 'var(--vapor-text-primary, #F5F7FA)',
+    secondaryText: 'var(--vapor-text-secondary, rgba(245, 247, 250, 0.65))',
+    mutedText: 'var(--vapor-text-muted, rgba(245, 247, 250, 0.40))',
 
     // Semantic Borders
     border: 'var(--vapor-border, rgba(255, 255, 255, 0.08))',
     borderSubtle: 'var(--vapor-border-subtle, rgba(255, 255, 255, 0.04))',
-    borderActive: 'var(--vapor-border-active, #10B981)',
+    borderActive: 'var(--vapor-border-active, #6FF0C2)',
 
     // Semantic Accents
-    primaryAccent: 'var(--vapor-emerald, #10B981)',
-    primaryAccentHover: '#059669',
-    success: 'var(--vapor-emerald, #10B981)',
+    primaryAccent: 'var(--vapor-emerald, #6FF0C2)',
+    primaryAccentHover: '#5AE0B2',
+    success: 'var(--vapor-emerald, #6FF0C2)',
     warning: 'var(--vapor-amber, #F59E0B)',
     danger: 'var(--vapor-crimson, #EF4444)',
-    info: 'var(--vapor-cyan, #06B6D4)',
+    info: 'var(--vapor-cyan, #9BB7FF)',
   },
 
   typography: {

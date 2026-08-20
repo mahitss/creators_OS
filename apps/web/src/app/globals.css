@@ -6,17 +6,31 @@
    KINETIQ DESIGN SYSTEM & RESPONSIVE UNIT ENGINE
    ══════════════════════════════════════════════════════════ */
 :root {
-  --bg-base: #050505;
-  --bg-panel: #0A0C0F;
-  --accent-emerald: #10B981;
+  --bg-base: #050607;
+  --bg-panel: #090B0D;
+  --accent-emerald: #6FF0C2;
 
-  --ink: #fafafa;
-  --muted: #a7a6a6;
-  --nav: #b6b5b5;
-  --strip: #8b8a8a;
+  --vapor-bg: #050607;
+  --vapor-surface: #090B0D;
+  --vapor-elevated: #0C0F11;
+  --vapor-border: rgba(255, 255, 255, 0.08);
+  --vapor-border-subtle: rgba(255, 255, 255, 0.04);
+  --vapor-border-active: #6FF0C2;
+  --vapor-text-primary: #F5F7FA;
+  --vapor-text-secondary: rgba(245, 247, 250, 0.65);
+  --vapor-text-muted: rgba(245, 247, 250, 0.40);
+  --vapor-emerald: #6FF0C2;
+  --vapor-cyan: #9BB7FF;
+  --vapor-amber: #F59E0B;
+  --vapor-crimson: #EF4444;
+
+  --ink: #F5F7FA;
+  --muted: rgba(245, 247, 250, 0.65);
+  --nav: rgba(245, 247, 250, 0.55);
+  --strip: rgba(245, 247, 250, 0.40);
   --pill: #ffffff;
-  --pill-ink: #050505;
-  --bg: #050505;
+  --pill-ink: #050607;
+  --bg: #050607;
 
   /* Reference canvas: 1487 x 1058 */
   --u: calc(100vh / 1058);

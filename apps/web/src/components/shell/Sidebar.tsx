@@ -46,18 +46,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#12141C] border-r border-slate-800/80 transition-all duration-200 ease-out ${
+        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#090B0D] border-r border-[rgba(255,255,255,0.08)] transition-all duration-200 ease-out ${
           isCollapsed ? 'w-16' : 'w-60'
         } ${
           isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Header / Brand Logo */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-slate-800/80">
+        <div className="flex items-center justify-between h-14 px-4 border-b border-[rgba(255,255,255,0.08)]">
           <Link href="/home" className="flex items-center gap-2.5 overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.8)] shrink-0" />
+            <span className="w-3 h-3 rounded-full bg-[#6FF0C2] shadow-[0_0_10px_rgba(111,240,194,0.6)] shrink-0" />
             {(!isCollapsed || isMobileOpen) && (
-              <span className="font-semibold tracking-wider text-slate-100 text-sm font-sans uppercase">
+              <span className="font-semibold tracking-wider text-[#F5F7FA] text-sm font-sans uppercase">
                 KINETIQ
               </span>
             )}
@@ -103,10 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
                 key={item.id}
                 href={item.href}
                 onClick={onMobileClose}
-                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6FF0C2] ${
                   isActive
-                    ? 'bg-emerald-500/10 text-emerald-400 font-semibold border-l-2 border-emerald-500'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                    ? 'bg-[#6FF0C2]/10 text-[#6FF0C2] font-semibold border-l-2 border-[#6FF0C2]'
+                    : 'text-[rgba(245,247,250,0.60)] hover:text-[#F5F7FA] hover:bg-[rgba(255,255,255,0.04)]'
                 } ${isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''}`}
               >
                 <span className="shrink-0">{item.icon}</span>

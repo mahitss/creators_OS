@@ -30,7 +30,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="h-14 bg-[#12141C] border-b border-slate-800/80 px-4 flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0">
+    <header className="h-14 bg-[#090B0D] border-b border-[rgba(255,255,255,0.08)] px-4 flex items-center justify-between gap-4 sticky top-0 z-30 shrink-0">
       {/* Left: Mobile Menu Toggle & Title */}
       <div className="flex items-center gap-3">
         <IconButton

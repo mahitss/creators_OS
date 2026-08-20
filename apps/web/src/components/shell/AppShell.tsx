@@ -317,7 +317,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col antialiased selection:bg-emerald-500/30 selection:text-emerald-200 overflow-x-hidden">
+    <div className="min-h-screen bg-[#050607] text-[#F5F7FA] flex flex-col antialiased selection:bg-[#6FF0C2]/30 selection:text-[#6FF0C2] overflow-x-hidden">
       {/* Mobile Drawer Backdrop */}
       {isMobileMenuOpen && (
         <div
@@ -329,18 +329,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Left Navigation Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#0D0F17] border-r border-slate-800/80 transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#090B0D] border-r border-[rgba(255,255,255,0.08)] transition-all duration-300 ease-in-out ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
         } ${
           isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-slate-800/80 shrink-0 bg-[#0D0F17]">
+        <div className="h-14 px-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] shrink-0 bg-[#090B0D]">
           <Link href="/home" className="flex items-center gap-2.5 group overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(0,240,255,0.8)] group-hover:scale-110 transition-transform shrink-0" />
+            <span className="w-3 h-3 rounded-full bg-[#6FF0C2] shadow-[0_0_10px_rgba(111,240,194,0.6)] group-hover:scale-110 transition-transform shrink-0" />
             {(!isSidebarCollapsed || isMobileMenuOpen) && (
-              <span className="font-bold tracking-widest text-sm text-slate-100 uppercase font-mono truncate">
+              <span className="font-bold tracking-widest text-sm text-[#F5F7FA] uppercase font-mono truncate">
                 KINETIQ
               </span>
             )}
@@ -434,8 +434,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : undefined}
                           className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
                             isActive
-                              ? 'bg-emerald-500/10 text-emerald-400 font-semibold border-l-2 border-emerald-500 pl-2 shadow-sm'
-                              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                              ? 'bg-[#6FF0C2]/10 text-[#6FF0C2] font-semibold border-l-2 border-[#6FF0C2] pl-2 shadow-sm'
+                              : 'text-[rgba(245,247,250,0.60)] hover:text-[#F5F7FA] hover:bg-[rgba(255,255,255,0.04)]'
                           } ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`}
                         >
                           <span className="text-sm shrink-0">{item.icon}</span>
@@ -484,7 +484,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         }`}
       >
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-slate-800/80 bg-[#0D0F17]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
+        <header className="h-14 border-b border-[rgba(255,255,255,0.08)] bg-[#090B0D]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
           {/* Left: Mobile Menu Toggle & Context Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -496,9 +496,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </button>
 
             <div className="flex items-center gap-2 text-xs truncate">
-              <span className="text-slate-400 font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
-              <span className="text-slate-600 hidden sm:inline">/</span>
-              <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1.5">
+              <span className="text-[rgba(245,247,250,0.60)] font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
+              <span className="text-[rgba(245,247,250,0.30)] hidden sm:inline">/</span>
+              <span className="text-[rgba(245,247,250,0.60)] font-mono text-[11px] flex items-center gap-1.5">
                 <span>{currentItem.item.icon}</span>
                 <span>WORKSPACE</span>
               </span>
@@ -520,8 +520,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </button>
 
             {/* Live Telemetry Status Chip */}
-            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-[11px] font-mono text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#6FF0C2]/10 border border-[#6FF0C2]/30 text-[11px] font-mono text-[#6FF0C2]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6FF0C2] animate-pulse" />
               <span>SYSTEM OPERATIONAL</span>
             </div>
 
@@ -542,14 +542,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
             {/* Workspace Context Chip */}
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
-              <span className="text-emerald-400 text-xs">⚡</span>
+              <span className="text-[#6FF0C2] text-xs">⚡</span>
               <span>{currentUser?.workspace_id || 'Workspace'}</span>
             </div>
 
             {/* User Profile Avatar & Logout Pill */}
             <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
               <div 
-                className="w-7 h-7 rounded-full bg-emerald-600/30 border border-emerald-500/50 flex items-center justify-center text-xs font-semibold text-emerald-300"
+                className="w-7 h-7 rounded-full bg-[#6FF0C2]/20 border border-[#6FF0C2]/40 flex items-center justify-center text-xs font-semibold text-[#6FF0C2]"
                 title={currentUser?.email || 'Authenticated User'}
               >
                 {currentUser?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || 'U'}

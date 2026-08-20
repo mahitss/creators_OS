@@ -11,14 +11,27 @@ const config: Config = {
     extend: {
       colors: {
         vapor: {
-          bg: '#090A0F',
-          panel: '#12141C',
-          elevated: '#1C1F2B',
+          bg: '#050607',
+          panel: '#090B0D',
+          elevated: '#0C0F11',
           border: 'rgba(255, 255, 255, 0.08)',
-          emerald: '#10B981',
-          cyan: '#06B6D4',
+          emerald: '#6FF0C2',
+          cyan: '#9BB7FF',
           amber: '#F59E0B',
           crimson: '#EF4444',
+        },
+        slate: {
+          950: '#050607',
+          900: '#090B0D',
+          800: 'rgba(255, 255, 255, 0.08)',
+          700: 'rgba(255, 255, 255, 0.14)',
+          600: 'rgba(255, 255, 255, 0.25)',
+          500: 'rgba(245, 247, 250, 0.40)',
+          400: 'rgba(245, 247, 250, 0.60)',
+          300: 'rgba(245, 247, 250, 0.75)',
+          200: 'rgba(245, 247, 250, 0.88)',
+          100: '#F5F7FA',
+          50: '#FFFFFF',
         },
       },
       fontFamily: {
