@@ -4,11 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 
 export function FinalCtaSection() {
-  const scrollToTop = (e: React.MouseEvent) => {
-    e.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
     <section className="relative min-h-[70svh] py-28 lg:py-36 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] flex items-center justify-center overflow-hidden text-center">
       {/* Background Ambient Glow */}
@@ -20,9 +15,8 @@ export function FinalCtaSection() {
         </div>
 
         <h2 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-[#F5F7FA] tracking-tight font-sans leading-[1.08]">
-          THE ENTERPRISE <br />
-          INTELLIGENCE LAYER <br />
-          IS HERE.
+          THE OPERATING LAYER <br />
+          FOR INTELLIGENT ENTERPRISES.
         </h2>
 
         <p className="text-base sm:text-lg text-[rgba(245,247,250,0.55)] font-light max-w-2xl leading-relaxed mt-2">
@@ -34,15 +28,15 @@ export function FinalCtaSection() {
             href="/login"
             className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#7CF7C5] via-[#7CF7C5] to-[#9BB7FF] hover:opacity-90 text-[#050505] font-bold text-sm font-mono tracking-wider uppercase transition-all shadow-[0_0_30px_rgba(124,247,197,0.3)] hover:shadow-[0_0_45px_rgba(124,247,197,0.5)] active:scale-95 whitespace-nowrap"
           >
-            [ ENTER KINETIQ ]
+            ENTER KINETIQ →
           </Link>
 
-          <button
-            onClick={scrollToTop}
-            className="px-6 py-4 rounded-xl bg-[#0A0C0F] hover:bg-[#12161F] border border-[rgba(255,255,255,0.10)] text-[rgba(245,247,250,0.55)] hover:text-[#F5F7FA] font-mono text-sm tracking-wider uppercase transition-all whitespace-nowrap"
+          <a
+            href="#system"
+            className="px-6 py-4 rounded-xl bg-[#0A0C0F] hover:bg-[#12161F] border border-[rgba(255,255,255,0.10)] text-[rgba(245,247,250,0.70)] hover:text-[#F5F7FA] font-mono text-sm tracking-wider uppercase transition-all whitespace-nowrap"
           >
-            RETURN TO TOP ↑
-          </button>
+            EXPLORE THE SYSTEM →
+          </a>
         </div>
 
         <div className="text-xs font-mono text-[rgba(245,247,250,0.40)] pt-4 flex flex-wrap items-center justify-center gap-2">
