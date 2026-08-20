@@ -23,10 +23,10 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-[95vh] flex items-center justify-center pt-28 pb-20 overflow-hidden bg-[#050505]">
+    <section className="relative min-h-[100svh] flex items-center justify-center pt-32 lg:pt-36 pb-16 lg:pb-24 overflow-hidden bg-[#050505]">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-gradient-to-tr from-[#7CF7C5]/10 via-[#9BB7FF]/5 to-transparent blur-[140px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-10 right-1/4 w-[500px] h-[400px] bg-[#7CF7C5]/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[450px] bg-gradient-to-tr from-[#7CF7C5]/10 via-[#9BB7FF]/5 to-transparent blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute bottom-10 right-1/4 w-[450px] h-[350px] bg-[#7CF7C5]/5 blur-[120px] pointer-events-none rounded-full" />
 
       {/* Subtle Technical Grid (Boot stage 1+) */}
       <div
@@ -35,12 +35,12 @@ export function HeroSection() {
         }`}
       />
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center relative z-10">
-        {/* Left Column: Typography & CTAs */}
-        <div className="lg:col-span-6 flex flex-col gap-6 text-left">
-          {/* Eyebrow badge (Boot stage 2+) */}
+      <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center relative z-10">
+        {/* Left Column: Typography & CTAs (approx 55% width on desktop) */}
+        <div className="lg:col-span-7 flex flex-col items-start text-left max-w-[680px]">
+          {/* Eyebrow badge */}
           <div
-            className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] w-fit shadow-[0_0_15px_rgba(124,247,197,0.08)] transition-all duration-700 ${
+            className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] shadow-[0_0_15px_rgba(124,247,197,0.08)] mb-6 transition-all duration-700 ${
               bootStage >= 2 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}
           >
@@ -50,17 +50,17 @@ export function HeroSection() {
             </span>
           </div>
 
-          {/* Headline & Wordmark (Boot stage 5 & 6) */}
-          <div className="flex flex-col gap-3">
+          {/* Wordmark & Main Headline */}
+          <div className="flex flex-col gap-2">
             <span
-              className={`text-sm font-mono tracking-[0.3em] text-[#9BB7FF] uppercase transition-all duration-700 ${
+              className={`text-xs font-mono tracking-[0.3em] text-[#9BB7FF] uppercase transition-all duration-700 ${
                 bootStage >= 5 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
               }`}
             >
               KINETIQ
             </span>
             <h1
-              className={`text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#F5F7FA] font-sans leading-[1.05] transition-all duration-700 ${
+              className={`text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#F5F7FA] font-sans leading-[1.08] max-w-[640px] transition-all duration-700 ${
                 bootStage >= 6 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
               }`}
             >
@@ -69,51 +69,53 @@ export function HeroSection() {
                 OPERATING LAYER.
               </span>
             </h1>
-            <p
-              className={`text-base sm:text-lg text-[rgba(245,247,250,0.55)] font-sans font-light leading-relaxed max-w-xl transition-all duration-700 ${
-                bootStage >= 6 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-              }`}
-            >
-              Connect intelligence, execution, and control in one autonomous enterprise system. An intelligent operating layer uniting enterprise data, AI models, governed agents, workflows, and decisions.
-            </p>
           </div>
 
-          {/* Technical Specs Pill Row (Boot stage 7+) */}
+          {/* Supporting Description */}
+          <p
+            className={`text-base sm:text-lg text-[rgba(245,247,250,0.55)] font-sans font-light leading-relaxed max-w-[580px] mt-6 transition-all duration-700 ${
+              bootStage >= 6 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
+            }`}
+          >
+            Connect intelligence, execution, and control in one autonomous enterprise system. Uniting enterprise data, AI models, governed agents, workflows, and decisions under strict cryptographic isolation.
+          </p>
+
+          {/* Technical Capability Tags */}
           <div
-            className={`flex flex-wrap gap-2 pt-1 transition-all duration-700 ${
+            className={`flex flex-wrap gap-2 mt-6 transition-all duration-700 ${
               bootStage >= 7 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}
           >
-            <span className="px-2.5 py-1 rounded bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.55)]">
+            <span className="px-3 py-1 rounded-md bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.65)]">
               Multi-Model AI Gateway
             </span>
-            <span className="px-2.5 py-1 rounded bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.55)]">
+            <span className="px-3 py-1 rounded-md bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.65)]">
               Deterministic Agent Runtime
             </span>
-            <span className="px-2.5 py-1 rounded bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.55)]">
+            <span className="px-3 py-1 rounded-md bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.65)]">
               Zero-Trust Identity & RBAC
             </span>
-            <span className="px-2.5 py-1 rounded bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.55)]">
+            <span className="px-3 py-1 rounded-md bg-[#0A0C0F] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[rgba(245,247,250,0.65)]">
               Tenant Isolation
             </span>
           </div>
 
-          {/* Action CTAs (Boot stage 7+) */}
+          {/* Action CTAs */}
           <div
-            className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-3 transition-all duration-700 ${
+            className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 mt-8 w-full sm:w-auto transition-all duration-700 ${
               bootStage >= 7 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
             }`}
           >
             <Link
               href="/login"
-              className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#7CF7C5] via-[#7CF7C5] to-[#9BB7FF] hover:opacity-90 text-[#050505] font-bold text-sm font-mono tracking-wider uppercase transition-all shadow-[0_0_30px_rgba(124,247,197,0.25)] hover:shadow-[0_0_40px_rgba(124,247,197,0.45)] text-center active:scale-95"
+              className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#7CF7C5] via-[#7CF7C5] to-[#9BB7FF] hover:opacity-90 text-[#050505] font-bold text-sm font-mono tracking-wider uppercase transition-all shadow-[0_0_30px_rgba(124,247,197,0.25)] hover:shadow-[0_0_40px_rgba(124,247,197,0.45)] text-center active:scale-95 whitespace-nowrap"
             >
               ENTER KINETIQ →
             </Link>
 
             <a
               href="#system"
-              className="px-6 py-3.5 rounded-xl bg-[#0A0C0F] hover:bg-[#12161F] border border-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.25)] text-[#F5F7FA] font-mono text-sm tracking-wider uppercase transition-all text-center"
+              className="px-6 py-3.5 rounded-xl bg-[#0A0C0F] hover:bg-[#12161F] border border-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.25)] text-[#F5F7FA] font-mono text-sm tracking-wider uppercase transition-all text-center whitespace-nowrap"
             >
               EXPLORE THE SYSTEM ↓
             </a>
@@ -121,7 +123,7 @@ export function HeroSection() {
 
           {/* Cryptographic Subtext */}
           <div
-            className={`text-[11px] font-mono text-[rgba(245,247,250,0.55)] pt-1 flex items-center gap-2 transition-all duration-700 ${
+            className={`text-[11px] font-mono text-[rgba(245,247,250,0.45)] mt-6 flex items-center gap-2 transition-all duration-700 ${
               bootStage >= 8 ? 'opacity-100' : 'opacity-0'
             }`}
           >
@@ -130,22 +132,14 @@ export function HeroSection() {
           </div>
         </div>
 
-        {/* Right Column: Procedural 3D Intelligence Structure (Boot stage 4+) */}
+        {/* Right Column: 3D Intelligence Topology Visual (approx 45% width on desktop) */}
         <div
-          className={`lg:col-span-6 flex items-center justify-center relative min-h-[420px] lg:min-h-[580px] transition-all duration-1000 ${
+          className={`lg:col-span-5 flex items-center justify-center relative w-full min-h-[380px] sm:min-h-[460px] lg:min-h-[560px] transition-all duration-1000 ${
             bootStage >= 4 ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
         >
-          <div className="w-full h-full relative">
+          <div className="w-full h-full relative flex items-center justify-center">
             <KinetiqCanvas />
-
-            {/* Spatial Status Indicators */}
-            <div className="absolute top-6 right-4 px-3 py-1.5 rounded-lg bg-[#0A0C0F]/90 border border-[rgba(255,255,255,0.10)] backdrop-blur-md text-[10px] font-mono text-[#7CF7C5] shadow-lg pointer-events-none">
-              ◈ KINETIQ_TOPOLOGY_ACTIVE
-            </div>
-            <div className="absolute bottom-6 left-4 px-3 py-1.5 rounded-lg bg-[#0A0C0F]/90 border border-[rgba(255,255,255,0.10)] backdrop-blur-md text-[10px] font-mono text-[#9BB7FF] shadow-lg pointer-events-none">
-              ◉ DISTRIBUTED EXECUTION MESH
-            </div>
           </div>
         </div>
       </div>

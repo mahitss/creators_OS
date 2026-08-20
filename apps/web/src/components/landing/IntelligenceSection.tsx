@@ -4,24 +4,24 @@ import React from 'react';
 
 export function IntelligenceSection() {
   return (
-    <section id="intelligence" className="py-28 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <section id="intelligence" className="relative min-h-[90svh] py-28 lg:py-36 bg-[#050505] border-t border-[rgba(255,255,255,0.08)]">
+      <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
           {/* Left Column: Contextual Intelligence Overview */}
-          <div className="lg:col-span-6 flex flex-col gap-6">
+          <div className="lg:col-span-6 flex flex-col items-start text-left gap-6">
             <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
               <span>[ 03 // INTELLIGENCE LAYER ]</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans">
+            <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans leading-tight">
               INTELLIGENCE THAT <br />
               UNDERSTANDS CONTEXT.
             </h2>
-            <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg leading-relaxed font-light">
+            <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg leading-relaxed font-light max-w-xl">
               Kinetiq turns fragmented enterprise signals into contextual intelligence. Operating an enterprise model gateway with dynamic routing, continuous token accounting, and DLP perimeter protection.
             </p>
 
             {/* Visual Layers: DATA → CONTEXT → REASONING → DECISION */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full pt-2">
               <div className="p-3.5 rounded-xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-1">
                 <span className="text-[10px] font-mono text-[rgba(245,247,250,0.55)]">01 LAYER</span>
                 <span className="text-xs font-bold text-[#F5F7FA] font-mono">DATA</span>

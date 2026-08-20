@@ -13,7 +13,7 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#050505] text-[#F5F7FA] flex flex-col font-sans selection:bg-[#7CF7C5]/30 selection:text-[#7CF7C5] overflow-x-hidden antialiased">
+    <main className="min-h-screen bg-[#050505] text-[#F5F7FA] flex flex-col font-sans selection:bg-[#7CF7C5]/30 selection:text-[#7CF7C5] overflow-x-clip antialiased">
       {/* Public Landing Navigation */}
       <LandingNavbar />
 

@@ -4,17 +4,17 @@ import React from 'react';
 
 export function AgentsAutomationSection() {
   return (
-    <section id="automation" className="py-28 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8">
-        <div className="max-w-3xl flex flex-col gap-3">
+    <section id="automation" className="relative min-h-[85svh] py-28 lg:py-36 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)]">
+      <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
+        <div className="max-w-3xl flex flex-col items-start text-left gap-3">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
             <span>[ 04 // AUTONOMOUS EXECUTION ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans">
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans leading-tight">
             FROM DECISION <br />
             TO EXECUTION.
           </h2>
-          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light leading-relaxed">
+          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light leading-relaxed max-w-2xl mt-2">
             Kinetiq does not simply generate text. It executes governed multi-agent workflows, coordinates continuous tools, and verifies state mutations through deterministic state machines.
           </p>
         </div>
@@ -31,7 +31,7 @@ export function AgentsAutomationSection() {
               { step: '06', title: 'RESULT', desc: 'Verified state' },
             ].map((item, idx) => (
               <React.Fragment key={item.step}>
-                <div className="flex flex-col items-center text-center p-3 rounded-xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] w-28 shrink-0">
+                <div className="flex flex-col items-center text-center p-3.5 rounded-xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] w-28 shrink-0">
                   <span className="text-[9px] font-mono text-[#7CF7C5]">{item.step}</span>
                   <span className="text-xs font-bold font-mono text-[#F5F7FA] mt-1">{item.title}</span>
                   <span className="text-[9px] text-[rgba(245,247,250,0.45)] mt-0.5">{item.desc}</span>

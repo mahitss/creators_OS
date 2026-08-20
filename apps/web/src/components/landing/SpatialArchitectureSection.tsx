@@ -92,27 +92,27 @@ export function SpatialArchitectureSection() {
   const activeNode = SYSTEM_NODES.find(n => n.id === activeNodeId) || SYSTEM_NODES[0];
 
   return (
-    <section id="system" className="py-28 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)] relative overflow-hidden">
+    <section id="system" className="relative min-h-[90svh] py-28 lg:py-36 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)]">
       {/* Ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#7CF7C5]/5 blur-[160px] pointer-events-none rounded-full" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#7CF7C5]/5 blur-[160px] pointer-events-none rounded-full" />
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
+      <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 relative z-10">
         {/* Section Header */}
-        <div className="max-w-3xl flex flex-col gap-3">
+        <div className="max-w-3xl flex flex-col items-start text-left gap-3">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
             <span>[ 02 // SYSTEM VISUALIZATION ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans">
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans leading-tight">
             ONE SYSTEM. <br />
             MANY INTELLIGENCES.
           </h2>
-          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light">
+          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light mt-2 max-w-2xl leading-relaxed">
             An interconnected enterprise nervous system. Select any architectural node to inspect its runtime guarantees and technical capabilities.
           </p>
         </div>
 
         {/* Interactive Architecture Grid & Inspector Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-14 items-start">
           {/* Left: 8 Interactive Nodes (7 cols) */}
           <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {SYSTEM_NODES.map(node => {
@@ -163,7 +163,7 @@ export function SpatialArchitectureSection() {
           </div>
 
           {/* Right: Technical Subsystem Inspector Panel (5 cols) */}
-          <div className="lg:col-span-5 p-8 rounded-2xl bg-[#050505] border border-[rgba(255,255,255,0.10)] shadow-2xl relative flex flex-col gap-6 sticky top-28 backdrop-blur-md">
+          <div className="lg:col-span-5 p-7 sm:p-8 rounded-2xl bg-[#050505] border border-[rgba(255,255,255,0.10)] shadow-2xl relative flex flex-col gap-6 sticky top-28 backdrop-blur-md">
             {/* Header Badge */}
             <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
               <div className="flex items-center gap-2">

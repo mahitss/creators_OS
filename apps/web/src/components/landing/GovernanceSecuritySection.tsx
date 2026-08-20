@@ -4,17 +4,17 @@ import React from 'react';
 
 export function GovernanceSecuritySection() {
   return (
-    <section id="security" className="py-28 bg-[#050505] border-t border-[rgba(255,255,255,0.08)] relative">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8">
-        <div className="max-w-3xl flex flex-col gap-3">
+    <section id="security" className="relative min-h-[85svh] py-28 lg:py-36 bg-[#050505] border-t border-[rgba(255,255,255,0.08)]">
+      <div className="w-full max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12">
+        <div className="max-w-3xl flex flex-col items-start text-left gap-3">
           <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
             <span>[ 05 // ENTERPRISE CONTROL ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans">
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans leading-tight">
             AUTONOMY <br />
             WITH CONTROL.
           </h2>
-          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light leading-relaxed">
+          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light leading-relaxed max-w-2xl mt-2">
             Autonomous systems need boundaries. Kinetiq enforces them. Built from the ground up with zero-trust identity, strict multi-tenant isolation, and immutable audit streams.
           </p>
         </div>
@@ -43,7 +43,7 @@ export function GovernanceSecuritySection() {
 
         {/* 4 Security Details */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
+          <div className="p-7 sm:p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[#7CF7C5] font-mono text-xs">P0-01 // SERVER IDENTITY</span>
               <span className="text-[10px] font-mono text-[#7CF7C5] bg-[#7CF7C5]/10 px-2 py-0.5 rounded border border-[#7CF7C5]/20">
@@ -56,7 +56,7 @@ export function GovernanceSecuritySection() {
             </p>
           </div>
 
-          <div className="p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
+          <div className="p-7 sm:p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[#9BB7FF] font-mono text-xs">P0-02 // TENANT ISOLATION</span>
               <span className="text-[10px] font-mono text-[#7CF7C5] bg-[#7CF7C5]/10 px-2 py-0.5 rounded border border-[#7CF7C5]/20">
@@ -69,7 +69,7 @@ export function GovernanceSecuritySection() {
             </p>
           </div>
 
-          <div className="p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
+          <div className="p-7 sm:p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[#7CF7C5] font-mono text-xs">P0-03 // DATA LOSS PREVENTION</span>
               <span className="text-[10px] font-mono text-[#7CF7C5] bg-[#7CF7C5]/10 px-2 py-0.5 rounded border border-[#7CF7C5]/20">
@@ -82,7 +82,7 @@ export function GovernanceSecuritySection() {
             </p>
           </div>
 
-          <div className="p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
+          <div className="p-7 sm:p-8 rounded-2xl bg-[#0A0C0F] border border-[rgba(255,255,255,0.08)] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
               <span className="text-[#9BB7FF] font-mono text-xs">P0-04 // AUDIT COMPLIANCE</span>
               <span className="text-[10px] font-mono text-[#7CF7C5] bg-[#7CF7C5]/10 px-2 py-0.5 rounded border border-[#7CF7C5]/20">
