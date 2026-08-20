@@ -14,7 +14,7 @@ describe('Kinetiq Public Landing Page', () => {
   it('renders landing page with Kinetiq branding, hero headline, and CTA', () => {
     render(<LandingPage />);
     expect(screen.getAllByText(/KINETIQ/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Spatial AI Operating System/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Enter Kinetiq/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/THE INTELLIGENCE/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/ENTER KINETIQ/i).length).toBeGreaterThan(0);
   });
 });

@@ -4,8 +4,15 @@ import { ThemeProvider } from './providers';
 import { WebVitalsReporter } from '../components/WebVitalsReporter';
 
 export const metadata: Metadata = {
-  title: 'Vapor OS — AI Chief of Staff',
-  description: 'An AI Chief of Staff platform foundation.',
+  title: 'KINETIQ — Intelligence Operating Layer',
+  description:
+    'Kinetiq is an autonomous enterprise intelligence operating layer connecting AI, agents, workflows, knowledge, decisions, and secure execution.',
+  openGraph: {
+    title: 'KINETIQ — Intelligence Operating Layer',
+    description:
+      'Kinetiq is an autonomous enterprise intelligence operating layer connecting AI, agents, workflows, knowledge, decisions, and secure execution.',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -15,7 +22,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark h-full">
-      <body className="h-full bg-[#090A0F] text-slate-100 antialiased flex flex-col">
+      <body className="h-full bg-[#050505] text-[#F5F7FA] antialiased flex flex-col selection:bg-[#7CF7C5]/30 selection:text-[#7CF7C5]">
         <ThemeProvider>
           <WebVitalsReporter />
           {children}

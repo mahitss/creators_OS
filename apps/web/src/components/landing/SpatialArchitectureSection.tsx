@@ -14,109 +14,109 @@ interface SystemNode {
 
 const SYSTEM_NODES: SystemNode[] = [
   {
-    id: 'core',
-    name: 'Kinetiq Core Kernel',
-    category: 'CENTRAL OPERATING SYSTEM',
-    code: 'CORE_KERNEL_01',
-    description: 'Central state machine and authoritative coordination layer governing all tenant contexts, agents, and execution graphs.',
-    capabilities: ['Multi-tenant Isolation', 'Authoritative Auth Context', 'Event Bus & SSE Streaming', 'State Machine Transitions'],
-    techStack: 'FastAPI • SQLAlchemy Async • Redis • PostgreSQL'
+    id: 'data',
+    name: 'DATA',
+    category: 'ENTERPRISE DATA FABRIC',
+    code: 'DATA_LAYER_01',
+    description: 'Enterprise data lakes, continuous event streams, and operational databases structured for real-time AI ingestion.',
+    capabilities: ['Structured & Unstructured Ingestion', 'Tenant-Isolated Storage', 'Streaming Webhooks & Change Feeds', 'Cryptographic Data Protection'],
+    techStack: 'PostgreSQL • Redis • Vector Indices',
   },
   {
-    id: 'gateway',
-    name: 'Model Gateway',
-    category: 'INTELLIGENCE INFRASTRUCTURE',
-    code: 'AI_GATEWAY_ROUTER',
-    description: 'Cryptographically managed OpenRouter integration with automated multi-provider failover, token accounting, and streaming tool calls.',
-    capabilities: ['Dynamic Model Routing', 'Streaming SSE Output', 'Deterministic Fallback', 'Token & Cost Attribution'],
-    techStack: 'OpenRouter API • Circuit Breaker • AES-256'
+    id: 'knowledge',
+    name: 'KNOWLEDGE',
+    category: 'ORGANIZATIONAL MEMORY',
+    code: 'KNOWLEDGE_VAULT_02',
+    description: 'Context and organizational memory powering decisions. Semantic graphs, document embeddings, and learned workspace insights.',
+    capabilities: ['Semantic Vector Search', 'Knowledge Graph Traversal', 'Document Vault Indexing', 'Continuous Experience Learning'],
+    techStack: 'pgvector • NetworkX • Semantic Embeddings',
+  },
+  {
+    id: 'models',
+    name: 'MODELS',
+    category: 'INTELLIGENCE GATEWAY',
+    code: 'MODEL_ROUTER_03',
+    description: 'Capability-aware AI routing across configured providers. Dynamic OpenRouter integration with automated failover and token accounting.',
+    capabilities: ['Multi-Provider Dynamic Routing', 'SSE Token Streaming', 'Circuit Breaker Fallback', 'Real-Time Cost Attribution'],
+    techStack: 'OpenRouter API • Model Registry • Streaming SSE',
   },
   {
     id: 'agents',
-    name: 'Agent Runtime Mesh',
-    category: 'AUTONOMOUS EXECUTION',
-    code: 'AGENT_RUNTIME_MESH',
-    description: 'Deterministic multi-agent execution framework with structured tool registries, goal decomposition, and step-by-step verification.',
-    capabilities: ['Autonomous Mission Planning', 'Tool Execution Sandboxing', 'Human-in-the-Loop Pausing', 'Sub-Agent Delegation'],
-    techStack: 'LangGraph State • Async Worker • Tool Registry'
+    name: 'AGENTS',
+    category: 'AUTONOMOUS RUNTIME',
+    code: 'AGENT_MESH_04',
+    description: 'Autonomous execution coordinated through governed agent runtimes. Multi-agent collaboration with structured tool sandboxes.',
+    capabilities: ['Goal Decomposition & Planning', 'Tool Sandbox Execution', 'Attention Inbox Escalation', 'Sub-Agent Delegation'],
+    techStack: 'LangGraph State • Async Worker • Tool Registry',
   },
   {
     id: 'workflows',
-    name: 'Workflow Orchestration Engine',
-    category: 'CONTINUOUS OPERATIONS',
-    code: 'WORKFLOW_ENGINE_V2',
-    description: 'Cyclic and acyclic workflow graphs automating complex enterprise processes with event triggers and scheduled cron executions.',
-    capabilities: ['DAG & Cyclic Graph Execution', 'Webhook Event Triggers', 'Stateful Retry Logic', 'Step Output Passing'],
-    techStack: 'Async Task Queues • Webhook Engine • CRON'
-  },
-  {
-    id: 'memory',
-    name: 'Context & Knowledge Graph',
-    category: 'DATA & ONTOLOGY',
-    code: 'SEMANTIC_GRAPH_VAULT',
-    description: 'Vector embeddings, structured document vaults, and semantic relationship graphs for enterprise memory retrieval.',
-    capabilities: ['Vector Semantic Search', 'Cycle-Detected Knowledge Graphs', 'Document Embeddings', 'Tenant-Isolated Vaults'],
-    techStack: 'pgvector • NetworkX • Semantic Embeddings'
+    name: 'WORKFLOWS',
+    category: 'EXECUTION PIPELINE',
+    code: 'WORKFLOW_ENGINE_05',
+    description: 'Stateful DAG and cyclic execution graphs with event triggers. Automates complex business processes with deterministic guarantees.',
+    capabilities: ['DAG & Cyclic Graph Runtime', 'Event-Driven Triggers', 'Stateful Retry & Exponential Backoff', 'Step Output Pipeline'],
+    techStack: 'Async Task Queues • Webhook Engine • CRON',
   },
   {
     id: 'decisions',
-    name: 'Decision Intelligence',
-    category: 'STRATEGIC PREDICTION',
-    code: 'DECISION_LEARNING_ENGINE',
-    description: 'Monte Carlo simulations, strategic foresight analysis, and counterfactual learning loops for high-stakes enterprise decisions.',
-    capabilities: ['Multi-scenario Simulation', 'Early Warning Indicators', 'Counterfactual Learning', 'Drift Calibration'],
-    techStack: 'Probabilistic Modeling • Bayesian Inference'
+    name: 'DECISIONS',
+    category: 'STRATEGIC FORESIGHT',
+    code: 'DECISION_ENGINE_06',
+    description: 'Strategic foresight, counterfactual learning, and risk simulation. Evaluates scenarios before high-stakes enterprise commitments.',
+    capabilities: ['Monte Carlo Simulation', 'Early Warning Indicators', 'Counterfactual Learning Loops', 'Drift Calibration'],
+    techStack: 'Probabilistic Modeling • Bayesian Inference',
   },
   {
-    id: 'governance',
-    name: 'Zero-Trust Policy Engine',
-    category: 'SECURITY & COMPLIANCE',
-    code: 'POLICY_GOVERNANCE_GATE',
-    description: 'Real-time RBAC and ABAC policy enforcement, DLP secret masking, and immutable append-only audit trails.',
-    capabilities: ['RBAC / ABAC Rule Evaluation', 'DLP Secret Redaction', 'Immutable Audit Logs', 'SCIM 2.0 Identity Sync'],
-    techStack: 'JWT HMAC-SHA256 • OIDC • DLP Engine'
+    id: 'security',
+    name: 'SECURITY',
+    category: 'ZERO-TRUST BOUNDARY',
+    code: 'POLICY_ENGINE_07',
+    description: 'Zero-trust boundary attestation and DLP masking. Enforces server-side identity verification, RBAC/ABAC, and immutable audit logs.',
+    capabilities: ['Google OIDC Verification', 'Row-Level Tenant Isolation', 'Real-Time DLP Secret Redaction', 'Immutable Audit Trails'],
+    techStack: 'JWT HMAC-SHA256 • OIDC • PolicyEngine',
   },
   {
-    id: 'resilience',
-    name: 'Resilience Sentinel',
-    category: 'HIGH AVAILABILITY',
-    code: 'CIRCUIT_BREAKER_SENTINEL',
-    description: 'Autonomous health probes, distributed circuit breakers, and graceful degradation ensuring 99.99% operational continuity.',
+    id: 'operations',
+    name: 'OPERATIONS',
+    category: 'CONTINUOUS RESILIENCE',
+    code: 'RESILIENCE_SENTINEL_08',
+    description: 'Continuous observability, RUM telemetry, and circuit breakers. Ensures 99.99% operational continuity under infrastructure stress.',
     capabilities: ['Automated Fail-Fast Breakers', 'Prometheus Metrics Exposition', 'RUM Web Vitals Telemetry', 'Degraded Fallbacks'],
-    techStack: 'OpenTelemetry • Prometheus • Circuit State'
-  }
+    techStack: 'OpenTelemetry • Prometheus • Circuit State',
+  },
 ];
 
 export function SpatialArchitectureSection() {
-  const [activeNodeId, setActiveNodeId] = useState<string>('core');
-  const activeNode = SYSTEM_NODES.find((n) => n.id === activeNodeId) || SYSTEM_NODES[0];
+  const [activeNodeId, setActiveNodeId] = useState<string>('models');
+  const activeNode = SYSTEM_NODES.find(n => n.id === activeNodeId) || SYSTEM_NODES[0];
 
   return (
-    <section id="architecture" className="py-28 bg-[#050608] relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-cyan-500/5 blur-[160px] pointer-events-none rounded-full" />
+    <section id="system" className="py-28 bg-[#0A0C0F] border-t border-[rgba(255,255,255,0.08)] relative overflow-hidden">
+      {/* Ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#7CF7C5]/5 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
         {/* Section Header */}
-        <div className="max-w-3xl flex flex-col gap-4">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-cyan-400 tracking-widest uppercase">
-            <span>[ 02 // SPATIAL ARCHITECTURE ]</span>
+        <div className="max-w-3xl flex flex-col gap-3">
+          <div className="inline-flex items-center gap-2 text-xs font-mono text-[#7CF7C5] tracking-widest uppercase">
+            <span>[ 02 // SYSTEM VISUALIZATION ]</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            An Interconnected Operating Architecture.
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#F5F7FA] tracking-tight font-sans">
+            ONE SYSTEM. <br />
+            MANY INTELLIGENCES.
           </h2>
-          <p className="text-slate-400 text-base sm:text-lg font-light">
-            Hover over any architectural node to inspect its internal subsystems, cryptographic boundaries, and capabilities.
+          <p className="text-[rgba(245,247,250,0.55)] text-base sm:text-lg font-light">
+            An interconnected enterprise nervous system. Select any architectural node to inspect its runtime guarantees and technical capabilities.
           </p>
         </div>
 
-        {/* Interactive Spatial Grid & Detail Panel */}
+        {/* Interactive Architecture Grid & Inspector Panel */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-16 items-start">
-          {/* Left: Interactive Node Matrix (7 cols) */}
+          {/* Left: 8 Interactive Nodes (7 cols) */}
           <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {SYSTEM_NODES.map((node) => {
+            {SYSTEM_NODES.map(node => {
               const isActive = node.id === activeNodeId;
-              const isCore = node.id === 'core';
 
               return (
                 <button
@@ -126,37 +126,35 @@ export function SpatialArchitectureSection() {
                   onClick={() => setActiveNodeId(node.id)}
                   className={`text-left p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between min-h-[140px] ${
                     isActive
-                      ? isCore
-                        ? 'bg-[#0E1522] border-cyan-400 shadow-[0_0_30px_rgba(0,240,255,0.2)] ring-1 ring-cyan-400/50'
-                        : 'bg-[#0E1522] border-cyan-500/80 shadow-[0_0_20px_rgba(0,240,255,0.15)]'
-                      : 'bg-[#080A0D] border-slate-800/80 hover:border-slate-700 hover:bg-[#0B0E12]'
+                      ? 'bg-[#12161F] border-[#7CF7C5] shadow-[0_0_25px_rgba(124,247,197,0.15)] ring-1 ring-[#7CF7C5]/40'
+                      : 'bg-[#050505] border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.20)] hover:bg-[#080A0D]'
                   }`}
                 >
                   {/* Top: Category & Status */}
                   <div className="flex items-center justify-between w-full">
-                    <span className="text-[10px] font-mono tracking-wider text-slate-400 uppercase">
+                    <span className="text-[10px] font-mono tracking-wider text-[rgba(245,247,250,0.55)] uppercase">
                       {node.category}
                     </span>
                     <span
                       className={`w-2 h-2 rounded-full transition-all ${
-                        isActive ? 'bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,0.8)] scale-125' : 'bg-slate-700'
+                        isActive ? 'bg-[#7CF7C5] shadow-[0_0_8px_rgba(124,247,197,0.8)] scale-125' : 'bg-slate-700'
                       }`}
                     />
                   </div>
 
-                  {/* Middle: Title */}
+                  {/* Middle: Title & Code */}
                   <div className="my-2">
-                    <h3 className={`text-base font-bold font-sans ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                    <h3 className={`text-base font-bold font-sans ${isActive ? 'text-[#F5F7FA]' : 'text-slate-200'}`}>
                       {node.name}
                     </h3>
-                    <div className="text-[11px] font-mono text-cyan-400/80 mt-0.5">
+                    <div className="text-[11px] font-mono text-[#9BB7FF] mt-0.5">
                       {node.code}
                     </div>
                   </div>
 
                   {/* Bottom: Connection status */}
-                  <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1.5">
-                    <span className={isActive ? 'text-emerald-400' : 'text-slate-400'}>●</span>
+                  <div className="text-[10px] font-mono text-[rgba(245,247,250,0.55)] flex items-center gap-1.5">
+                    <span className={isActive ? 'text-[#7CF7C5]' : 'text-slate-500'}>●</span>
                     <span>{isActive ? 'INSPECTING' : 'ONLINE'}</span>
                   </div>
                 </button>
@@ -165,39 +163,39 @@ export function SpatialArchitectureSection() {
           </div>
 
           {/* Right: Technical Subsystem Inspector Panel (5 cols) */}
-          <div className="lg:col-span-5 p-8 rounded-2xl bg-[#080A0D] border border-cyan-500/30 shadow-2xl relative flex flex-col gap-6 sticky top-28 backdrop-blur-md">
+          <div className="lg:col-span-5 p-8 rounded-2xl bg-[#050505] border border-[rgba(255,255,255,0.10)] shadow-2xl relative flex flex-col gap-6 sticky top-28 backdrop-blur-md">
             {/* Header Badge */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,240,255,0.8)] animate-pulse" />
-                <span className="text-xs font-mono tracking-widest text-cyan-300 uppercase">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#7CF7C5] shadow-[0_0_8px_rgba(124,247,197,0.8)] animate-pulse" />
+                <span className="text-xs font-mono tracking-widest text-[#7CF7C5] uppercase">
                   NODE SPECIFICATION
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+              <span className="text-[10px] font-mono text-[rgba(245,247,250,0.55)] bg-[#0A0C0F] px-2.5 py-1 rounded border border-[rgba(255,255,255,0.10)]">
                 {activeNode.code}
               </span>
             </div>
 
             {/* Name & Description */}
             <div className="flex flex-col gap-2">
-              <h3 className="text-2xl font-bold text-white font-sans">
+              <h3 className="text-2xl font-bold text-[#F5F7FA] font-sans">
                 {activeNode.name}
               </h3>
-              <p className="text-sm text-slate-300 font-light leading-relaxed">
+              <p className="text-sm text-[rgba(245,247,250,0.80)] font-light leading-relaxed">
                 {activeNode.description}
               </p>
             </div>
 
             {/* Verified Capabilities */}
-            <div className="flex flex-col gap-2.5 pt-2 border-t border-slate-800/80">
-              <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+            <div className="flex flex-col gap-2.5 pt-2 border-t border-[rgba(255,255,255,0.08)]">
+              <span className="text-[11px] font-mono text-[rgba(245,247,250,0.55)] uppercase tracking-wider">
                 CORE CAPABILITIES
               </span>
               <div className="flex flex-col gap-2">
                 {activeNode.capabilities.map((cap, idx) => (
                   <div key={idx} className="flex items-center gap-2.5 text-xs text-slate-200">
-                    <span className="text-cyan-400 font-mono text-[10px]">▶</span>
+                    <span className="text-[#7CF7C5] font-mono text-[10px]">▶</span>
                     <span>{cap}</span>
                   </div>
                 ))}
@@ -205,11 +203,11 @@ export function SpatialArchitectureSection() {
             </div>
 
             {/* Technical Stack */}
-            <div className="pt-3 border-t border-slate-800/80 flex flex-col gap-1.5">
-              <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                UNDERLYING KERNEL STACK
+            <div className="pt-3 border-t border-[rgba(255,255,255,0.08)] flex flex-col gap-1.5">
+              <span className="text-[10px] font-mono text-[rgba(245,247,250,0.55)] uppercase tracking-wider">
+                RUNTIME ENGINE STACK
               </span>
-              <div className="text-xs font-mono text-emerald-400 bg-[#050608] p-3 rounded-lg border border-slate-800/80">
+              <div className="text-xs font-mono text-[#7CF7C5] bg-[#0A0C0F] p-3 rounded-lg border border-[rgba(255,255,255,0.08)]">
                 {activeNode.techStack}
               </div>
             </div>

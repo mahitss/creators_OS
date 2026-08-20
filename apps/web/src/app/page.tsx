@@ -3,7 +3,6 @@
 import React from 'react';
 import { LandingNavbar } from '../components/landing/LandingNavbar';
 import { HeroSection } from '../components/landing/HeroSection';
-import { PositioningSection } from '../components/landing/PositioningSection';
 import { SpatialArchitectureSection } from '../components/landing/SpatialArchitectureSection';
 import { IntelligenceSection } from '../components/landing/IntelligenceSection';
 import { AgentsAutomationSection } from '../components/landing/AgentsAutomationSection';
@@ -14,35 +13,32 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-[#050608] text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200 overflow-x-hidden antialiased">
+    <main className="min-h-screen bg-[#050505] text-[#F5F7FA] flex flex-col font-sans selection:bg-[#7CF7C5]/30 selection:text-[#7CF7C5] overflow-x-hidden antialiased">
       {/* Public Landing Navigation */}
       <LandingNavbar />
 
-      {/* 01 Hero Section with 3D Spatial Core */}
+      {/* 01 — HERO (with 3D Intelligence Topology & Boot Sequence) */}
       <HeroSection />
 
-      {/* 02 Positioning & What Kinetiq Is */}
-      <PositioningSection />
-
-      {/* 03 Interactive Spatial Architecture */}
+      {/* 02 — SYSTEM VISUALIZATION (ONE SYSTEM. MANY INTELLIGENCES.) */}
       <SpatialArchitectureSection />
 
-      {/* 04 Intelligence & Model Gateway */}
+      {/* 03 — INTELLIGENCE LAYER (INTELLIGENCE THAT UNDERSTANDS CONTEXT.) */}
       <IntelligenceSection />
 
-      {/* 05 Autonomous Agents & Workflows */}
+      {/* 04 — AUTONOMOUS EXECUTION (FROM DECISION TO EXECUTION.) */}
       <AgentsAutomationSection />
 
-      {/* 06 Zero-Trust Governance & Security */}
+      {/* 05 — ENTERPRISE CONTROL (AUTONOMY WITH CONTROL.) */}
       <GovernanceSecuritySection />
 
-      {/* 07 Live Kernel Telemetry */}
+      {/* 06 — LIVE SYSTEM (Real-time Authoritative Telemetry) */}
       <LiveHealthSection />
 
-      {/* 08 Final Call to Action */}
+      {/* 07 — FINAL CTA (THE ENTERPRISE INTELLIGENCE LAYER IS HERE.) */}
       <FinalCtaSection />
 
-      {/* 09 Minimalist Footer */}
+      {/* Minimalist Technical Footer */}
       <LandingFooter />
     </main>
   );
