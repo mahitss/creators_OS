@@ -130,11 +130,53 @@ async def get_authenticated_context(
 # Backward-compatibility alias
 get_current_workspace = get_authenticated_context
 
+def require_role(allowed_roles: List[str]):
+    """Factory dependency enforcing that the user possesses one of the allowed roles (case-insensitive)."""
+    normalized_allowed = [r.lower() for r in allowed_roles]
+
+    async def _role_checker(auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)) -> AuthenticatedContext:
+        user_role = (auth_ctx.role or "viewer").lower()
+        if user_role not in normalized_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied: Required role in {allowed_roles}, but current role is '{auth_ctx.role}'."
+            )
+        return auth_ctx
+
+    return _role_checker
+
+def authorize(action: str, resource: Optional[str] = None):
+    """Reusable fine-grained authorization primitive (READ, CREATE, UPDATE, DELETE, EXECUTE, ADMINISTER)."""
+    action_upper = action.upper()
+
+    # Role-based action matrix
+    role_permissions = {
+        "owner": {"READ", "CREATE", "UPDATE", "DELETE", "EXECUTE", "ADMINISTER"},
+        "admin": {"READ", "CREATE", "UPDATE", "DELETE", "EXECUTE", "ADMINISTER"},
+        "operator": {"READ", "CREATE", "UPDATE", "EXECUTE"},
+        "analyst": {"READ", "CREATE", "UPDATE"},
+        "member": {"READ", "CREATE", "UPDATE"},
+        "viewer": {"READ"},
+        "readonly": {"READ"},
+    }
+
+    async def _authorizer(auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)) -> AuthenticatedContext:
+        user_role = (auth_ctx.role or "viewer").lower()
+        allowed_actions = role_permissions.get(user_role, {"READ"})
+        if action_upper not in allowed_actions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied: Role '{auth_ctx.role}' lacks permission for action '{action_upper}' on resource '{resource or '*'}'."
+            )
+        return auth_ctx
+
+    return _authorizer
+
 async def require_admin(
     auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)
 ) -> AuthenticatedContext:
     """Enforces that the authenticated user holds 'admin' or 'owner' role within the target workspace."""
-    if auth_ctx.role not in ["admin", "owner"]:
+    if auth_ctx.role.lower() not in ["admin", "owner"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Administrative privileges required. Current role: '{auth_ctx.role}'."
@@ -145,7 +187,7 @@ async def require_owner(
     auth_ctx: AuthenticatedContext = Depends(get_authenticated_context)
 ) -> AuthenticatedContext:
     """Enforces that the authenticated user is the 'owner' of the target workspace."""
-    if auth_ctx.role != "owner":
+    if auth_ctx.role.lower() != "owner":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Workspace owner privileges required. Current role: '{auth_ctx.role}'."
@@ -184,3 +226,4 @@ def get_current_user_optional(
         )
     except Exception:
         return None
+

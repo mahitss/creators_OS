@@ -1,31 +1,33 @@
-# Vapor OS — Contributing Guidelines
+# KINETIQ — Engineering Contribution Guide
 
-Thank you for contributing to Vapor OS! All pull requests must adhere to our Sprint 1 engineering standards.
+## 1. Development Principles
+
+1. **Production-Grade Engineering**: Write code intended to run enterprise workloads. No hacks, no shortcuts, no fake synthetic mocks.
+2. **Zero Breaking Changes**: Do not break existing API contracts, database schemas, or working features.
+3. **Type Safety**: Maintain strict TypeScript in `apps/web` and `packages/*`, and Python type hints across `apps/api`.
+4. **Matte Black Visual Discipline**: Strict adherence to the Kinetiq design tokens (`#050505` canvas, monochrome text, `#62E6B2` operational green, zero emoji characters).
 
 ---
 
-## Contribution Workflow
+## 2. Local Setup & Workflow
 
-1. **Create a Feature Branch**:
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
+```bash
+# 1. Install dependencies
+pnpm install
 
-2. **Commit Convention**:
-   We enforce [Conventional Commits](https://www.conventionalcommits.org/):
-   * `feat: ...` — New feature implementation
-   * `fix: ...` — Bug fix
-   * `docs: ...` — Documentation updates
-   * `chore: ...` — Tooling/build updates
+# 2. Start development servers
+pnpm run dev
 
-3. **Pre-Push Quality Checks**:
-   Before opening a PR, ensure all local validation checks pass:
-   ```bash
-   pnpm lint
-   pnpm typecheck
-   pnpm test
-   ```
+# 3. Run test suites
+pnpm --filter vapor-web test
+python -m pytest apps/api/tests
+```
 
-4. **Pull Request Review**:
-   * All CI/CD GitHub Actions checks must pass.
-   * PRs must be under 300 lines of code diff wherever possible.
+---
+
+## 3. Pull Request Checklist
+
+- [ ] All new backend endpoints require authentication and tenant isolation.
+- [ ] Database queries are scoped by `workspace_id` and have appropriate indices.
+- [ ] Frontend changes respect the matte-black design tokens and zero-emoji rule.
+- [ ] All tests in Vitest and Pytest pass cleanly.
