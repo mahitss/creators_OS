@@ -200,6 +200,112 @@ class MissionEvent(Base):
         Index("idx_mission_events_workspace_time", "workspace_id", "timestamp"),
     )
 
+# ----------------- AGENT RUNTIME V1 CORE ENTITIES -----------------
+
+class Agent(Base):
+    __tablename__ = "agents"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="ACTIVE", index=True)
+    system_instructions: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    capabilities: Mapped[list] = mapped_column(JSON, default=list)
+    allowed_tools: Mapped[list] = mapped_column(JSON, default=list)
+    allowed_models: Mapped[list] = mapped_column(JSON, default=list)
+    max_steps: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
+    max_runtime_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=300)
+    max_token_budget: Mapped[int] = mapped_column(Integer, nullable=False, default=100000)
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False, default="usr_system")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_agents_workspace_status", "workspace_id", "status"),
+    )
+
+class AgentVersion(Base):
+    __tablename__ = "agent_versions"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    instructions: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    capabilities: Mapped[list] = mapped_column(JSON, default=list)
+    tool_policy: Mapped[dict] = mapped_column(JSON, default=dict)
+    model_policy: Mapped[dict] = mapped_column(JSON, default=dict)
+    limits: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_by: Mapped[str] = mapped_column(String(255), nullable=False, default="usr_system")
+
+    __table_args__ = (
+        Index("idx_agent_versions_agent_ver", "agent_id", "version", unique=True),
+        Index("idx_agent_versions_workspace", "workspace_id"),
+    )
+
+class AgentRun(Base):
+    __tablename__ = "agent_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    agent_version_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="SET NULL"), nullable=True, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="QUEUED", index=True)
+    current_step: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    error_info: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    result_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+    __table_args__ = (
+        Index("idx_agent_runs_workspace_status", "workspace_id", "status"),
+        Index("idx_agent_runs_agent_time", "agent_id", "created_at"),
+    )
+
+class AgentObservation(Base):
+    __tablename__ = "agent_observations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    step_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    observation_type: Mapped[str] = mapped_column(String(100), nullable=False, default="tool_result")
+    tool_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="success")
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    raw_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (
+        Index("idx_agent_obs_run_step", "agent_run_id", "step_number"),
+    )
+
+class AgentEvent(Base):
+    __tablename__ = "agent_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    mission_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    correlation_id: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    __table_args__ = (
+        Index("idx_agent_events_run_time", "agent_run_id", "timestamp"),
+        Index("idx_agent_events_workspace_time", "workspace_id", "timestamp"),
+    )
+
 class MissionExecution(Base):
     __tablename__ = "mission_executions"
 
@@ -493,31 +599,6 @@ class MissionDocumentReference(Base):
 
     __table_args__ = (
         Index("idx_mission_doc_ref_unique", "mission_id", "drive_file_id", unique=True),
-    )
-
-class AgentRun(Base):
-    __tablename__ = "agent_runs"
-
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
-    mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="queued", index=True)
-    goal: Mapped[str] = mapped_column(Text, nullable=False)
-    current_step_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    iteration_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    max_iterations: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
-    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    lease_worker_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    budget_state: Mapped[dict] = mapped_column(JSON, default=dict)
-    resume_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-
-    __table_args__ = (
-        Index("idx_agent_runs_workspace_status", "workspace_id", "status"),
     )
 
 class AgentStep(Base):

@@ -1,125 +1,181 @@
-from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status
+"""Agent Run Management, Streaming & Execution Router for Kinetiq Agent Runtime V1."""
+
+from typing import Optional, List, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dependencies.db import get_db
 from app.dependencies.auth import get_current_workspace, WorkspaceContext
-from app.schemas.agent_runs import (
-    AgentRunCreate,
-    AgentRunResponse,
-    AgentStepResponse,
-    AgentApprovalResponse,
-    AgentCheckpointResponse
+from app.schemas.agents import (
+    AgentRunCreateRequest,
+    AgentRunDetailResponse,
+    AgentObservationResponse,
+    AgentEventResponse,
 )
-from app.services import agent_runtime, agent_recovery
+from app.services import agent_run_service, agent_runtime, agent_recovery
+from app.core.agent_lifecycle import AgentExecutionNotAllowedError
 
-router = APIRouter()
+router = APIRouter(tags=["agent-runs"])
 
-@router.post("/missions/{id}/agent-runs", response_model=AgentRunResponse, status_code=status.HTTP_201_CREATED)
-async def create_agent_run(
-    id: str,
-    payload: AgentRunCreate,
+
+@router.get("/agent-runs", response_model=List[AgentRunDetailResponse])
+async def list_agent_runs(
+    agent_id: Optional[str] = Query(None, description="Filter by agent ID"),
+    mission_id: Optional[str] = Query(None, description="Filter by mission ID"),
+    status: Optional[str] = Query(None, description="Filter by run status (QUEUED, EXECUTING, COMPLETED, FAILED, CANCELLED)"),
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentRunResponse:
+) -> List[AgentRunDetailResponse]:
+    """Lists AgentRuns for active workspace with optional filters."""
+    runs = await agent_run_service.list_agent_runs(db, ws_ctx.workspace_id, agent_id=agent_id, mission_id=mission_id, status_filter=status)
+    return [AgentRunDetailResponse(**r) for r in runs]
+
+
+@router.post("/agent-runs", response_model=AgentRunDetailResponse, status_code=status.HTTP_201_CREATED)
+async def create_agent_run(
+    payload: AgentRunCreateRequest,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
+    db: Optional[AsyncSession] = Depends(get_db),
+) -> AgentRunDetailResponse:
+    """Initializes and begins autonomous execution of an AgentRun."""
     try:
-        run = await agent_runtime.create_agent_run(
-            db, ws_ctx.workspace_id, mission_id=id, goal=payload.goal, max_iterations=payload.max_iterations or 20, user_id=ws_ctx.user_id
+        run = await agent_run_service.create_and_start_agent_run(
+            session=db,
+            workspace_id=ws_ctx.workspace_id,
+            user_id=ws_ctx.user_id,
+            user_role=ws_ctx.role,
+            payload=payload
         )
-        return AgentRunResponse(**run)
+        return AgentRunDetailResponse(**run)
+    except AgentExecutionNotAllowedError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
 
-@router.get("/agent-runs/{id}", response_model=AgentRunResponse)
+
+@router.get("/agent-runs/{id}", response_model=AgentRunDetailResponse)
 async def get_agent_run(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentRunResponse:
-    run = await agent_runtime.get_agent_run(db, ws_ctx.workspace_id, id)
+) -> AgentRunDetailResponse:
+    """Retrieves single AgentRun with step observations and events."""
+    run = await agent_run_service.get_agent_run(db, ws_ctx.workspace_id, id)
     if not run:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Agent run not found in active workspace."
+            detail=f"AgentRun '{id}' not found in active workspace."
         )
-    return AgentRunResponse(**run)
+    return AgentRunDetailResponse(**run)
 
-@router.get("/agent-runs/{id}/steps", response_model=List[AgentStepResponse])
-async def list_agent_steps(
+
+@router.get("/agent-runs/{id}/observations", response_model=List[AgentObservationResponse])
+async def list_agent_run_observations(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> List[AgentStepResponse]:
-    steps = await agent_runtime.list_agent_steps(db, ws_ctx.workspace_id, id)
-    return [AgentStepResponse(**s) for s in steps]
+) -> List[AgentObservationResponse]:
+    """Retrieves step observations produced by the AgentRun."""
+    try:
+        obs = await agent_run_service.list_agent_run_observations(db, ws_ctx.workspace_id, id)
+        return [AgentObservationResponse(**o) for o in obs]
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
-@router.get("/agent-runs/{id}/checkpoints", response_model=List[AgentCheckpointResponse])
-async def list_agent_checkpoints(
+
+@router.get("/agent-runs/{id}/events", response_model=List[AgentEventResponse])
+async def list_agent_run_events(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> List[AgentCheckpointResponse]:
-    run = await agent_runtime.get_agent_run(db, ws_ctx.workspace_id, id)
-    if not run:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent run not found.")
-    cps = agent_recovery._in_memory_checkpoints.get(id, [])
-    return [AgentCheckpointResponse(**c) for c in cps]
+) -> List[AgentEventResponse]:
+    """Retrieves immutable append-only event ledger history for the AgentRun."""
+    try:
+        evts = await agent_run_service.list_agent_run_events(db, ws_ctx.workspace_id, id)
+        return [AgentEventResponse(**e) for e in evts]
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
-@router.post("/agent-runs/{id}/pause", response_model=AgentRunResponse)
+
+@router.post("/agent-runs/{id}/pause", response_model=AgentRunDetailResponse)
 async def pause_agent_run(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentRunResponse:
-    run = await agent_runtime.pause_agent_run(db, ws_ctx.workspace_id, id)
-    if not run:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent run not found.")
-    return AgentRunResponse(**run)
+) -> AgentRunDetailResponse:
+    """Pauses an AgentRun at a safe step boundary."""
+    try:
+        run = await agent_run_service.pause_agent_run(db, ws_ctx.workspace_id, id)
+        return AgentRunDetailResponse(**run)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
-@router.post("/agent-runs/{id}/resume", response_model=AgentRunResponse)
+
+@router.post("/agent-runs/{id}/resume", response_model=AgentRunDetailResponse)
 async def resume_agent_run(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentRunResponse:
-    run = await agent_runtime.resume_agent_run(db, ws_ctx.workspace_id, id)
-    if not run:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent run not found.")
-    return AgentRunResponse(**run)
+) -> AgentRunDetailResponse:
+    """Resumes a paused AgentRun."""
+    try:
+        run = await agent_run_service.resume_agent_run(db, ws_ctx.workspace_id, id)
+        return AgentRunDetailResponse(**run)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
-@router.post("/agent-runs/{id}/cancel", response_model=AgentRunResponse)
+
+@router.post("/agent-runs/{id}/cancel", response_model=AgentRunDetailResponse)
 async def cancel_agent_run(
     id: str,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentRunResponse:
-    run = await agent_runtime.cancel_agent_run(db, ws_ctx.workspace_id, id)
-    if not run:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Agent run not found.")
-    return AgentRunResponse(**run)
+) -> AgentRunDetailResponse:
+    """Aborts and cancels an AgentRun immediately."""
+    try:
+        run = await agent_run_service.cancel_agent_run(db, ws_ctx.workspace_id, id)
+        return AgentRunDetailResponse(**run)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
 
-@router.post("/agent-runs/{id}/approvals/{approval_id}/approve", response_model=AgentApprovalResponse)
-async def approve_approval_request(
+
+@router.get("/agent-runs/{id}/stream")
+async def stream_agent_run(
     id: str,
-    approval_id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace)
+):
+    """Server-Sent Events (SSE) live stream for an AgentRun."""
+    return StreamingResponse(
+        agent_run_service.subscribe_agent_run_stream(ws_ctx.workspace_id, id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+# ----------------- LEGACY MISSION AGENT-RUNS COMPATIBILITY -----------------
+
+@router.post("/missions/{id}/agent-runs", status_code=status.HTTP_201_CREATED)
+async def create_mission_agent_run_legacy(
+    id: str,
+    payload: Dict[str, Any],
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentApprovalResponse:
+):
+    """Legacy compatibility bridge for mission agent runs."""
+    agent_id = payload.get("agent_id") or "ag_revenue_analyst"
+    req = AgentRunCreateRequest(
+        agent_id=agent_id,
+        mission_id=id,
+        goal=payload.get("goal"),
+        context=payload.get("context")
+    )
     try:
-        app_req = await agent_runtime.approve_approval_request(db, ws_ctx.workspace_id, id, approval_id)
-        return AgentApprovalResponse(**app_req)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
-
-@router.post("/agent-runs/{id}/approvals/{approval_id}/reject", response_model=AgentApprovalResponse)
-async def reject_approval_request(
-    id: str,
-    approval_id: str,
-    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
-    db: Optional[AsyncSession] = Depends(get_db),
-) -> AgentApprovalResponse:
-    try:
-        app_req = await agent_runtime.reject_approval_request(db, ws_ctx.workspace_id, id, approval_id)
-        return AgentApprovalResponse(**app_req)
-    except ValueError as exc:
+        run = await agent_run_service.create_and_start_agent_run(db, ws_ctx.workspace_id, ws_ctx.user_id, ws_ctx.role, req)
+        return run
+    except Exception as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))

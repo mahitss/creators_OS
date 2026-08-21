@@ -59,17 +59,6 @@ export interface Proposal {
   createdAt: string;
 }
 
-export interface Agent {
-  id: string;
-  workspaceId: string;
-  name: string;
-  role: string;
-  status: 'IDLE' | 'ACTIVE' | 'BUSY' | 'ERROR' | 'OFFLINE';
-  capabilities: string[];
-  allowedTools: string[];
-  createdAt: string;
-}
-
 export type MissionStatus =
   | 'DRAFT'
   | 'QUEUED'
@@ -174,6 +163,139 @@ export interface MissionEvent {
   eventType: MissionEventType;
   timestamp: string;
   payload: Record<string, unknown>;
+}
+
+// ----------------- AGENT RUNTIME V1 CORE TYPES -----------------
+
+export type AgentStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'DISABLED' | 'ARCHIVED';
+
+export type AgentRunStatus =
+  | 'QUEUED'
+  | 'INITIALIZING'
+  | 'PLANNING'
+  | 'EXECUTING'
+  | 'WAITING_TOOL'
+  | 'OBSERVING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'TIMED_OUT';
+
+export type ToolRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export type AgentActionType = 'RESPOND' | 'TOOL_CALL' | 'WAIT' | 'COMPLETE' | 'FAIL';
+
+export type AgentEventType =
+  | 'AGENT_RUN_CREATED'
+  | 'AGENT_INITIALIZED'
+  | 'CONTEXT_ASSEMBLED'
+  | 'MODEL_REQUESTED'
+  | 'MODEL_RESPONDED'
+  | 'TOOL_REQUESTED'
+  | 'TOOL_AUTHORIZED'
+  | 'TOOL_DENIED'
+  | 'TOOL_EXECUTED'
+  | 'OBSERVATION_RECORDED'
+  | 'AGENT_STEP_STARTED'
+  | 'AGENT_STEP_COMPLETED'
+  | 'AGENT_PAUSED'
+  | 'AGENT_FAILED'
+  | 'AGENT_COMPLETED';
+
+export interface Agent {
+  id: string;
+  workspaceId: string;
+  name: string;
+  description: string;
+  status: AgentStatus;
+  systemInstructions: string;
+  capabilities: string[];
+  allowedTools: string[];
+  allowedModels: string[];
+  maxSteps: number;
+  maxRuntimeSeconds: number;
+  maxTokenBudget: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  currentVersion?: number;
+  latestVersionId?: string;
+  total_runs?: number;
+  totalRuns?: number;
+}
+
+export interface AgentVersion {
+  id: string;
+  agentId: string;
+  workspaceId: string;
+  version: number;
+  instructions: string;
+  capabilities: string[];
+  toolPolicy: Record<string, unknown>;
+  modelPolicy: Record<string, unknown>;
+  limits: {
+    maxSteps?: number;
+    maxRuntimeSeconds?: number;
+    maxTokenBudget?: number;
+  };
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface AgentRun {
+  id: string;
+  agentId: string;
+  agentVersionId: string;
+  missionId?: string | null;
+  workspaceId: string;
+  status: AgentRunStatus;
+  currentStep: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  durationMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  costUsd: number;
+  errorInfo?: Record<string, unknown> | string | null;
+  resultData?: Record<string, unknown> | string | null;
+  createdAt: string;
+}
+
+export interface AgentObservation {
+  id: string;
+  agentRunId: string;
+  workspaceId: string;
+  stepNumber: number;
+  observationType: string;
+  toolName?: string | null;
+  status: 'success' | 'failed' | 'denied';
+  summary: string;
+  rawData?: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface AgentEvent {
+  id: string;
+  agentRunId: string;
+  workspaceId: string;
+  missionId?: string | null;
+  eventType: AgentEventType;
+  correlationId: string;
+  timestamp: string;
+  payload: Record<string, unknown>;
+}
+
+export interface ToolDefinition {
+  id: string;
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+  outputSchema?: Record<string, unknown>;
+  requiredPermissions: string[];
+  riskLevel: ToolRiskLevel;
+  timeoutSeconds: number;
+  enabled: boolean;
 }
 
 export interface Workflow {
