@@ -70,16 +70,110 @@ export interface Agent {
   createdAt: string;
 }
 
+export type MissionStatus =
+  | 'DRAFT'
+  | 'QUEUED'
+  | 'PLANNING'
+  | 'RUNNING'
+  | 'WAITING'
+  | 'PAUSED'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'active'
+  | 'completed'
+  | 'archived';
+
+export type MissionPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'low' | 'medium' | 'high' | 'urgent';
+
+export type MissionStepStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'SKIPPED' | 'pending' | 'ready' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+
+export type MissionStepType = 'retrieval' | 'analysis' | 'reasoning' | 'generation' | 'action';
+
+export type MissionEventType =
+  | 'MISSION_CREATED'
+  | 'MISSION_QUEUED'
+  | 'MISSION_PLANNING'
+  | 'PLAN_CREATED'
+  | 'STEP_STARTED'
+  | 'STEP_COMPLETED'
+  | 'STEP_FAILED'
+  | 'MODEL_REQUEST'
+  | 'MODEL_RESPONSE'
+  | 'MISSION_PAUSED'
+  | 'MISSION_RESUMED'
+  | 'MISSION_CANCELLED'
+  | 'MISSION_COMPLETED'
+  | 'MISSION_FAILED';
+
+export interface MissionTokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
 export interface Mission {
   id: string;
   workspaceId: string;
+  tenantId?: string;
+  name: string;
   title: string;
+  goal: string;
   description: string;
-  status: 'PENDING' | 'PLANNING' | 'RUNNING' | 'WAITING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'TIMED_OUT' | 'active' | 'completed' | 'paused' | 'failed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: MissionStatus;
+  priority: MissionPriority;
+  agentId?: string | null;
+  model?: string | null;
+  context?: Record<string, unknown>;
+  plan?: Record<string, unknown> | null;
+  currentStep: number;
+  progress: number;
   createdBy: string;
   createdAt: string;
+  updatedAt?: string;
+  startedAt?: string | null;
   completedAt?: string | null;
+  failedAt?: string | null;
+  cancelledAt?: string | null;
+  error?: Record<string, unknown> | string | null;
+  result?: Record<string, unknown> | string | null;
+  tokenUsage?: MissionTokenUsage;
+  cost?: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface MissionStep {
+  id: string;
+  missionId: string;
+  workspaceId?: string;
+  stepNumber: number;
+  name: string;
+  title?: string;
+  description: string;
+  stepType: MissionStepType;
+  status: MissionStepStatus;
+  input?: Record<string, unknown>;
+  output?: Record<string, unknown> | null;
+  error?: Record<string, unknown> | string | null;
+  retryCount: number;
+  maxRetries: number;
+  tokenUsage?: MissionTokenUsage;
+  costUsd?: number;
+  durationMs?: number;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface MissionEvent {
+  id: string;
+  missionId: string;
+  workspaceId: string;
+  stepId?: string | null;
+  eventType: MissionEventType;
+  timestamp: string;
+  payload: Record<string, unknown>;
 }
 
 export interface Workflow {

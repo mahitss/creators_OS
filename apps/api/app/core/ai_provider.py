@@ -57,12 +57,15 @@ class UsageMetadata(BaseModel):
 
     def to_audit_dict(self) -> Dict[str, Any]:
         """Exports structured JSON telemetry dictionary for tenant cost attribution (GAP-03)."""
+        in_t = self.input_tokens or 0
+        out_t = self.output_tokens or 0
         return {
             "ai_provider": self.provider,
             "ai_model": self.model,
             "latency_ms": self.latency_ms,
-            "input_tokens": self.input_tokens or 0,
-            "output_tokens": self.output_tokens or 0,
+            "input_tokens": in_t,
+            "output_tokens": out_t,
+            "total_tokens": in_t + out_t,
             "tenant_id": self.tenant_id or "org_global_enterprise_01",
             "estimated_cost_usd": self.estimated_cost_usd or 0.0
         }

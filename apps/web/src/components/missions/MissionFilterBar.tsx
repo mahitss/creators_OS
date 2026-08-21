@@ -20,9 +20,11 @@ export const MissionFilterBar: React.FC<MissionFilterBarProps> = ({
 }) => {
   const statusTabs = [
     { id: 'all', label: 'All' },
-    { id: 'active', label: 'Active' },
+    { id: 'draft', label: 'Draft' },
+    { id: 'running', label: 'Running' },
+    { id: 'paused', label: 'Paused' },
     { id: 'completed', label: 'Completed' },
-    { id: 'archived', label: 'Archived' },
+    { id: 'failed', label: 'Failed' },
   ];
 
   const priorityOptions = [
@@ -30,11 +32,11 @@ export const MissionFilterBar: React.FC<MissionFilterBarProps> = ({
     { label: 'Low', value: 'low' },
     { label: 'Medium', value: 'medium' },
     { label: 'High', value: 'high' },
-    { label: 'Urgent', value: 'urgent' },
+    { label: 'Critical / Urgent', value: 'critical' },
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pb-2 border-b border-neutral-800">
       <Tabs tabs={statusTabs} activeTabId={activeStatus} onChange={onStatusChange} />
 
       <div className="flex items-center gap-2">

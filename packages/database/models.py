@@ -67,13 +67,29 @@ class Mission(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    goal: Mapped[str] = mapped_column(Text, nullable=False, default="")
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="active", index=True)
-    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="medium", index=True)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="DRAFT", index=True)
+    priority: Mapped[str] = mapped_column(String(50), nullable=False, default="MEDIUM", index=True)
+    agent_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    context_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    plan_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    current_step: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    error_info: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    result_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    token_usage: Mapped[dict] = mapped_column(JSON, default=lambda: {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    metadata_info: Mapped[dict] = mapped_column(JSON, default=dict)
 
     __table_args__ = (
         Index("idx_missions_workspace_status", "workspace_id", "status"),
@@ -121,7 +137,7 @@ class PlanNode(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
     type: Mapped[str] = mapped_column(String(50), nullable=False, default="tool_call", index=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, ready, running, waiting_for_approval, completed, failed, blocked, cancelled, skipped
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
     dependencies: Mapped[list] = mapped_column(JSON, default=list)
     tool_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     input_schema: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -140,19 +156,48 @@ class MissionStep(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=True, index=True)
     plan_version_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("mission_plans.id", ondelete="SET NULL"), nullable=True)
+    step_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    order: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False, default="")
-    order: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
+    step_type: Mapped[str] = mapped_column(String(50), nullable=False, default="analysis")
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="PENDING", index=True)
+    input_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_info: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
+    token_usage: Mapped[dict] = mapped_column(JSON, default=lambda: {"input_tokens": 0, "output_tokens": 0, "total_tokens": 0})
+    cost_usd: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         Index("idx_mission_steps_order", "mission_id", "order"),
+        Index("idx_mission_steps_step_number", "mission_id", "step_number"),
+    )
+
+class MissionEvent(Base):
+    __tablename__ = "mission_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mission_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    step_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("mission_steps.id", ondelete="SET NULL"), nullable=True, index=True)
+    event_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    payload: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    __table_args__ = (
+        Index("idx_mission_events_mission_time", "mission_id", "timestamp"),
+        Index("idx_mission_events_workspace_time", "workspace_id", "timestamp"),
     )
 
 class MissionExecution(Base):

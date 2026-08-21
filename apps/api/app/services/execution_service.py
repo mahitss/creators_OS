@@ -91,8 +91,26 @@ async def get_mission_steps_and_execution(
     if not mission:
         return {"execution": None, "steps": []}
 
-    steps = _in_memory_steps.get(mission_id, [])
+    steps = _in_memory_steps.get(mission_id)
+    if not steps:
+        from app.services.mission_engine import _in_memory_engine_steps
+        steps = _in_memory_engine_steps.get(mission_id, [])
+
     execution = _in_memory_executions.get(mission_id)
+    if not execution and steps:
+        completed = sum(1 for s in steps if str(s.get("status", "")).lower() == "completed")
+        execution = {
+            "id": f"exec_{mission_id}",
+            "mission_id": mission_id,
+            "status": mission.get("status", "idle"),
+            "completed_steps_count": completed,
+            "total_steps_count": len(steps),
+            "created_at": mission.get("created_at"),
+            "updated_at": mission.get("updated_at"),
+            "started_at": mission.get("started_at"),
+            "completed_at": mission.get("completed_at")
+        }
+
     return {"execution": execution, "steps": steps}
 
 get_execution_state = get_mission_steps_and_execution

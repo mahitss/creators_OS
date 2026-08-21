@@ -10,7 +10,7 @@ import { Typography, Button, EmptyState, Spinner, ErrorState } from '@vapor/ui';
 
 export default function MissionsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
-  const [statusFilter, setStatusFilter] = useState('active');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -47,13 +47,15 @@ export default function MissionsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-4xl mx-auto w-full flex flex-col gap-6 py-2">
+      <div className="max-w-5xl mx-auto w-full flex flex-col gap-6 py-4">
         {/* Header Bar */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col gap-0.5">
-            <Typography variant="h1">Missions</Typography>
-            <Typography variant="caption" className="text-slate-400">
-              Work items defined for Executive background observation and execution.
+            <Typography variant="h1" className="text-xl font-bold font-mono tracking-tight text-neutral-100">
+              Missions
+            </Typography>
+            <Typography variant="caption" className="text-neutral-400 font-mono text-xs">
+              Executive AI operating system mission execution engine and runtime.
             </Typography>
           </div>
           <Button variant="primary" onClick={() => setIsCreateOpen(true)}>
@@ -73,27 +75,27 @@ export default function MissionsPage() {
 
         {/* Content View */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center p-12 gap-3">
+          <div className="flex flex-col items-center justify-center p-16 gap-3">
             <Spinner size="md" />
-            <Typography variant="caption" className="text-slate-500 font-mono">
-              Loading workspace missions...
+            <Typography variant="caption" className="text-neutral-500 font-mono text-xs">
+              Streaming workspace missions ledger...
             </Typography>
           </div>
         ) : isError ? (
           <ErrorState
-            title="Missions Error"
+            title="Missions Stream Offline"
             message="Could not retrieve missions for active workspace."
             onRetry={loadMissions}
           />
         ) : missions.length === 0 ? (
-          <div className="py-8">
+          <div className="py-12">
             <EmptyState
               title="No missions yet."
-              description="Create your first mission and give Vapor something meaningful to work on."
-              icon={<span className="text-2xl">⚡</span>}
+              description="Create your first autonomous mission to begin planning and execution."
+              icon={<span className="text-2xl font-mono">⚡</span>}
               action={
                 <Button variant="primary" size="sm" onClick={() => setIsCreateOpen(true)}>
-                  Create Mission
+                  + Create Mission
                 </Button>
               }
             />
