@@ -1,0 +1,9 @@
+{
+  "name": "vapor-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
+    "build": "python -c \"import app.main; print('API build verification passed')\""
+  }
+}
