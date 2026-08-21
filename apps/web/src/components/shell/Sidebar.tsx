@@ -103,13 +103,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
                 key={item.id}
                 href={item.href}
                 onClick={onMobileClose}
-                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#62E6B2] ${
+                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none ${
                   isActive
                     ? 'bg-[#151515] text-[#F5F5F5] font-semibold border-l-2 border-[#62E6B2]'
-                    : 'text-[#8A8A8A] hover:text-[#F5F5F5] hover:bg-[#111111]'
+                    : 'text-[#777777] hover:text-[#F5F5F5] hover:bg-[#0D0D0D]'
                 } ${isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''}`}
               >
-                <span className="shrink-0">{item.icon}</span>
+                <span className={`shrink-0 ${isActive ? 'text-[#62E6B2]' : 'text-[#858585]'}`}>{item.icon}</span>
                 {(!isCollapsed || isMobileOpen) && <span>{item.label}</span>}
               </Link>
             );

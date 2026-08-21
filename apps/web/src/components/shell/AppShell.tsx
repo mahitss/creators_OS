@@ -6,6 +6,46 @@ import { usePathname } from 'next/navigation';
 import { fetchAttentionCount } from '../../lib/api/attention';
 import { CommandPalette } from '../command/CommandPalette';
 
+import {
+  Terminal,
+  Cpu,
+  Brain,
+  ShieldCheck,
+  Layers,
+  Activity,
+  FileText,
+  Mail,
+  Folder,
+  Database,
+  Network,
+  GitBranch,
+  Play,
+  Sliders,
+  Eye,
+  Compass,
+  Lock,
+  Server,
+  Settings,
+  Workflow,
+  TrendingUp,
+  BarChart2,
+  Users,
+  Boxes,
+  Key,
+  Cloud,
+  Bell,
+  AlertTriangle,
+  Radio,
+  Sparkles,
+  CheckSquare,
+  Search,
+  Command,
+  LayoutDashboard,
+  Shield,
+  Zap,
+  X,
+} from 'lucide-react';
+
 export interface AppShellProps {
   children: React.ReactNode;
 }
@@ -13,14 +53,65 @@ export interface AppShellProps {
 interface NavCategory {
   id: string;
   name: string;
-  icon: string;
+  iconName: string;
   items: {
     label: string;
     href: string;
-    icon: string;
+    iconName: string;
     badgeCount?: number;
   }[];
 }
+
+const renderNavIcon = (name: string, className = 'w-3.5 h-3.5') => {
+  switch (name) {
+    case 'command': return <Terminal className={className} />;
+    case 'intelligence': return <Brain className={className} />;
+    case 'execution': return <Cpu className={className} />;
+    case 'governance': return <ShieldCheck className={className} />;
+    case 'system': return <Server className={className} />;
+    case 'brief': return <LayoutDashboard className={className} />;
+    case 'bell': return <Bell className={className} />;
+    case 'missions': return <Play className={className} />;
+    case 'work': return <CheckSquare className={className} />;
+    case 'strategy': return <TrendingUp className={className} />;
+    case 'foresight': return <Eye className={className} />;
+    case 'portfolio': return <BarChart2 className={className} />;
+    case 'execution_gov': return <Sliders className={className} />;
+    case 'operating_model': return <Compass className={className} />;
+    case 'collaboration': return <Users className={className} />;
+    case 'organization': return <Network className={className} />;
+    case 'content': return <Sparkles className={className} />;
+    case 'mail': return <Mail className={className} />;
+    case 'folder': return <Folder className={className} />;
+    case 'memory': return <Database className={className} />;
+    case 'knowledge': return <FileText className={className} />;
+    case 'graph': return <Network className={className} />;
+    case 'eval': return <BarChart2 className={className} />;
+    case 'models': return <Cpu className={className} />;
+    case 'automations': return <Zap className={className} />;
+    case 'workflows': return <Workflow className={className} />;
+    case 'mesh': return <Network className={className} />;
+    case 'skills': return <Boxes className={className} />;
+    case 'capabilities': return <Boxes className={className} />;
+    case 'decisions': return <GitBranch className={className} />;
+    case 'optimization': return <Sliders className={className} />;
+    case 'predictions': return <Radio className={className} />;
+    case 'resilience': return <Shield className={className} />;
+    case 'control': return <Sliders className={className} />;
+    case 'simulation': return <Activity className={className} />;
+    case 'warroom': return <AlertTriangle className={className} />;
+    case 'crisis': return <AlertTriangle className={className} />;
+    case 'threats': return <ShieldCheck className={className} />;
+    case 'operations': return <Activity className={className} />;
+    case 'finops': return <Cloud className={className} />;
+    case 'identity': return <Key className={className} />;
+    case 'security': return <Lock className={className} />;
+    case 'integrations': return <Layers className={className} />;
+    case 'events': return <Radio className={className} />;
+    case 'settings': return <Settings className={className} />;
+    default: return <Terminal className={className} />;
+  }
+};
 
 export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const pathname = usePathname();
@@ -179,90 +270,96 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     }));
   };
 
-  // 4 Primary Logical Groups containing all 61 verified routes
+  // 5 Primary Logical Groups containing all 61 verified routes
   const categories: NavCategory[] = useMemo(
     () => [
       {
         id: 'command',
-        name: 'Command & Briefing',
-        icon: '🏛️',
+        name: 'COMMAND',
+        iconName: 'command',
         items: [
-          { label: 'Executive Brief', href: '/', icon: '🏛️' },
-          { label: 'Attention Inbox', href: '/attention', icon: '🔔', badgeCount: openAttentionCount },
-          { label: 'Autonomous Missions', href: '/missions', icon: '⚡' },
-          { label: 'Work Queue', href: '/work', icon: '📋' },
-          { label: 'Strategic Intelligence', href: '/strategy', icon: '📈' },
-          { label: 'Strategic Foresight', href: '/foresight', icon: '🔮' },
-          { label: 'Portfolio Intelligence', href: '/portfolio', icon: '📊' },
-          { label: 'Execution Governance', href: '/execution', icon: '⚖️' },
-          { label: 'Operating Model', href: '/operating-model', icon: '📐' },
-          { label: 'Collaboration Center', href: '/collaboration', icon: '👥' },
-          { label: 'Operating Map', href: '/organization', icon: '🗺️' },
+          { label: 'Executive Brief', href: '/', iconName: 'brief' },
+          { label: 'Attention Inbox', href: '/attention', iconName: 'bell', badgeCount: openAttentionCount },
+          { label: 'Autonomous Missions', href: '/missions', iconName: 'missions' },
+          { label: 'Work Queue', href: '/work', iconName: 'work' },
+          { label: 'Strategic Intelligence', href: '/strategy', iconName: 'strategy' },
+          { label: 'Strategic Foresight', href: '/foresight', iconName: 'foresight' },
+          { label: 'Portfolio Intelligence', href: '/portfolio', iconName: 'portfolio' },
         ],
       },
       {
         id: 'intelligence',
-        name: 'Intelligence & Context',
-        icon: '🧠',
+        name: 'INTELLIGENCE',
+        iconName: 'intelligence',
         items: [
-          { label: 'Content Studio', href: '/content', icon: '🎨' },
-          { label: 'Gmail Triage', href: '/gmail', icon: '📧' },
-          { label: 'Drive Browser', href: '/drive', icon: '📁' },
-          { label: 'Memory Vault', href: '/memory', icon: '🧠' },
-          { label: 'Enterprise Knowledge', href: '/knowledge', icon: '📚' },
-          { label: 'Semantic Graph', href: '/knowledge/graph', icon: '🕸️' },
-          { label: 'Intelligence Governance', href: '/knowledge/governance', icon: '🛡️' },
-          { label: 'AI Evaluation', href: '/ai/evaluation', icon: '📊' },
-          { label: 'AI Models', href: '/ai/models', icon: '🤖' },
+          { label: 'Memory Vault', href: '/memory', iconName: 'memory' },
+          { label: 'Enterprise Knowledge', href: '/knowledge', iconName: 'knowledge' },
+          { label: 'Semantic Graph', href: '/knowledge/graph', iconName: 'graph' },
+          { label: 'AI Evaluation', href: '/ai/evaluation', iconName: 'eval' },
+          { label: 'AI Models', href: '/ai/models', iconName: 'models' },
+          { label: 'Content Studio', href: '/content', iconName: 'content' },
+          { label: 'Gmail Triage', href: '/gmail', iconName: 'mail' },
+          { label: 'Drive Browser', href: '/drive', iconName: 'folder' },
         ],
       },
       {
-        id: 'automation',
-        name: 'Automation & Agents',
-        icon: '⚡',
+        id: 'execution',
+        name: 'EXECUTION',
+        iconName: 'execution',
         items: [
-          { label: 'Automations', href: '/automations', icon: '⚡' },
-          { label: 'Workflows', href: '/workflows', icon: '🌿' },
-          { label: 'Workflow Optimization', href: '/workflows/optimization', icon: '⚡' },
-          { label: 'AI Agent Mesh', href: '/agents/mesh', icon: '🕸️' },
-          { label: 'Agent Skill Fabric', href: '/agents/skills', icon: '⚡' },
-          { label: 'Capability Registry', href: '/capabilities', icon: '📦' },
-          { label: 'Agent Executions 2.0', href: '/agents/executions/exec_demo_01', icon: '⚙️' },
-          { label: 'Decision Engine 2.0', href: '/decisions', icon: '⚖️' },
-          { label: 'Decision Intelligence', href: '/intelligence', icon: '📈' },
-          { label: 'Decision Learning 2.0', href: '/transformation-decision-learning', icon: '🧠' },
-          { label: 'Prescriptive Intelligence', href: '/optimization', icon: '⚖️' },
-          { label: 'Predictive Operations', href: '/predictions', icon: '🔮' },
+          { label: 'Automations', href: '/automations', iconName: 'automations' },
+          { label: 'Workflows', href: '/workflows', iconName: 'workflows' },
+          { label: 'Workflow Optimization', href: '/workflows/optimization', iconName: 'optimization' },
+          { label: 'AI Agent Mesh', href: '/agents/mesh', iconName: 'mesh' },
+          { label: 'Agent Skill Fabric', href: '/agents/skills', iconName: 'skills' },
+          { label: 'Capability Registry', href: '/capabilities', iconName: 'capabilities' },
+          { label: 'Agent Executions 2.0', href: '/agents/executions/exec_demo_01', iconName: 'execution' },
+          { label: 'Decision Engine 2.0', href: '/decisions', iconName: 'decisions' },
+          { label: 'Prescriptive Intelligence', href: '/optimization', iconName: 'optimization' },
+          { label: 'Predictive Operations', href: '/predictions', iconName: 'predictions' },
         ],
       },
       {
-        id: 'resilience',
-        name: 'Resilience & Operations',
-        icon: '🛡️',
+        id: 'governance',
+        name: 'GOVERNANCE',
+        iconName: 'governance',
         items: [
-          { label: 'Resilience Command Center', href: '/transformation-resilience-command-center', icon: '🗼' },
-          { label: 'Transformation Control', href: '/transformation-control', icon: '🗼' },
-          { label: 'Transformation Intelligence', href: '/transformation-intelligence', icon: '🕸️' },
-          { label: 'Transformation Foresight', href: '/transformation-foresight', icon: '🔮' },
-          { label: 'Transformation Decisions', href: '/transformation-decisions', icon: '⚖️' },
-          { label: 'Transformation Portfolio', href: '/transformation-portfolio', icon: '📊' },
-          { label: 'Digital Twin Simulation', href: '/transformation-simulation', icon: '🌀' },
-          { label: 'Transformation War Room', href: '/transformation-war-room', icon: '🚨' },
-          { label: 'Transformation Recovery', href: '/transformation-recovery', icon: '🛡️' },
-          { label: 'Resilience Engineering', href: '/transformation-resilience-engineering', icon: '🏗️' },
-          { label: 'Adaptive Governance', href: '/transformation-governance', icon: '🏛️' },
-          { label: 'Crisis Operations', href: '/crisis', icon: '🚨' },
-          { label: 'Threat Intelligence', href: '/threats', icon: '⚡' },
-          { label: 'Global Operations', href: '/operations', icon: '🌐' },
-          { label: 'FinOps & Cloud Infra', href: '/finops', icon: '💰' },
-          { label: 'Enterprise Governance', href: '/admin/governance', icon: '🏛️' },
-          { label: 'Enterprise Identity & SSO', href: '/admin/identity', icon: '🔑' },
-          { label: 'Enterprise Data Security', href: '/admin/data', icon: '🛡️' },
-          { label: 'SecOps Operations Center', href: '/security/operations', icon: '🚨' },
-          { label: 'Agent Security Fabric', href: '/security', icon: '🛡️' },
-          { label: 'Integrations Hub', href: '/integrations', icon: '🔌' },
-          { label: 'Event Mesh', href: '/admin/events', icon: '⚡' },
-          { label: 'Settings Console', href: '/settings', icon: '⚙️' },
+          { label: 'Execution Governance', href: '/execution', iconName: 'execution_gov' },
+          { label: 'Operating Model', href: '/operating-model', iconName: 'operating_model' },
+          { label: 'Operating Map', href: '/organization', iconName: 'organization' },
+          { label: 'Collaboration Center', href: '/collaboration', iconName: 'collaboration' },
+          { label: 'Intelligence Governance', href: '/knowledge/governance', iconName: 'governance' },
+          { label: 'Adaptive Governance', href: '/transformation-governance', iconName: 'governance' },
+          { label: 'Enterprise Governance', href: '/admin/governance', iconName: 'governance' },
+          { label: 'Enterprise Identity & SSO', href: '/admin/identity', iconName: 'identity' },
+          { label: 'Enterprise Data Security', href: '/admin/data', iconName: 'security' },
+          { label: 'Agent Security Fabric', href: '/security', iconName: 'security' },
+          { label: 'SecOps Operations Center', href: '/security/operations', iconName: 'security' },
+          { label: 'Policy Engine Guardrails', href: '/transformation-decision-learning', iconName: 'governance' },
+        ],
+      },
+      {
+        id: 'system',
+        name: 'SYSTEM',
+        iconName: 'system',
+        items: [
+          { label: 'Resilience Command Center', href: '/transformation-resilience-command-center', iconName: 'resilience' },
+          { label: 'Transformation Control', href: '/transformation-control', iconName: 'control' },
+          { label: 'Transformation Intelligence', href: '/transformation-intelligence', iconName: 'intelligence' },
+          { label: 'Transformation Foresight', href: '/transformation-foresight', iconName: 'foresight' },
+          { label: 'Transformation Decisions', href: '/transformation-decisions', iconName: 'decisions' },
+          { label: 'Transformation Portfolio', href: '/transformation-portfolio', iconName: 'portfolio' },
+          { label: 'Digital Twin Simulation', href: '/transformation-simulation', iconName: 'simulation' },
+          { label: 'Transformation War Room', href: '/transformation-war-room', iconName: 'warroom' },
+          { label: 'Transformation Recovery', href: '/transformation-recovery', iconName: 'resilience' },
+          { label: 'Resilience Engineering', href: '/transformation-resilience-engineering', iconName: 'resilience' },
+          { label: 'Crisis Operations', href: '/crisis', iconName: 'crisis' },
+          { label: 'Threat Intelligence', href: '/threats', iconName: 'threats' },
+          { label: 'Global Operations', href: '/operations', iconName: 'operations' },
+          { label: 'FinOps & Cloud Infra', href: '/finops', iconName: 'finops' },
+          { label: 'Integrations Hub', href: '/integrations', iconName: 'integrations' },
+          { label: 'Event Mesh', href: '/admin/events', iconName: 'events' },
+          { label: 'Settings Console', href: '/settings', iconName: 'settings' },
         ],
       },
     ],
@@ -296,8 +393,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       }
     }
     return {
-      item: { label: 'Command Center', href: '/', icon: '🏛️' },
-      cat: { name: 'Vapor OS', icon: '🏛️' },
+      item: { label: 'Command Center', href: '/', iconName: 'brief' },
+      cat: { name: 'KINETIQ', iconName: 'command' },
     };
   }, [categories, pathname]);
 
@@ -368,22 +465,23 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
         {/* Sidebar Search Filter (expanded mode only) */}
         {(!isSidebarCollapsed || isMobileMenuOpen) && (
-          <div className="p-3 border-b border-[rgba(255,255,255,0.08)] shrink-0">
-            <div className="relative">
+          <div className="p-3 border-b border-[rgba(255,255,255,0.06)] shrink-0">
+            <div className="relative flex items-center">
+              <Search className="absolute left-2.5 w-3.5 h-3.5 text-[#555555] pointer-events-none" />
               <input
                 type="text"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Filter routes..."
-                className="w-full pl-8 pr-3 py-1.5 bg-[#080808] border border-[rgba(255,255,255,0.10)] rounded-md text-xs text-[#F5F5F5] placeholder-[#555555] focus:outline-none focus:border-[rgba(255,255,255,0.25)] transition-all font-sans"
+                className="w-full pl-8 pr-7 py-1.5 bg-[#080808] border border-[rgba(255,255,255,0.08)] rounded-md text-xs text-[#F5F5F5] placeholder-[#555555] focus:outline-none focus:border-[rgba(255,255,255,0.22)] transition-all font-sans"
               />
-              <span className="absolute left-2.5 top-2 text-xs text-[#666666]">🔍</span>
               {searchFilter && (
                 <button
                   onClick={() => setSearchFilter('')}
-                  className="absolute right-2.5 top-2 text-xs text-[#666666] hover:text-[#F5F5F5]"
+                  className="absolute right-2 text-xs text-[#666666] hover:text-[#F5F5F5]"
+                  aria-label="Clear filter"
                 >
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -403,19 +501,19 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 {(!isSidebarCollapsed || isMobileMenuOpen) ? (
                   <button
                     onClick={() => toggleCategory(cat.id)}
-                    className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-[#A3A3A3] hover:text-[#F5F5F5] rounded transition-colors group"
+                    className="w-full flex items-center justify-between px-2 py-1.5 text-[11px] font-mono uppercase tracking-widest text-[#777777] hover:text-[#F5F5F5] rounded transition-colors group"
                   >
-                    <span className="flex items-center gap-1.5 truncate">
-                      <span>{cat.icon}</span>
+                    <span className="flex items-center gap-2 truncate">
+                      <span className="text-[#858585] group-hover:text-[#F5F5F5] transition-colors">{renderNavIcon(cat.iconName, 'w-3.5 h-3.5')}</span>
                       <span className="truncate">{cat.name}</span>
                     </span>
-                    <span className="text-[10px] text-[#666666] group-hover:text-[#A3A3A3] transition-transform">
+                    <span className="text-[10px] text-[#555555] group-hover:text-[#A3A3A3] transition-transform">
                       {isCatCollapsed ? '▼' : '▲'}
                     </span>
                   </button>
                 ) : (
-                  <div className="w-full flex justify-center py-1 text-xs text-[#666666]" title={cat.name}>
-                    <span>{cat.icon}</span>
+                  <div className="w-full flex justify-center py-1.5 text-xs text-[#858585]" title={cat.name}>
+                    <span>{renderNavIcon(cat.iconName, 'w-4 h-4')}</span>
                   </div>
                 )}
 
@@ -435,10 +533,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
                             isActive
                               ? 'bg-[#151515] text-[#F5F5F5] font-semibold border-l-2 border-[#62E6B2] pl-2 shadow-none'
-                              : 'text-[#8A8A8A] hover:text-[#F5F5F5] hover:bg-[#111111]'
+                              : 'text-[#777777] hover:text-[#F5F5F5] hover:bg-[#0D0D0D]'
                           } ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`}
                         >
-                          <span className="text-sm shrink-0">{item.icon}</span>
+                          <span className={`shrink-0 transition-colors ${isActive ? 'text-[#62E6B2]' : 'text-[#858585] group-hover:text-[#F5F5F5]'}`}>
+                            {renderNavIcon(item.iconName, 'w-3.5 h-3.5')}
+                          </span>
                           {(!isSidebarCollapsed || isMobileMenuOpen) && (
                             <span className="truncate flex-1">{item.label}</span>
                           )}
@@ -460,18 +560,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </nav>
 
         {/* Sidebar Footer Info */}
-        <div className="p-3 border-t border-[rgba(255,255,255,0.08)] shrink-0 bg-[#070707] flex items-center justify-between text-[11px] font-mono text-[#666666]">
+        <div className="p-3 border-t border-[rgba(255,255,255,0.06)] shrink-0 bg-[#070707] flex items-center justify-between text-[10px] font-mono text-[#555555]">
           {(!isSidebarCollapsed || isMobileMenuOpen) ? (
             <>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#62E6B2] animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
                 <span>v1.0.1-patch</span>
               </span>
-              <span className="text-[#666666]">PROD</span>
+              <span className="text-[#444444]">PROD</span>
             </>
           ) : (
             <div className="w-full flex justify-center" title="v1.0.1-patch PROD">
-              <span className="w-2 h-2 rounded-full bg-[#62E6B2] animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
             </div>
           )}
         </div>
@@ -484,7 +584,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         }`}
       >
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-[rgba(255,255,255,0.08)] bg-[#050505] sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
+        <header className="h-14 border-b border-[rgba(255,255,255,0.06)] bg-[#050505] sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
           {/* Left: Mobile Menu Toggle & Context Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <button
@@ -496,11 +596,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </button>
 
             <div className="flex items-center gap-2 text-xs truncate">
-              <span className="text-[#A3A3A3] font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
-              <span className="text-[#404040] hidden sm:inline">/</span>
+              <span className="text-[#666666] font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
+              <span className="text-[#333333] hidden sm:inline">/</span>
               <span className="text-[#A3A3A3] font-mono text-[11px] flex items-center gap-1.5">
-                <span>{currentItem.item.icon}</span>
-                <span>WORKSPACE</span>
+                <span className="text-[#858585]">{renderNavIcon(currentItem.item.iconName, 'w-3 h-3')}</span>
+                <span>{currentItem.item.label.toUpperCase()}</span>
               </span>
             </div>
           </div>
@@ -510,53 +610,54 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             {/* Global Search / Command Palette Button */}
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#0A0A0A] border border-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.18)] text-xs text-[#A3A3A3] hover:text-[#F5F5F5] transition-all font-mono shadow-none"
+              className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#0A0A0A] border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.16)] text-xs text-[#777777] hover:text-[#F5F5F5] transition-all font-mono shadow-none"
               aria-label="Open Command Palette (Cmd+K)"
             >
-              <span>🔍 Search</span>
-              <kbd className="hidden sm:inline px-1.5 py-0.5 rounded bg-[#050505] text-[10px] text-[#666666] border border-[rgba(255,255,255,0.10)]">
+              <Search className="w-3 h-3 text-[#777777]" />
+              <span className="text-[11px]">Search</span>
+              <kbd className="hidden sm:inline px-1 py-0.2 text-[9px] font-mono bg-[#050505] text-[#555555] rounded border border-[rgba(255,255,255,0.08)]">
                 ⌘K
               </kbd>
             </button>
 
             {/* Live Telemetry Status Chip */}
-            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[rgba(98,230,178,0.06)] border border-[rgba(98,230,178,0.22)] text-[11px] font-mono text-[#62E6B2]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2] animate-pulse" />
+            <div className="hidden xl:flex items-center gap-2 px-2 py-0.5 rounded-full bg-[rgba(98,230,178,0.04)] border border-[rgba(98,230,178,0.18)] text-[10px] font-mono text-[#62E6B2]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
               <span>SYSTEM OPERATIONAL</span>
             </div>
 
             {/* Attention Notifications Quick Link */}
             <Link
               href="/attention"
-              className="relative p-1.5 rounded-md text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#111111] border border-transparent hover:border-[rgba(255,255,255,0.10)] transition-all"
+              className="relative p-1.5 rounded-md text-[#777777] hover:text-[#F5F5F5] hover:bg-[#0D0D0D] transition-all"
               title="Notifications"
               aria-label="Notifications"
             >
-              <span className="text-sm">🔔</span>
+              <Bell className="w-3.5 h-3.5" />
               {openAttentionCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E7B95E] text-[#050505] text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#E7B95E] text-[#050505] text-[8px] font-bold flex items-center justify-center">
                   {openAttentionCount}
                 </span>
               )}
             </Link>
 
             {/* Workspace Context Chip */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#080808] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[#A3A3A3]">
-              <span className="text-[#62E6B2] text-xs">⚡</span>
-              <span>{currentUser?.workspace_id || 'Workspace'}</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#080808] border border-[rgba(255,255,255,0.08)] text-[10px] font-mono text-[#858585]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+              <span>{currentUser?.workspace_id || 'WORKSPACE'}</span>
             </div>
 
             {/* User Profile Avatar & Logout Pill */}
             <div className="flex items-center gap-2 pl-2 border-l border-[rgba(255,255,255,0.08)]">
               <div 
-                className="w-7 h-7 rounded-full bg-[rgba(98,230,178,0.10)] border border-[rgba(98,230,178,0.25)] flex items-center justify-center text-xs font-semibold text-[#62E6B2]"
+                className="w-6 h-6 rounded-full bg-[#111111] border border-[rgba(255,255,255,0.12)] flex items-center justify-center text-[10px] font-mono text-[#F5F5F5]"
                 title={currentUser?.email || 'Authenticated User'}
               >
                 {currentUser?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || 'U'}
               </div>
               <button
                 onClick={handleLogout}
-                className="px-2 py-1 text-[11px] font-mono text-[#A3A3A3] hover:text-[#FF6B7A] hover:bg-[rgba(255,107,122,0.08)] rounded border border-transparent hover:border-[rgba(255,107,122,0.20)] transition-colors"
+                className="px-1.5 py-0.5 text-[10px] font-mono text-[#777777] hover:text-[#FF6B7A] transition-colors"
                 title="Sign out of Kinetiq"
               >
                 Logout

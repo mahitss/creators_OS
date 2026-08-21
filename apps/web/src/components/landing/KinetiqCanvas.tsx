@@ -13,14 +13,14 @@ interface TopologyNodeDef {
 }
 
 const TOPOLOGY_NODES: TopologyNodeDef[] = [
-  { id: 'data', name: 'DATA FABRIC', code: '01_INGEST', pos: [-4.6, 2.2, 1.2], type: 'data', color: 0x9BB7FF },
-  { id: 'event', name: 'EVENT BUS', code: '02_STREAM', pos: [-4.8, -1.8, -1.0], type: 'event', color: 0x9BB7FF },
-  { id: 'model', name: 'MODEL GATEWAY', code: '03_ROUTER', pos: [-1.6, 3.4, -0.8], type: 'model', color: 0x7CF7C5 },
-  { id: 'memory', name: 'KNOWLEDGE VAULT', code: '04_MEMORY', pos: [-1.8, -3.0, 1.4], type: 'memory', color: 0x9BB7FF },
-  { id: 'policy', name: 'POLICY ENGINE', code: '05_GUARD', pos: [1.8, 2.6, 0.8], type: 'policy', color: 0x7CF7C5 },
-  { id: 'agent', name: 'AGENT RUNTIME', code: '06_WORKER', pos: [4.4, 1.4, -1.2], type: 'agent', color: 0x7CF7C5 },
-  { id: 'tool', name: 'TOOL SANDBOX', code: '07_SANDBOX', pos: [2.2, -2.6, -1.4], type: 'tool', color: 0x9BB7FF },
-  { id: 'execution', name: 'EXECUTION DAG', code: '08_RUNTIME', pos: [4.8, -1.8, 1.0], type: 'execution', color: 0x7CF7C5 },
+  { id: 'data', name: 'DATA FABRIC', code: '01_INGEST', pos: [-4.6, 2.2, 1.2], type: 'data', color: 0xCCCCCC },
+  { id: 'event', name: 'EVENT BUS', code: '02_STREAM', pos: [-4.8, -1.8, -1.0], type: 'event', color: 0xCCCCCC },
+  { id: 'model', name: 'MODEL GATEWAY', code: '03_ROUTER', pos: [-1.6, 3.4, -0.8], type: 'model', color: 0x62E6B2 },
+  { id: 'memory', name: 'KNOWLEDGE VAULT', code: '04_MEMORY', pos: [-1.8, -3.0, 1.4], type: 'memory', color: 0xCCCCCC },
+  { id: 'policy', name: 'POLICY ENGINE', code: '05_GUARD', pos: [1.8, 2.6, 0.8], type: 'policy', color: 0x62E6B2 },
+  { id: 'agent', name: 'AGENT RUNTIME', code: '06_WORKER', pos: [4.4, 1.4, -1.2], type: 'agent', color: 0x62E6B2 },
+  { id: 'tool', name: 'TOOL SANDBOX', code: '07_SANDBOX', pos: [2.2, -2.6, -1.4], type: 'tool', color: 0xCCCCCC },
+  { id: 'execution', name: 'EXECUTION DAG', code: '08_RUNTIME', pos: [4.8, -1.8, 1.0], type: 'execution', color: 0x62E6B2 },
 ];
 
 // Technical pipeline connections

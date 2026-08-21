@@ -1,29 +1,41 @@
 import React from 'react';
-import { Card, Skeleton } from '@vapor/ui';
+import { Skeleton } from '@vapor/ui';
 
 export const HomeSkeleton: React.FC = () => {
   return (
-    <div className="max-w-3xl mx-auto w-full flex flex-col gap-6 py-2 animate-in fade-in duration-200">
+    <div className="w-full flex flex-col gap-8 animate-in fade-in duration-200 font-mono">
       {/* Greeting Skeleton */}
-      <div className="flex flex-col gap-2">
-        <Skeleton width="220px" height="28px" />
-        <Skeleton width="340px" height="16px" />
+      <div className="flex flex-col gap-2 pb-4 border-b border-[rgba(255,255,255,0.06)]">
+        <Skeleton width="180px" height="14px" />
+        <Skeleton width="380px" height="32px" />
+        <Skeleton width="60%" height="16px" />
       </div>
 
-      {/* Today's Brief Skeleton */}
-      <Card variant="panel" className="flex flex-col gap-4 p-6 border-slate-800">
-        <Skeleton width="120px" height="18px" />
-        <Skeleton width="100%" height="48px" />
-      </Card>
+      {/* Telemetry Strip Skeleton */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 py-3 border-y border-[rgba(255,255,255,0.06)]">
+        <Skeleton height="36px" />
+        <Skeleton height="36px" />
+        <Skeleton height="36px" />
+        <Skeleton height="36px" />
+        <Skeleton height="36px" />
+      </div>
 
-      {/* Quick Actions Skeleton */}
-      <div className="flex flex-col gap-3">
-        <Skeleton width="140px" height="14px" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Skeleton height="60px" />
-          <Skeleton height="60px" />
+      {/* Canvas Skeleton */}
+      <div className="w-full h-80 bg-[#080808] rounded-xl border border-[rgba(255,255,255,0.06)] flex items-center justify-center">
+        <Skeleton width="40%" height="24px" />
+      </div>
+
+      {/* Content Skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          <Skeleton width="100%" height="120px" />
+          <Skeleton width="100%" height="140px" />
+        </div>
+        <div className="lg:col-span-4 flex flex-col gap-4">
+          <Skeleton width="100%" height="180px" />
         </div>
       </div>
     </div>
   );
 };
+

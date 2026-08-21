@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, Typography } from '@vapor/ui';
+import { Terminal, ArrowRight } from 'lucide-react';
 import { QuickActionItem } from '../../lib/api/home';
 
 interface QuickActionsProps {
@@ -13,39 +13,40 @@ export const QuickActions: React.FC<QuickActionsProps> = ({ actions }) => {
   if (actions.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 text-sm">⚡</span>
-          <Typography variant="h3" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Fast Command Launchpad
-          </Typography>
+          <Terminal className="w-3.5 h-3.5 text-[#858585]" />
+          <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest font-mono">
+            COMMAND LAUNCHPAD
+          </span>
         </div>
-        <span className="text-[10px] font-mono text-slate-500">HOTKEYS READY</span>
+        <span className="text-[10px] font-mono text-[#666666]">CLI READY</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {actions.map((act) => (
-          <Link key={act.id} href={act.href} className="group">
-            <Card
-              variant="panel"
-              className="flex items-center gap-3 p-3.5 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] hover:border-[rgba(255,255,255,0.18)] hover:bg-[#121212] transition-all rounded-lg cursor-pointer shadow-none"
+      <div className="flex flex-col divide-y divide-[rgba(255,255,255,0.04)] bg-[#080808] rounded-lg overflow-hidden border border-[rgba(255,255,255,0.06)]">
+        {actions.map((act) => {
+          const commandAlias = act.href.startsWith('/') ? act.href : `/${act.href}`;
+          return (
+            <Link
+              key={act.id}
+              href={act.href}
+              className="flex items-center justify-between px-3 py-2.5 text-xs hover:bg-[#0D0D0D] transition-colors group"
             >
-              <span className="text-lg p-2 rounded-md bg-[#080808] border border-[rgba(255,255,255,0.08)] group-hover:border-[rgba(98,230,178,0.30)] group-hover:bg-[rgba(98,230,178,0.06)] transition-all shrink-0">
-                {act.icon}
-              </span>
-              <div className="flex flex-col min-w-0">
-                <Typography variant="body" className="text-xs font-semibold text-[#F5F5F5] group-hover:text-[#62E6B2] transition-colors truncate">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[#62E6B2] text-xs font-semibold group-hover:underline">
+                  {commandAlias}
+                </span>
+                <span className="text-[#858585] text-xs font-sans group-hover:text-[#F5F5F5] transition-colors">
                   {act.label}
-                </Typography>
-                <Typography variant="caption" className="text-[10px] font-mono text-[#666666] truncate">
-                  {act.href}
-                </Typography>
+                </span>
               </div>
-            </Card>
-          </Link>
-        ))}
+              <ArrowRight className="w-3 h-3 text-[#444444] group-hover:text-[#62E6B2] transition-colors" />
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
 };
+

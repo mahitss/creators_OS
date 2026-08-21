@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Typography, EmptyState } from '@vapor/ui';
+import { Activity } from 'lucide-react';
 import { ActivityItem } from '../../lib/api/home';
 
 interface RecentActivityProps {
@@ -10,48 +10,45 @@ interface RecentActivityProps {
 
 export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between pb-1">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 text-sm">🤖</span>
-          <Typography variant="h3" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Live AI Agent Feed
-          </Typography>
+          <Activity className="w-3.5 h-3.5 text-[#858585]" />
+          <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest font-mono">
+            AGENT EXECUTION FEED
+          </span>
         </div>
-        <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span className="text-[10px] font-mono text-[#62E6B2] flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
           STREAMING
         </span>
       </div>
 
       {activities.length === 0 ? (
-        <Card variant="panel" className="p-5 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] rounded-xl shadow-none">
-          <EmptyState
-            title="No Recent Activity"
-            description="Vapor hasn't executed any autonomous background tasks in the last 15 minutes. As agents trigger missions, telemetry will stream here in real time."
-          />
-        </Card>
+        <div className="p-4 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.06)] text-xs text-[#666666] font-mono">
+          No active agent task events in buffer.
+        </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col divide-y divide-[rgba(255,255,255,0.04)] bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] overflow-hidden">
           {activities.map((act) => (
-            <Card
+            <div
               key={act.id}
-              variant="panel"
-              className="flex items-center justify-between p-3.5 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] hover:bg-[#121212] hover:border-[rgba(255,255,255,0.16)] transition-all rounded-lg shadow-none"
+              className="flex items-center justify-between p-3 text-xs hover:bg-[#0D0D0D] transition-colors"
             >
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="w-2 h-2 rounded-full bg-[#62E6B2] shrink-0" />
-                <Typography variant="body" className="text-xs font-medium text-[#F5F5F5] truncate">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2] shrink-0" />
+                <span className="font-medium text-[#F5F5F5] truncate font-sans">
                   {act.title}
-                </Typography>
+                </span>
               </div>
-              <span className="text-[11px] font-mono text-[#A3A3A3] shrink-0 ml-3 bg-[#080808] px-2 py-0.5 rounded border border-[rgba(255,255,255,0.08)]">
+              <span className="text-[10px] font-mono text-[#666666] shrink-0 ml-3">
                 {act.timestamp}
               </span>
-            </Card>
+            </div>
           ))}
         </div>
       )}
     </div>
   );
 };
+

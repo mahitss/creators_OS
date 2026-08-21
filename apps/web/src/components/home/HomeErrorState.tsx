@@ -1,4 +1,5 @@
 import React from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@vapor/ui';
 
 interface HomeErrorStateProps {
@@ -7,38 +8,37 @@ interface HomeErrorStateProps {
 }
 
 export const HomeErrorState: React.FC<HomeErrorStateProps> = ({
-  message = 'Unable to connect to Vapor Core API kernel.',
+  message = 'Unable to connect to Kinetiq Core API kernel.',
   onRetry,
 }) => {
   const isConnectionRefused = message.toLowerCase().includes('connection') || message.toLowerCase().includes('fetch');
 
   return (
     <div className="flex-1 flex items-center justify-center p-6 min-h-[400px]">
-      <div className="max-w-md w-full bg-[#121520] border border-rose-900/40 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center gap-4">
-        <div className="w-12 h-12 rounded-xl bg-rose-950/60 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl font-bold">
-          ⚠️
+      <div className="max-w-md w-full bg-[#080808] border border-[rgba(255,107,122,0.20)] rounded-xl p-6 flex flex-col items-center text-center gap-4">
+        <div className="w-10 h-10 rounded-lg bg-[rgba(255,107,122,0.08)] border border-[rgba(255,107,122,0.20)] flex items-center justify-center text-[#FF6B7A]">
+          <AlertTriangle className="w-5 h-5" />
         </div>
         
         <div className="flex flex-col gap-1">
-          <h3 className="text-base font-bold text-slate-100">
+          <h3 className="text-sm font-bold text-[#F5F5F5] font-sans uppercase tracking-wider">
             {isConnectionRefused ? 'Backend Kernel Offline' : 'Executive Brief Error'}
           </h3>
-          <p className="text-slate-400 font-mono text-xs">
+          <p className="text-[#A3A3A3] font-mono text-xs">
             {message}
           </p>
         </div>
 
         {isConnectionRefused && (
-          <div className="w-full text-left bg-slate-900/80 border border-slate-800 rounded-lg p-3 text-[11px] font-mono text-slate-400 space-y-1">
-            <div className="text-slate-300 font-semibold">Troubleshooting:</div>
+          <div className="w-full text-left bg-[#050505] border border-[rgba(255,255,255,0.06)] rounded p-3 text-[11px] font-mono text-[#858585] space-y-1">
+            <div className="text-[#F5F5F5] font-semibold">Troubleshooting:</div>
             <div>• Ensure FastAPI is running on port 8000</div>
-            <div>• Command: <code className="text-cyan-400">uvicorn app.main:app --port 8000</code></div>
-            <div>• Docker: <code className="text-cyan-400">docker-compose up -d</code></div>
+            <div>• Command: <code className="text-[#62E6B2]">uvicorn app.main:app --port 8000</code></div>
           </div>
         )}
 
         <div className="flex gap-3 pt-2">
-          <Button variant="primary" onClick={onRetry} className="bg-rose-600 hover:bg-rose-500 text-white font-medium px-5 py-2">
+          <Button variant="danger" onClick={onRetry} size="sm">
             Retry Connection
           </Button>
         </div>
@@ -46,3 +46,4 @@ export const HomeErrorState: React.FC<HomeErrorStateProps> = ({
     </div>
   );
 };
+

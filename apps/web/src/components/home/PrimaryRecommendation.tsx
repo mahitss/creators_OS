@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, Typography, Button } from '@vapor/ui';
+import { Zap, ArrowRight } from 'lucide-react';
+import { Button } from '@vapor/ui';
 import { RecommendationItem } from '../../lib/api/home';
 
 interface PrimaryRecommendationProps {
@@ -13,36 +14,34 @@ export const PrimaryRecommendation: React.FC<PrimaryRecommendationProps> = ({ re
   if (!recommendation) return null;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[#62E6B2] text-sm">💡</span>
-        <Typography variant="h3" className="text-xs font-bold text-[#62E6B2] uppercase tracking-wider">
-          Recommended Next Step
-        </Typography>
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center gap-2 pb-1 border-b border-[rgba(255,255,255,0.06)]">
+        <Zap className="w-3.5 h-3.5 text-[#62E6B2]" />
+        <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest font-mono">
+          RECOMMENDED ACTION
+        </span>
       </div>
 
-      <Card
-        variant="panel"
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 p-5 sm:p-6 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] rounded-xl shadow-none hover:bg-[#0E0E0E] transition-colors"
-      >
-        <div className="flex flex-col gap-1.5 max-w-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 bg-[#080808] rounded-xl border border-[rgba(255,255,255,0.06)] hover:bg-[#0B0B0B] transition-colors">
+        <div className="flex flex-col gap-1 max-w-xl">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#62E6B2] shrink-0" />
-            <Typography variant="h3" className="text-sm sm:text-base font-bold text-[#F5F5F5]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2] shrink-0" />
+            <span className="text-sm font-semibold text-[#F5F5F5] font-sans">
               {recommendation.title}
-            </Typography>
+            </span>
           </div>
-          <Typography variant="body" className="text-xs sm:text-sm text-[#A3A3A3] leading-relaxed">
+          <p className="text-xs text-[#A3A3A3] leading-relaxed">
             {recommendation.reason}
-          </Typography>
+          </p>
         </div>
 
         <Link href={recommendation.action_href} className="shrink-0 w-full sm:w-auto">
-          <Button variant="primary" size="md" className="w-full sm:w-auto">
-            {recommendation.action_label} →
+          <Button variant="primary" size="sm" className="w-full sm:w-auto">
+            {recommendation.action_label}
           </Button>
         </Link>
-      </Card>
+      </div>
     </div>
   );
 };
+

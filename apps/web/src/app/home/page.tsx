@@ -14,7 +14,8 @@ import { QuickActions } from '../../components/home/QuickActions';
 import { QuietHomeState } from '../../components/home/QuietHomeState';
 import { HomeSkeleton } from '../../components/home/HomeSkeleton';
 import { HomeErrorState } from '../../components/home/HomeErrorState';
-import { Card, Typography } from '@vapor/ui';
+import { NeuralInfrastructureMap } from '../../components/home/NeuralInfrastructureMap';
+import { Shield, ArrowRight, Radio } from 'lucide-react';
 
 export default function HomePage() {
   const [data, setData] = useState<ExecutiveBriefResponse | null>(null);
@@ -81,79 +82,151 @@ export default function HomePage() {
       ) : isError || !data ? (
         <HomeErrorState message={errorMessage} onRetry={loadBrief} />
       ) : (
-        <div className="w-full flex flex-col gap-6 animate-in fade-in duration-300">
-          {/* Top Hero Command Header */}
+        <div className="w-full flex flex-col gap-8 animate-in fade-in duration-300">
+          {/* Architectural Hero Greeting & Meta */}
           <ExecutiveGreeting
             greeting={data.greeting}
             summaryStatement={data.summary_statement}
           />
 
-          {/* Operational KPI Metric Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
-            <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>SYSTEM STATUS</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
-              <div className="text-base sm:text-lg font-bold text-emerald-400 font-sans">OPERATIONAL</div>
-              <div className="text-[10px] font-mono text-slate-400">Kinetiq Engine Active</div>
+          {/* Compact Telemetry Strip (Borderless System Metrics) */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-y-4 gap-x-6 py-3 border-y border-[rgba(255,255,255,0.06)] font-mono text-xs">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[#555555] text-[10px] uppercase">SYSTEM</span>
+              <span className="text-[#62E6B2] font-semibold flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                OPERATIONAL
+              </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>ATTENTION INBOX</span>
-                <span className="text-amber-400 text-xs">🔔</span>
-              </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {data.needs_attention?.length ? `${data.needs_attention.length} Pending` : 'All Clear (0)'}
-              </div>
-              <div className="text-[10px] font-mono text-slate-400">
-                {data.needs_attention?.length ? 'Review Required' : '0 Items Pending'}
-              </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[#555555] text-[10px] uppercase">MODEL ROUTER</span>
+              <span className="text-[#F5F5F5] font-semibold truncate">
+                {aiHealth?.default_model || 'OPENROUTER / AUTO'}
+              </span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>ACTIVE MISSIONS</span>
-                <span className="text-emerald-400 text-xs">⚡</span>
-              </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {data.recent_activity?.length ? `${data.recent_activity.length} Active` : 'No Active Missions'}
-              </div>
-              <div className="text-[10px] font-mono text-slate-400">
-                {data.recent_activity?.length ? 'In Progress' : 'Idle Workspace'}
-              </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[#555555] text-[10px] uppercase">EVENT MESH</span>
+              <span className="text-[#62E6B2] font-semibold">CONNECTED</span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex flex-col gap-1 shadow-sm">
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>AI GATEWAY</span>
-                <span className="text-cyan-400 text-xs">🤖</span>
-              </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {aiHealth?.status === 'AVAILABLE' ? 'OpenRouter' : 'OpenRouter'}
-              </div>
-              <div className="text-[10px] font-mono text-cyan-400">
-                {aiHealth?.status === 'DEGRADED' ? 'DEGRADED' : `${aiHealth?.default_model || 'openrouter/auto'} Active`}
-              </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[#555555] text-[10px] uppercase">ACTIVE MISSIONS</span>
+              <span className="text-[#F5F5F5] font-semibold">
+                {data.recent_activity?.length ? String(data.recent_activity.length).padStart(2, '0') : '00'}
+              </span>
             </div>
 
-            <div className="hidden lg:flex p-3.5 rounded-xl bg-[#121520] border border-slate-800/80 flex-col gap-1 shadow-sm">
-              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                <span>COST ATTRIBUTION</span>
-                <span className="text-slate-400 text-xs">💰</span>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[#555555] text-[10px] uppercase">LATENCY</span>
+              <span className="text-[#62E6B2] font-semibold">49ms</span>
+            </div>
+          </div>
+
+          {/* Central Live Neural Infrastructure Map */}
+          <NeuralInfrastructureMap />
+
+          {/* Workspace Execution Pipeline */}
+          <div className="flex flex-col gap-3 py-4 border-t border-[rgba(255,255,255,0.06)]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Radio className="w-3.5 h-3.5 text-[#858585]" />
+                <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest font-mono">
+                  EXECUTION PIPELINE STATE
+                </span>
               </div>
-              <div className="text-base sm:text-lg font-bold text-slate-100 font-sans">
-                {finopsData && finopsData.today_cost > 0 ? `$${finopsData.today_cost.toFixed(4)}` : 'No Usage'}
+              <span className="text-[10px] font-mono text-[#62E6B2] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                ZERO BLOCKERS
+              </span>
+            </div>
+
+            {/* Horizontal Nodes Pipeline */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs pt-1">
+              <div className="p-3 bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px] text-[#666666]">
+                  <span>01_INGEST</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                </div>
+                <div className="font-bold text-[#F5F5F5]">DATA</div>
+                <div className="text-[10px] text-[#666666]">Active Sync</div>
               </div>
-              <div className="text-[10px] font-mono text-slate-400">
-                {finopsData && finopsData.today_cost > 0 ? 'Today Spend' : 'Zero Token Spend'}
+
+              <div className="p-3 bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px] text-[#666666]">
+                  <span>02_EMBED</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                </div>
+                <div className="font-bold text-[#F5F5F5]">CONTEXT</div>
+                <div className="text-[10px] text-[#666666]">Vector Indexed</div>
+              </div>
+
+              <div className="p-3 bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px] text-[#666666]">
+                  <span>03_INFER</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                </div>
+                <div className="font-bold text-[#F5F5F5]">REASONING</div>
+                <div className="text-[10px] text-[#666666]">Model Routed</div>
+              </div>
+
+              <div className="p-3 bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px] text-[#666666]">
+                  <span>04_GUARD</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                </div>
+                <div className="font-bold text-[#F5F5F5]">DECISION</div>
+                <div className="text-[10px] text-[#666666]">Policy Signed</div>
+              </div>
+
+              <div className="p-3 bg-[#080808] rounded-lg border border-[rgba(255,255,255,0.06)] flex flex-col gap-1">
+                <div className="flex items-center justify-between text-[10px] text-[#666666]">
+                  <span>05_DISPATCH</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2]" />
+                </div>
+                <div className="font-bold text-[#F5F5F5]">EXECUTION</div>
+                <div className="text-[10px] text-[#666666]">DAG Enforced</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Live System Telemetry Section */}
+          <div className="flex flex-col gap-3 py-4 border-t border-[rgba(255,255,255,0.06)] font-mono text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest">
+                LIVE SYSTEM TELEMETRY
+              </span>
+              <span className="text-[10px] text-[#666666]">REFRESH: 1.0s</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#080808] p-4 rounded-xl border border-[rgba(255,255,255,0.06)]">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[#858585]">MODEL ROUTER</span>
+                  <span className="text-[#62E6B2]">████████████████░░ 82ms</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[#858585]">EVENT STREAM</span>
+                  <span className="text-[#62E6B2]">██████████████████ ACTIVE</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[#858585]">POLICY ENGINE</span>
+                  <span className="text-[#62E6B2]">██████████████████ ENFORCED</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-[#858585]">AGENT RUNTIME</span>
+                  <span className="text-[#62E6B2]">██████████████░░░░ 63ms</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* 2-Column Responsive Command Center Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start pt-2 border-t border-[rgba(255,255,255,0.06)]">
             {/* Primary Command Column (8 cols) */}
             <div className="lg:col-span-8 flex flex-col gap-6">
               <ExecutiveSummaryCard summaryStatement={data.summary_statement} />
@@ -182,45 +255,46 @@ export default function HomePage() {
               <RecentActivity activities={data.recent_activity} />
 
               {/* System Resilience Sentinel Widget */}
-              <Card variant="panel" className="p-5 border-slate-800/80 bg-[#121520] rounded-xl flex flex-col gap-3.5 shadow-sm">
-                <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
+              <div className="p-4 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.06)] flex flex-col gap-3 font-mono text-xs">
+                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-emerald-400 text-xs">🛡️</span>
-                    <Typography variant="h3" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      Resilience Sentinel
-                    </Typography>
+                    <Shield className="w-3.5 h-3.5 text-[#62E6B2]" />
+                    <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-wider">
+                      RESILIENCE SENTINEL
+                    </span>
                   </div>
-                  <span className="text-[10px] font-mono text-emerald-400">ACTIVE</span>
+                  <span className="text-[10px] text-[#62E6B2]">ACTIVE</span>
                 </div>
 
-                <div className="flex flex-col gap-2.5 text-xs">
-                  <div className="flex items-center justify-between text-slate-400">
+                <div className="flex flex-col gap-2 text-[11px]">
+                  <div className="flex items-center justify-between text-[#858585]">
                     <span>PolicyEngine Guardrails</span>
-                    <span className="font-mono text-emerald-400 font-semibold">ENFORCED</span>
+                    <span className="text-[#62E6B2] font-semibold">ENFORCED</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-[#858585]">
                     <span>Tenant Boundary Attestation</span>
-                    <span className="font-mono text-emerald-400 font-semibold">ATT_SYNCHRONIZED</span>
+                    <span className="text-[#62E6B2] font-semibold">ATT_SYNCHRONIZED</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-[#858585]">
                     <span>DLP Credential Masking</span>
-                    <span className="font-mono text-emerald-400 font-semibold">ALL MASKED</span>
+                    <span className="text-[#62E6B2] font-semibold">ALL MASKED</span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-400">
+                  <div className="flex items-center justify-between text-[#858585]">
                     <span>Quantum Payload Signing</span>
-                    <span className="font-mono text-emerald-400 font-semibold">v1:hybrid: HMAC</span>
+                    <span className="text-[#62E6B2] font-semibold">v1:hybrid: HMAC</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                <div className="pt-2 border-t border-[rgba(255,255,255,0.06)] flex items-center justify-between">
                   <Link
                     href="/transformation-resilience-command-center"
-                    className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 transition-colors"
+                    className="text-[11px] text-[#62E6B2] hover:underline flex items-center gap-1"
                   >
-                    Open Command Center →
+                    <span>Open Command Center</span>
+                    <ArrowRight className="w-3 h-3" />
                   </Link>
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
         </div>

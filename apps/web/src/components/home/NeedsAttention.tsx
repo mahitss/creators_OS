@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Card, Typography, Badge, Button } from '@vapor/ui';
+import { AlertCircle, ArrowRight } from 'lucide-react';
+import { Badge, Button } from '@vapor/ui';
 import { AttentionItem } from '../../lib/api/home';
 
 interface NeedsAttentionProps {
@@ -14,44 +15,44 @@ export const NeedsAttention: React.FC<NeedsAttentionProps> = ({ items }) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between pb-1 border-b border-[rgba(255,255,255,0.06)]">
         <div className="flex items-center gap-2">
-          <span className="text-amber-400 text-sm">🔔</span>
-          <Typography variant="h3" className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-            Needs Your Attention ({items.length})
-          </Typography>
+          <AlertCircle className="w-3.5 h-3.5 text-[#E7B95E]" />
+          <span className="text-xs font-bold text-[#F5F5F5] uppercase tracking-widest font-mono">
+            ATTENTION QUEUE ({items.length})
+          </span>
         </div>
-        <Link href="/attention" className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 transition-colors">
-          View All Items →
+        <Link href="/attention" className="text-[11px] font-mono text-[#62E6B2] hover:underline flex items-center gap-1">
+          <span>All Items</span>
+          <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col divide-y divide-[rgba(255,255,255,0.06)] bg-[#080808] rounded-xl border border-[rgba(255,255,255,0.06)] overflow-hidden">
         {items.map((item) => (
-          <Card
+          <div
             key={item.id}
-            variant="panel"
-            className="flex flex-col gap-3.5 p-5 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] rounded-xl shadow-none hover:bg-[#0E0E0E] transition-colors"
+            className="flex flex-col gap-3 p-4 sm:p-5 hover:bg-[#0B0B0B] transition-colors"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#E7B95E] shrink-0" />
-                <Typography variant="h3" className="text-sm sm:text-base font-bold text-[#F5F5F5]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E7B95E] shrink-0" />
+                <span className="text-sm font-semibold text-[#F5F5F5] font-sans">
                   {item.title}
-                </Typography>
+                </span>
               </div>
               <Badge variant={item.risk_level === 'HIGH' ? 'crimson' : 'amber'}>
                 {item.risk_level} RISK
               </Badge>
             </div>
 
-            <Typography variant="body" className="text-xs sm:text-sm text-[#A3A3A3] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#A3A3A3] leading-relaxed">
               {item.context}
-            </Typography>
+            </p>
 
-            <div className="p-2.5 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.08)] text-xs text-[#A3A3A3]">
-              <span className="font-semibold text-[#E7B95E] font-mono text-[11px] uppercase tracking-wide mr-1.5">
-                Impact Analysis:
+            <div className="p-2.5 rounded bg-[#050505] border border-[rgba(255,255,255,0.06)] text-xs text-[#858585]">
+              <span className="font-semibold text-[#E7B95E] font-mono text-[10px] uppercase tracking-wider mr-1.5">
+                IMPACT:
               </span>
               {item.why_it_matters}
             </div>
@@ -68,9 +69,10 @@ export const NeedsAttention: React.FC<NeedsAttentionProps> = ({ items }) => {
                 </Button>
               </Link>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>
   );
 };
+
