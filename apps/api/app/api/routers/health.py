@@ -1,3 +1,4 @@
+from typing import Optional
 from datetime import datetime, timezone
 import json
 import logging
@@ -14,11 +15,15 @@ router = APIRouter()
 logger = logging.getLogger("vapor.telemetry")
 
 @router.get("/health", response_model=HealthResponse)
-async def check_health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
+async def check_health(db: Optional[AsyncSession] = Depends(get_db)) -> HealthResponse:
+    from app.core.ai_provider import resolve_ai_provider
     import os
     services_status: ServiceHealthStatus = await get_system_health(db, settings.REDIS_URL)
     is_test = settings.ENVIRONMENT in ["development", "test"] or os.getenv("VAPOR_TEST_MODE") == "true" or bool(os.getenv("PYTEST_CURRENT_TEST"))
     is_healthy = services_status.database or is_test
+
+    provider = resolve_ai_provider()
+    provider_name = getattr(provider, "provider_name", type(provider).__name__)
     
     return HealthResponse(
         status="healthy" if is_healthy else "degraded",
@@ -28,8 +33,8 @@ async def check_health(db: AsyncSession = Depends(get_db)) -> HealthResponse:
         timestamp=datetime.now(timezone.utc).isoformat(),
         details={
             "database_engine": "postgresql+asyncpg",
-            "caching_engine": "redis",
-            "ai_provider": "deterministic_mock_provider"
+            "caching_engine": "redis" if services_status.redis else "in_memory",
+            "ai_provider": provider_name
         }
     )
 

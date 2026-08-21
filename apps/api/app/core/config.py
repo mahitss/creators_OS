@@ -1,5 +1,6 @@
 import os
 import secrets
+from pathlib import Path
 from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -38,7 +39,16 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     OPENROUTER_DEFAULT_MODEL: str = "openrouter/free"
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=[
+            str(Path(__file__).resolve().parents[4] / ".env"),
+            str(Path(__file__).resolve().parents[3] / ".env"),
+            str(Path(__file__).resolve().parents[2] / ".env"),
+            ".env"
+        ],
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 settings = Settings()
 
