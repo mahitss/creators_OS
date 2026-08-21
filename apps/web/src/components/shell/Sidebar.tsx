@@ -46,7 +46,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#090B0D] border-r border-[rgba(255,255,255,0.08)] transition-all duration-200 ease-out ${
+        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col bg-[#070707] border-r border-[rgba(255,255,255,0.08)] transition-all duration-200 ease-out ${
           isCollapsed ? 'w-16' : 'w-60'
         } ${
           isMobileOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0'
@@ -55,9 +55,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
         {/* Header / Brand Logo */}
         <div className="flex items-center justify-between h-14 px-4 border-b border-[rgba(255,255,255,0.08)]">
           <Link href="/home" className="flex items-center gap-2.5 overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-[#6FF0C2] shadow-[0_0_10px_rgba(111,240,194,0.6)] shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#62E6B2] shadow-none shrink-0" />
             {(!isCollapsed || isMobileOpen) && (
-              <span className="font-semibold tracking-wider text-[#F5F7FA] text-sm font-sans uppercase">
+              <span className="font-semibold tracking-wider text-[#F5F5F5] text-sm font-sans uppercase">
                 KINETIQ
               </span>
             )}
@@ -80,16 +80,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
               return (
                 <div
                   key={item.id}
-                  className={`flex items-center gap-3 px-3 py-2 text-xs rounded-md text-slate-600 cursor-not-allowed select-none ${
+                  className={`flex items-center gap-3 px-3 py-2 text-xs rounded-md text-[#404040] cursor-not-allowed select-none ${
                     isCollapsed && !isMobileOpen ? 'justify-center' : ''
                   }`}
                   title={`${item.label} (Coming in Sprint 4)`}
                 >
-                  <span className="shrink-0 opacity-50">{item.icon}</span>
+                  <span className="shrink-0 opacity-40">{item.icon}</span>
                   {(!isCollapsed || isMobileOpen) && (
                     <div className="flex items-center justify-between w-full">
                       <span>{item.label}</span>
-                      <span className="text-[9px] font-mono uppercase bg-slate-800/60 text-slate-500 px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-mono uppercase bg-[#111111] text-[#666666] px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.06)]">
                         Soon
                       </span>
                     </div>
@@ -103,10 +103,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
                 key={item.id}
                 href={item.href}
                 onClick={onMobileClose}
-                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6FF0C2] ${
+                className={`flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#62E6B2] ${
                   isActive
-                    ? 'bg-[#6FF0C2]/10 text-[#6FF0C2] font-semibold border-l-2 border-[#6FF0C2]'
-                    : 'text-[rgba(245,247,250,0.60)] hover:text-[#F5F7FA] hover:bg-[rgba(255,255,255,0.04)]'
+                    ? 'bg-[#151515] text-[#F5F5F5] font-semibold border-l-2 border-[#62E6B2]'
+                    : 'text-[#8A8A8A] hover:text-[#F5F5F5] hover:bg-[#111111]'
                 } ${isCollapsed && !isMobileOpen ? 'justify-center px-0' : ''}`}
               >
                 <span className="shrink-0">{item.icon}</span>
@@ -118,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ navItems, isMobileOpen, onMobi
 
         {/* Sidebar Footer */}
         {(!isCollapsed || isMobileOpen) && (
-          <div className="p-3 border-t border-slate-800/80 text-[11px] font-mono text-slate-600">
+          <div className="p-3 border-t border-[rgba(255,255,255,0.08)] text-[11px] font-mono text-[#666666]">
             KERNEL_V0.1.0 // ACTIVE
           </div>
         )}

@@ -1,27 +1,27 @@
 export const tokens = {
   colors: {
     // Semantic Backgrounds
-    background: 'var(--vapor-bg, #050607)',
-    surface: 'var(--vapor-surface, #090B0D)',
-    elevatedSurface: 'var(--vapor-elevated, #0C0F11)',
+    background: 'var(--kinetic-black, #050505)',
+    surface: 'var(--kinetic-surface, #0B0B0B)',
+    elevatedSurface: 'var(--kinetic-elevated, #101010)',
 
     // Semantic Text
-    primaryText: 'var(--vapor-text-primary, #F5F7FA)',
-    secondaryText: 'var(--vapor-text-secondary, rgba(245, 247, 250, 0.65))',
-    mutedText: 'var(--vapor-text-muted, rgba(245, 247, 250, 0.40))',
+    primaryText: 'var(--kinetic-white, #F5F5F5)',
+    secondaryText: 'var(--kinetic-gray, #A3A3A3)',
+    mutedText: 'var(--kinetic-muted, #666666)',
 
     // Semantic Borders
-    border: 'var(--vapor-border, rgba(255, 255, 255, 0.08))',
-    borderSubtle: 'var(--vapor-border-subtle, rgba(255, 255, 255, 0.04))',
-    borderActive: 'var(--vapor-border-active, #6FF0C2)',
+    border: 'var(--kinetic-border, rgba(255, 255, 255, 0.10))',
+    borderSubtle: 'var(--kinetic-border-subtle, rgba(255, 255, 255, 0.05))',
+    borderActive: 'var(--kinetic-green, #62E6B2)',
 
     // Semantic Accents
-    primaryAccent: 'var(--vapor-emerald, #6FF0C2)',
-    primaryAccentHover: '#5AE0B2',
-    success: 'var(--vapor-emerald, #6FF0C2)',
-    warning: 'var(--vapor-amber, #F59E0B)',
-    danger: 'var(--vapor-crimson, #EF4444)',
-    info: 'var(--vapor-cyan, #9BB7FF)',
+    primaryAccent: 'var(--kinetic-green, #62E6B2)',
+    primaryAccentHover: '#52D6A2',
+    success: 'var(--kinetic-green, #62E6B2)',
+    warning: 'var(--kinetic-warning, #E7B95E)',
+    danger: 'var(--kinetic-error, #FF6B7A)',
+    info: 'var(--kinetic-green, #62E6B2)',
   },
 
   typography: {

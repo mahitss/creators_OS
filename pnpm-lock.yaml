@@ -24,6 +24,8 @@ importers:
         specifier: ^5.4.0
         version: 5.9.3
 
+  apps/api: {}
+
   apps/web:
     dependencies:
       '@types/three':

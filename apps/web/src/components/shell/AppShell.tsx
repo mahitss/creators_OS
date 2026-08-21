@@ -303,10 +303,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   if (authState === 'CHECKING') {
     return (
-      <div className="min-h-screen bg-[#090A0F] text-slate-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen bg-[#050505] text-[#F5F5F5] flex flex-col items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-          <span className="text-xs font-mono text-slate-400">Verifying Vapor OS Session...</span>
+          <div className="w-8 h-8 border-2 border-[rgba(255,255,255,0.14)] border-t-[#62E6B2] rounded-full animate-spin" />
+          <span className="text-xs font-mono text-[#A3A3A3]">Verifying KINETIQ Session...</span>
         </div>
       </div>
     );
@@ -317,7 +317,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#050607] text-[#F5F7FA] flex flex-col antialiased selection:bg-[#6FF0C2]/30 selection:text-[#6FF0C2] overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-[#F5F5F5] flex flex-col antialiased selection:bg-[#62E6B2]/20 selection:text-[#62E6B2] overflow-x-hidden">
       {/* Mobile Drawer Backdrop */}
       {isMobileMenuOpen && (
         <div
@@ -329,18 +329,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Left Navigation Sidebar */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#090B0D] border-r border-[rgba(255,255,255,0.08)] transition-all duration-300 ease-in-out ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#070707] border-r border-[rgba(255,255,255,0.08)] transition-all duration-300 ease-in-out ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
         } ${
           isMobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Brand Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] shrink-0 bg-[#090B0D]">
+        <div className="h-14 px-4 flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] shrink-0 bg-[#070707]">
           <Link href="/home" className="flex items-center gap-2.5 group overflow-hidden">
-            <span className="w-3 h-3 rounded-full bg-[#6FF0C2] shadow-[0_0_10px_rgba(111,240,194,0.6)] group-hover:scale-110 transition-transform shrink-0" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#62E6B2] shadow-none shrink-0" />
             {(!isSidebarCollapsed || isMobileMenuOpen) && (
-              <span className="font-bold tracking-widest text-sm text-[#F5F7FA] uppercase font-mono truncate">
+              <span className="font-bold tracking-widest text-sm text-[#F5F5F5] uppercase font-mono truncate">
                 KINETIQ
               </span>
             )}
@@ -349,7 +349,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           {/* Desktop Collapse Toggle */}
           <button
             onClick={toggleSidebarCollapse}
-            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs transition-colors"
+            className="hidden lg:flex items-center justify-center w-7 h-7 rounded-md bg-[#0B0B0B] border border-[rgba(255,255,255,0.10)] text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#121212] text-xs transition-colors"
             title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
@@ -359,7 +359,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           {/* Mobile Close Button */}
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 text-xs"
+            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md bg-[#0B0B0B] border border-[rgba(255,255,255,0.10)] text-[#A3A3A3] hover:text-[#F5F5F5] text-xs"
             aria-label="Close navigation"
           >
             ✕
@@ -368,20 +368,20 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
         {/* Sidebar Search Filter (expanded mode only) */}
         {(!isSidebarCollapsed || isMobileMenuOpen) && (
-          <div className="p-3 border-b border-slate-800/60 shrink-0">
+          <div className="p-3 border-b border-[rgba(255,255,255,0.08)] shrink-0">
             <div className="relative">
               <input
                 type="text"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
                 placeholder="Filter routes..."
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-900/90 border border-slate-800/90 rounded-md text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/30 transition-all font-sans"
+                className="w-full pl-8 pr-3 py-1.5 bg-[#080808] border border-[rgba(255,255,255,0.10)] rounded-md text-xs text-[#F5F5F5] placeholder-[#555555] focus:outline-none focus:border-[rgba(255,255,255,0.25)] transition-all font-sans"
               />
-              <span className="absolute left-2.5 top-2 text-xs text-slate-500">🔍</span>
+              <span className="absolute left-2.5 top-2 text-xs text-[#666666]">🔍</span>
               {searchFilter && (
                 <button
                   onClick={() => setSearchFilter('')}
-                  className="absolute right-2.5 top-2 text-xs text-slate-500 hover:text-slate-300"
+                  className="absolute right-2.5 top-2 text-xs text-[#666666] hover:text-[#F5F5F5]"
                 >
                   ✕
                 </button>
@@ -403,18 +403,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 {(!isSidebarCollapsed || isMobileMenuOpen) ? (
                   <button
                     onClick={() => toggleCategory(cat.id)}
-                    className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-slate-400 hover:text-slate-200 rounded transition-colors group"
+                    className="w-full flex items-center justify-between px-2 py-1 text-[11px] font-mono uppercase tracking-wider text-[#A3A3A3] hover:text-[#F5F5F5] rounded transition-colors group"
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <span>{cat.icon}</span>
                       <span className="truncate">{cat.name}</span>
                     </span>
-                    <span className="text-[10px] text-slate-600 group-hover:text-slate-400 transition-transform">
+                    <span className="text-[10px] text-[#666666] group-hover:text-[#A3A3A3] transition-transform">
                       {isCatCollapsed ? '▼' : '▲'}
                     </span>
                   </button>
                 ) : (
-                  <div className="w-full flex justify-center py-1 text-xs text-slate-600" title={cat.name}>
+                  <div className="w-full flex justify-center py-1 text-xs text-[#666666]" title={cat.name}>
                     <span>{cat.icon}</span>
                   </div>
                 )}
@@ -434,8 +434,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           title={isSidebarCollapsed && !isMobileMenuOpen ? item.label : undefined}
                           className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all group ${
                             isActive
-                              ? 'bg-[#6FF0C2]/10 text-[#6FF0C2] font-semibold border-l-2 border-[#6FF0C2] pl-2 shadow-sm'
-                              : 'text-[rgba(245,247,250,0.60)] hover:text-[#F5F7FA] hover:bg-[rgba(255,255,255,0.04)]'
+                              ? 'bg-[#151515] text-[#F5F5F5] font-semibold border-l-2 border-[#62E6B2] pl-2 shadow-none'
+                              : 'text-[#8A8A8A] hover:text-[#F5F5F5] hover:bg-[#111111]'
                           } ${isSidebarCollapsed && !isMobileMenuOpen ? 'justify-center px-0' : ''}`}
                         >
                           <span className="text-sm shrink-0">{item.icon}</span>
@@ -445,7 +445,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                           {(!isSidebarCollapsed || isMobileMenuOpen) &&
                             item.badgeCount !== undefined &&
                             item.badgeCount > 0 && (
-                              <span className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold shrink-0">
+                              <span className="px-1.5 py-0.5 rounded-full bg-[rgba(231,185,94,0.12)] text-[#E7B95E] border border-[rgba(231,185,94,0.25)] text-[10px] font-bold shrink-0">
                                 {item.badgeCount}
                               </span>
                             )}
@@ -460,18 +460,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </nav>
 
         {/* Sidebar Footer Info */}
-        <div className="p-3 border-t border-slate-800/80 shrink-0 bg-[#0A0C12] flex items-center justify-between text-[11px] font-mono text-slate-500">
+        <div className="p-3 border-t border-[rgba(255,255,255,0.08)] shrink-0 bg-[#070707] flex items-center justify-between text-[11px] font-mono text-[#666666]">
           {(!isSidebarCollapsed || isMobileMenuOpen) ? (
             <>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-[#62E6B2] animate-pulse" />
                 <span>v1.0.1-patch</span>
               </span>
-              <span className="text-slate-600">PROD</span>
+              <span className="text-[#666666]">PROD</span>
             </>
           ) : (
             <div className="w-full flex justify-center" title="v1.0.1-patch PROD">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-[#62E6B2] animate-pulse" />
             </div>
           )}
         </div>
@@ -484,21 +484,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         }`}
       >
         {/* Top Header Bar */}
-        <header className="h-14 border-b border-[rgba(255,255,255,0.08)] bg-[#090B0D]/95 backdrop-blur-md sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
+        <header className="h-14 border-b border-[rgba(255,255,255,0.08)] bg-[#050505] sticky top-0 z-40 px-4 sm:px-6 flex items-center justify-between gap-4 max-w-full">
           {/* Left: Mobile Menu Toggle & Context Breadcrumb */}
           <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md bg-slate-900 border border-slate-800 text-slate-300 hover:text-white"
+              className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md bg-[#0B0B0B] border border-[rgba(255,255,255,0.10)] text-[#A3A3A3] hover:text-[#F5F5F5]"
               aria-label="Open navigation menu"
             >
               ☰
             </button>
 
             <div className="flex items-center gap-2 text-xs truncate">
-              <span className="text-[rgba(245,247,250,0.60)] font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
-              <span className="text-[rgba(245,247,250,0.30)] hidden sm:inline">/</span>
-              <span className="text-[rgba(245,247,250,0.60)] font-mono text-[11px] flex items-center gap-1.5">
+              <span className="text-[#A3A3A3] font-mono text-[11px] uppercase tracking-wider hidden sm:inline">{currentItem.cat.name}</span>
+              <span className="text-[#404040] hidden sm:inline">/</span>
+              <span className="text-[#A3A3A3] font-mono text-[11px] flex items-center gap-1.5">
                 <span>{currentItem.item.icon}</span>
                 <span>WORKSPACE</span>
               </span>
@@ -510,54 +510,54 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             {/* Global Search / Command Palette Button */}
             <button
               onClick={() => setIsCommandPaletteOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-xs text-slate-400 hover:text-slate-200 transition-all font-mono shadow-sm"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#0A0A0A] border border-[rgba(255,255,255,0.10)] hover:border-[rgba(255,255,255,0.18)] text-xs text-[#A3A3A3] hover:text-[#F5F5F5] transition-all font-mono shadow-none"
               aria-label="Open Command Palette (Cmd+K)"
             >
               <span>🔍 Search</span>
-              <kbd className="hidden sm:inline px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400 border border-slate-700">
+              <kbd className="hidden sm:inline px-1.5 py-0.5 rounded bg-[#050505] text-[10px] text-[#666666] border border-[rgba(255,255,255,0.10)]">
                 ⌘K
               </kbd>
             </button>
 
             {/* Live Telemetry Status Chip */}
-            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#6FF0C2]/10 border border-[#6FF0C2]/30 text-[11px] font-mono text-[#6FF0C2]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6FF0C2] animate-pulse" />
+            <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-full bg-[rgba(98,230,178,0.06)] border border-[rgba(98,230,178,0.22)] text-[11px] font-mono text-[#62E6B2]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2] animate-pulse" />
               <span>SYSTEM OPERATIONAL</span>
             </div>
 
             {/* Attention Notifications Quick Link */}
             <Link
               href="/attention"
-              className="relative p-1.5 rounded-md text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent hover:border-slate-700 transition-all"
+              className="relative p-1.5 rounded-md text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-[#111111] border border-transparent hover:border-[rgba(255,255,255,0.10)] transition-all"
               title="Notifications"
               aria-label="Notifications"
             >
               <span className="text-sm">🔔</span>
               {openAttentionCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] font-bold flex items-center justify-center shadow">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E7B95E] text-[#050505] text-[9px] font-bold flex items-center justify-center">
                   {openAttentionCount}
                 </span>
               )}
             </Link>
 
             {/* Workspace Context Chip */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
-              <span className="text-[#6FF0C2] text-xs">⚡</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#080808] border border-[rgba(255,255,255,0.10)] text-[11px] font-mono text-[#A3A3A3]">
+              <span className="text-[#62E6B2] text-xs">⚡</span>
               <span>{currentUser?.workspace_id || 'Workspace'}</span>
             </div>
 
             {/* User Profile Avatar & Logout Pill */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+            <div className="flex items-center gap-2 pl-2 border-l border-[rgba(255,255,255,0.08)]">
               <div 
-                className="w-7 h-7 rounded-full bg-[#6FF0C2]/20 border border-[#6FF0C2]/40 flex items-center justify-center text-xs font-semibold text-[#6FF0C2]"
+                className="w-7 h-7 rounded-full bg-[rgba(98,230,178,0.10)] border border-[rgba(98,230,178,0.25)] flex items-center justify-center text-xs font-semibold text-[#62E6B2]"
                 title={currentUser?.email || 'Authenticated User'}
               >
                 {currentUser?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || 'U'}
               </div>
               <button
                 onClick={handleLogout}
-                className="px-2 py-1 text-[11px] font-mono text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 rounded border border-transparent hover:border-rose-900/40 transition-colors"
-                title="Sign out of Vapor OS"
+                className="px-2 py-1 text-[11px] font-mono text-[#A3A3A3] hover:text-[#FF6B7A] hover:bg-[rgba(255,107,122,0.08)] rounded border border-transparent hover:border-[rgba(255,107,122,0.20)] transition-colors"
+                title="Sign out of Kinetiq"
               >
                 Logout
               </button>

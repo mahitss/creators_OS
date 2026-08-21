@@ -31,12 +31,12 @@ export const NeedsAttention: React.FC<NeedsAttentionProps> = ({ items }) => {
           <Card
             key={item.id}
             variant="panel"
-            className="flex flex-col gap-3.5 p-5 border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent rounded-xl shadow-sm"
+            className="flex flex-col gap-3.5 p-5 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] rounded-xl shadow-none hover:bg-[#0E0E0E] transition-colors"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                <Typography variant="h3" className="text-sm sm:text-base font-bold text-slate-100">
+                <span className="w-2 h-2 rounded-full bg-[#E7B95E] shrink-0" />
+                <Typography variant="h3" className="text-sm sm:text-base font-bold text-[#F5F5F5]">
                   {item.title}
                 </Typography>
               </div>
@@ -45,12 +45,12 @@ export const NeedsAttention: React.FC<NeedsAttentionProps> = ({ items }) => {
               </Badge>
             </div>
 
-            <Typography variant="body" className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <Typography variant="body" className="text-xs sm:text-sm text-[#A3A3A3] leading-relaxed">
               {item.context}
             </Typography>
 
-            <div className="p-2.5 rounded-lg bg-black/40 border border-slate-800/80 text-xs text-slate-300">
-              <span className="font-semibold text-amber-400 font-mono text-[11px] uppercase tracking-wide mr-1.5">
+            <div className="p-2.5 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.08)] text-xs text-[#A3A3A3]">
+              <span className="font-semibold text-[#E7B95E] font-mono text-[11px] uppercase tracking-wide mr-1.5">
                 Impact Analysis:
               </span>
               {item.why_it_matters}
@@ -58,7 +58,7 @@ export const NeedsAttention: React.FC<NeedsAttentionProps> = ({ items }) => {
 
             <div className="flex items-center gap-3 pt-1">
               <Link href={item.primary_action.href}>
-                <Button variant="primary" size="sm" className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold border-none shadow-md">
+                <Button variant="primary" size="sm">
                   {item.primary_action.label}
                 </Button>
               </Link>

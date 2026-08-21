@@ -18,10 +18,10 @@ export const ToastContainer: React.FC<ToastProps> = ({ toasts, onDismiss }) => {
   if (toasts.length === 0) return null;
 
   const typeStyles = {
-    info: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/10',
-    success: 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10',
-    warning: 'border-amber-500/30 text-amber-400 bg-amber-500/10',
-    error: 'border-rose-500/30 text-rose-400 bg-rose-500/10',
+    info: 'border-[rgba(255,255,255,0.12)] text-[#F5F5F5] bg-[#0B0B0B]',
+    success: 'border-[rgba(98,230,178,0.25)] text-[#62E6B2] bg-[#0B0B0B]',
+    warning: 'border-[rgba(231,185,94,0.25)] text-[#E7B95E] bg-[#0B0B0B]',
+    error: 'border-[rgba(255,107,122,0.25)] text-[#FF6B7A] bg-[#0B0B0B]',
   };
 
   return (

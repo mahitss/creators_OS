@@ -6,31 +6,52 @@
    KINETIQ DESIGN SYSTEM & RESPONSIVE UNIT ENGINE
    ══════════════════════════════════════════════════════════ */
 :root {
-  --bg-base: #050607;
-  --bg-panel: #090B0D;
-  --accent-emerald: #6FF0C2;
+  --kinetic-black: #050505;
+  --kinetic-bg-secondary: #080808;
+  --kinetic-surface: #0B0B0B;
+  --kinetic-elevated: #101010;
+  --kinetic-card: #0D0D0D;
+  --kinetic-card-hover: #121212;
 
-  --vapor-bg: #050607;
-  --vapor-surface: #090B0D;
-  --vapor-elevated: #0C0F11;
-  --vapor-border: rgba(255, 255, 255, 0.08);
-  --vapor-border-subtle: rgba(255, 255, 255, 0.04);
-  --vapor-border-active: #6FF0C2;
-  --vapor-text-primary: #F5F7FA;
-  --vapor-text-secondary: rgba(245, 247, 250, 0.65);
-  --vapor-text-muted: rgba(245, 247, 250, 0.40);
-  --vapor-emerald: #6FF0C2;
-  --vapor-cyan: #9BB7FF;
-  --vapor-amber: #F59E0B;
-  --vapor-crimson: #EF4444;
+  --kinetic-border: rgba(255, 255, 255, 0.10);
+  --kinetic-border-strong: rgba(255, 255, 255, 0.16);
 
-  --ink: #F5F7FA;
-  --muted: rgba(245, 247, 250, 0.65);
-  --nav: rgba(245, 247, 250, 0.55);
-  --strip: rgba(245, 247, 250, 0.40);
-  --pill: #ffffff;
-  --pill-ink: #050607;
-  --bg: #050607;
+  --kinetic-white: #F5F5F5;
+  --kinetic-gray: #A3A3A3;
+  --kinetic-muted: #666666;
+  --kinetic-disabled: #404040;
+
+  --kinetic-green: #62E6B2;
+  --kinetic-green-dark: #12382C;
+  --kinetic-error: #FF6B7A;
+  --kinetic-warning: #E7B95E;
+
+  --bg-base: #050505;
+  --bg-panel: #0B0B0B;
+  --accent-emerald: #62E6B2;
+
+  --vapor-bg: #050505;
+  --vapor-surface: #0B0B0B;
+  --vapor-elevated: #101010;
+  --vapor-card: #0D0D0D;
+  --vapor-border: rgba(255, 255, 255, 0.10);
+  --vapor-border-subtle: rgba(255, 255, 255, 0.05);
+  --vapor-border-active: #62E6B2;
+  --vapor-text-primary: #F5F5F5;
+  --vapor-text-secondary: #A3A3A3;
+  --vapor-text-muted: #666666;
+  --vapor-emerald: #62E6B2;
+  --vapor-cyan: #62E6B2;
+  --vapor-amber: #E7B95E;
+  --vapor-crimson: #FF6B7A;
+
+  --ink: #F5F5F5;
+  --muted: #A3A3A3;
+  --nav: #8A8A8A;
+  --strip: #666666;
+  --pill: #F2F2F2;
+  --pill-ink: #050505;
+  --bg: #050505;
 
   /* Reference canvas: 1487 x 1058 */
   --u: calc(100vh / 1058);

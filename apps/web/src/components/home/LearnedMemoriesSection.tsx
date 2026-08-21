@@ -31,16 +31,16 @@ export const LearnedMemoriesSection: React.FC<LearnedMemoriesSectionProps> = ({ 
           <Card
             key={mem.id}
             variant="panel"
-            className="flex flex-col gap-2 p-4 border-slate-800/80 bg-[#121520] hover:border-cyan-500/40 transition-all rounded-xl shadow-sm"
+            className="flex flex-col gap-2 p-4 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] hover:border-[rgba(255,255,255,0.18)] hover:bg-[#121212] transition-all rounded-xl shadow-none"
           >
             <div className="flex items-center justify-between gap-2">
-              <Badge variant="cyan">{mem.type.toUpperCase()}</Badge>
-              <span className="text-[10px] font-mono text-slate-500">SYNCHRONIZED</span>
+              <Badge variant="emerald">{mem.type.toUpperCase()}</Badge>
+              <span className="text-[10px] font-mono text-[#666666]">SYNCHRONIZED</span>
             </div>
-            <Typography variant="body" className="text-xs font-bold text-slate-100 line-clamp-1">
+            <Typography variant="body" className="text-xs font-bold text-[#F5F5F5] line-clamp-1">
               {mem.title}
             </Typography>
-            <Typography variant="caption" className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
+            <Typography variant="caption" className="text-xs text-[#A3A3A3] line-clamp-2 leading-relaxed">
               {mem.content}
             </Typography>
           </Card>

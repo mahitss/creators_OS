@@ -15,12 +15,12 @@ export const Typography: React.FC<TypographyProps> = ({
   const Component = as || (variant === 'h1' ? 'h1' : variant === 'h2' ? 'h2' : variant === 'h3' ? 'h3' : variant === 'code' ? 'code' : 'p');
 
   const variantStyles = {
-    h1: 'text-2xl font-bold tracking-tight text-slate-100',
-    h2: 'text-lg font-semibold tracking-tight text-slate-100',
-    h3: 'text-base font-medium text-slate-200',
-    body: 'text-sm text-slate-300 leading-relaxed',
-    caption: 'text-xs text-slate-500 font-normal',
-    code: 'font-mono text-xs text-emerald-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 tabular-nums',
+    h1: 'text-2xl font-bold tracking-tight text-[#F5F5F5]',
+    h2: 'text-lg font-semibold tracking-tight text-[#F5F5F5]',
+    h3: 'text-base font-medium text-[#F5F5F5]',
+    body: 'text-sm text-[#A3A3A3] leading-relaxed',
+    caption: 'text-xs text-[#666666] font-normal',
+    code: 'font-mono text-xs text-[#62E6B2] bg-[#080808] px-1.5 py-0.5 rounded border border-[rgba(255,255,255,0.10)] tabular-nums',
   };
 
   return (

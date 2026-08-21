@@ -18,7 +18,7 @@ export interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ tabs, activeTabId, onChange, className = '' }) => {
   return (
-    <div className={`flex items-center gap-1 border-b border-slate-800/80 ${className}`} role="tablist">
+    <div className={`flex items-center gap-1 border-b border-[rgba(255,255,255,0.08)] ${className}`} role="tablist">
       {tabs.map((tab) => {
         const isActive = tab.id === activeTabId;
         return (
@@ -28,15 +28,15 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTabId, onChange, classNa
             aria-selected={isActive}
             disabled={tab.disabled}
             onClick={() => !tab.disabled && onChange(tab.id)}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-medium border-b-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+            className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold border-b-2 transition-all focus-visible:outline-none ${
               isActive
-                ? 'border-emerald-500 text-emerald-400 font-semibold'
-                : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                ? 'border-[#62E6B2] text-[#F5F5F5]'
+                : 'border-transparent text-[#666666] hover:text-[#A3A3A3] hover:border-[rgba(255,255,255,0.12)]'
             } ${tab.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
           >
             <span>{tab.label}</span>
             {tab.badge !== undefined && (
-              <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-mono ${isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`px-1.5 py-0.5 text-[10px] rounded-full font-mono ${isActive ? 'bg-[rgba(98,230,178,0.12)] text-[#62E6B2]' : 'bg-[#151515] text-[#666666]'}`}>
                 {tab.badge}
               </span>
             )}

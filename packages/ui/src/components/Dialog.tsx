@@ -22,28 +22,28 @@ export const Dialog: React.FC<DialogProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div
-        className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-lg shadow-2xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="relative w-full max-w-md bg-[#0B0B0B] border border-[rgba(255,255,255,0.12)] rounded-xl shadow-2xl p-6 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'dialog-title' : undefined}
         aria-describedby={description ? 'dialog-description' : undefined}
       >
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.08)] mb-4">
           <div>
             {title && (
-              <h2 id="dialog-title" className="text-base font-semibold text-slate-100">
+              <h2 id="dialog-title" className="text-base font-semibold text-[#F5F5F5]">
                 {title}
               </h2>
             )}
             {description && (
-              <p id="dialog-description" className="text-xs text-slate-400 mt-0.5">
+              <p id="dialog-description" className="text-xs text-[#A3A3A3] mt-0.5">
                 {description}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded hover:bg-slate-800"
+            className="text-[#666666] hover:text-[#F5F5F5] transition-colors p-1 rounded hover:bg-[#121212]"
             aria-label="Close dialog"
           >
             ✕

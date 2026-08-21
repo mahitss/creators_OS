@@ -8,15 +8,15 @@ interface TodaysBriefProps {
 
 export const TodaysBrief: React.FC<TodaysBriefProps> = ({ isEmptyState }) => {
   return (
-    <Card variant="panel" className="flex flex-col gap-4 p-6 border-slate-800/80 bg-[#12141C]">
+    <Card variant="panel" className="flex flex-col gap-4 p-6 border-[rgba(255,255,255,0.10)] bg-[#0B0B0B] rounded-xl shadow-none">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <Typography variant="h3" className="text-sm font-semibold text-slate-200">
+          <span className="w-2 h-2 rounded-full bg-[#62E6B2] animate-pulse" />
+          <Typography variant="h3" className="text-sm font-semibold text-[#F5F5F5]">
             Today&apos;s Brief
           </Typography>
         </div>
-        <Typography variant="caption" className="text-slate-500 font-mono text-[11px]">
+        <Typography variant="caption" className="text-[#666666] font-mono text-[11px]">
           REALTIME_CONTEXT
         </Typography>
       </div>

@@ -252,42 +252,34 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-slate-100 flex flex-col justify-center items-center px-4 relative overflow-hidden font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
-      {/* Background ambient lighting effects */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-indigo-600/20 via-sky-500/10 to-transparent blur-[120px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[300px] bg-purple-600/10 blur-[100px] pointer-events-none rounded-full" />
-
+    <div className="min-h-screen bg-[#050505] text-[#F5F5F5] flex flex-col justify-center items-center px-4 relative overflow-hidden font-sans selection:bg-[#62E6B2]/20 selection:text-[#62E6B2]">
       {/* Main Container Card */}
       <div className="w-full max-w-md z-10">
         {/* Brand Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-b from-cyan-500 to-blue-700 shadow-xl shadow-cyan-500/20 border border-cyan-400/30 mb-4">
-            <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2" />
-              <polyline points="2 17 12 22 22 17" />
-              <polyline points="2 12 12 17 22 12" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.14)] mb-4">
+            <span className="w-3.5 h-3.5 rounded-full bg-[#62E6B2]" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center justify-center gap-2 font-mono">
+          <h1 className="text-2xl font-bold tracking-tight text-[#F5F5F5] flex items-center justify-center gap-2 font-mono">
             KINETIQ
           </h1>
-          <p className="text-sm text-slate-400 mt-1 font-sans">Spatial AI Operating System for Enterprise</p>
+          <p className="text-xs text-[#A3A3A3] mt-1 font-mono tracking-wide uppercase">Spatial AI Operating System for Enterprise</p>
         </div>
 
         {/* Auth Box */}
-        <div className="bg-[#0D1117]/80 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-7 shadow-2xl shadow-black/80">
-          <div className="flex border-b border-slate-800 mb-6 pb-2">
+        <div className="bg-[#0B0B0B] border border-[rgba(255,255,255,0.10)] rounded-xl p-7 shadow-none">
+          <div className="flex border-b border-[rgba(255,255,255,0.08)] mb-6 pb-2">
             <button
               type="button"
               onClick={() => { setActiveTab('google'); setErrorMsg(null); }}
-              className={`flex-1 text-center py-2 text-sm font-medium border-b-2 transition-all ${activeTab === 'google' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`flex-1 text-center py-2 text-sm font-semibold border-b-2 transition-all ${activeTab === 'google' ? 'border-[#F5F5F5] text-[#F5F5F5]' : 'border-transparent text-[#666666] hover:text-[#A3A3A3]'}`}
             >
               Google Identity
             </button>
             <button
               type="button"
               onClick={() => { setActiveTab('passkey'); setErrorMsg(null); }}
-              className={`flex-1 text-center py-2 text-sm font-medium border-b-2 transition-all ${activeTab === 'passkey' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+              className={`flex-1 text-center py-2 text-sm font-semibold border-b-2 transition-all ${activeTab === 'passkey' ? 'border-[#F5F5F5] text-[#F5F5F5]' : 'border-transparent text-[#666666] hover:text-[#A3A3A3]'}`}
             >
               Passkey / Direct
             </button>
@@ -295,18 +287,18 @@ function LoginContent() {
 
           {/* Error Alert */}
           {errorMsg && (
-            <div className="mb-5 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-xs flex items-start gap-2.5">
-              <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <div className="mb-5 p-3.5 rounded-lg bg-[rgba(255,107,122,0.10)] border border-[rgba(255,107,122,0.25)] text-[#FF6B7A] text-xs flex items-start gap-2.5">
+              <svg className="w-4 h-4 text-[#FF6B7A] shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <div className="flex-1">{errorMsg}</div>
-              <button onClick={() => setErrorMsg(null)} className="text-rose-400 hover:text-rose-200">×</button>
+              <button onClick={() => setErrorMsg(null)} className="text-[#FF6B7A] hover:text-white">×</button>
             </div>
           )}
 
           {activeTab === 'google' ? (
             <div className="flex flex-col items-center gap-4">
-              <p className="text-xs text-slate-400 text-center leading-relaxed">
+              <p className="text-xs text-[#A3A3A3] text-center leading-relaxed">
                 Sign in with your verified Google Account. Identity is validated server-side via OpenID Connect.
               </p>
 
@@ -316,9 +308,9 @@ function LoginContent() {
                   <button
                     type="button"
                     disabled
-                    className="w-full max-w-[320px] flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-slate-900/80 border border-slate-800 text-sm font-medium text-slate-400 cursor-not-allowed opacity-75 shadow-sm"
+                    className="w-full max-w-[320px] flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.10)] text-sm font-medium text-[#666666] cursor-not-allowed opacity-75 shadow-none"
                   >
-                    <svg className="animate-spin w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none">
+                    <svg className="animate-spin w-4 h-4 text-[#62E6B2]" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -339,9 +331,9 @@ function LoginContent() {
                     <button
                       type="button"
                       onClick={handleRetryGis}
-                      className="w-full max-w-[320px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-rose-950/40 border border-rose-800/60 hover:bg-rose-900/50 text-sm font-medium text-rose-200 transition-all shadow-sm active:scale-[0.98]"
+                      className="w-full max-w-[320px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[rgba(255,107,122,0.10)] border border-[rgba(255,107,122,0.25)] hover:bg-[rgba(255,107,122,0.18)] text-sm font-medium text-[#FF6B7A] transition-all shadow-none active:scale-[0.98]"
                     >
-                      <svg className="w-4 h-4 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg className="w-4 h-4 text-[#FF6B7A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                         <path d="M3 3v5h5" />
                         <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
@@ -350,7 +342,7 @@ function LoginContent() {
                       Retry Google Sign-In
                     </button>
                     {gisErrorMessage && (
-                      <p className="text-[11px] text-rose-400/90 text-center leading-normal max-w-[320px]">
+                      <p className="text-[11px] text-[#FF6B7A] text-center leading-normal max-w-[320px]">
                         {gisErrorMessage}
                       </p>
                     )}
@@ -358,38 +350,36 @@ function LoginContent() {
                 )}
               </div>
 
-              <div className="w-full bg-slate-900/60 rounded-xl p-3.5 border border-slate-800 text-[11px] text-slate-400 space-y-1.5 mt-2">
-                <div className="flex items-center gap-1.5 font-medium text-slate-300">
-                  <svg className="w-3.5 h-3.5 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+              <div className="w-full bg-[#080808] rounded-lg p-3.5 border border-[rgba(255,255,255,0.08)] text-[11px] text-[#A3A3A3] space-y-1.5 mt-2">
+                <div className="flex items-center gap-1.5 font-medium text-[#F5F5F5]">
+                  <span className="text-[#62E6B2]">🔒</span>
                   Decoupled Permission Architecture
                 </div>
-                <p>Google sign-in only establishes your identity. Gmail, Google Drive, and Calendar permissions are isolated and requested on-demand in Settings.</p>
+                <p className="text-[#666666]">Google sign-in only establishes your identity. Gmail, Google Drive, and Calendar permissions are isolated and requested on-demand in Settings.</p>
               </div>
             </div>
           ) : (
             <form onSubmit={handlePasskeyOrDirectLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">Work Email</label>
+                <label className="block text-xs font-medium text-[#A3A3A3] mb-1.5">Work Email</label>
                 <input
                   type="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
                   placeholder="alex@enterprise.corp"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-3.5 py-2.5 rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.12)] text-sm text-[#F5F5F5] placeholder-[#555555] focus:outline-none focus:border-[rgba(255,255,255,0.30)] focus:ring-0"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all shadow-lg shadow-indigo-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-lg bg-[#F2F2F2] hover:bg-[#FFFFFF] text-[#050505] font-semibold text-sm transition-all shadow-none disabled:opacity-40 flex items-center justify-center gap-2 active:scale-[0.98]"
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin w-4 h-4 text-white" viewBox="0 0 24 24" fill="none">
+                    <svg className="animate-spin w-4 h-4 text-[#050505]" viewBox="0 0 24 24" fill="none">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -404,8 +394,8 @@ function LoginContent() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-8 text-center text-xs text-slate-500">
-          VAPOR OS Kernel &bull; Zero-Trust Authorization &bull; RBAC & ABAC Governed
+        <div className="mt-8 text-center text-xs text-[#666666] font-mono">
+          KINETIQ Kernel &bull; Zero-Trust Authorization &bull; RBAC & ABAC Governed
         </div>
       </div>
     </div>
@@ -414,7 +404,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#07090E] flex items-center justify-center text-slate-400">Loading Vapor OS Login...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#050505] flex items-center justify-center text-[#666666] font-mono">Loading Kinetiq Login...</div>}>
       <LoginContent />
     </Suspense>
   );

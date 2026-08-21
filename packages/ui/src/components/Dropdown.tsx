@@ -37,7 +37,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ trigger, items, align = 'rig
 
       {isOpen && (
         <div
-          className={`absolute z-50 mt-1 w-48 rounded-md bg-slate-900 border border-slate-800 shadow-xl py-1 focus:outline-none animate-in fade-in-80 zoom-in-95 ${
+          className={`absolute z-50 mt-1 w-48 rounded-lg bg-[#0B0B0B] border border-[rgba(255,255,255,0.12)] shadow-xl py-1 focus:outline-none animate-in fade-in-80 zoom-in-95 ${
             align === 'right' ? 'right-0' : 'left-0'
           }`}
           role="menu"
@@ -54,8 +54,8 @@ export const Dropdown: React.FC<DropdownProps> = ({ trigger, items, align = 'rig
               disabled={item.disabled}
               className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${
                 item.danger
-                  ? 'text-rose-400 hover:bg-rose-500/10'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                  ? 'text-[#FF6B7A] hover:bg-[rgba(255,107,122,0.10)]'
+                  : 'text-[#A3A3A3] hover:bg-[#151515] hover:text-[#F5F5F5]'
               } ${item.disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
               role="menuitem"
             >

@@ -11,29 +11,29 @@ export const ExecutiveSummaryCard: React.FC<ExecutiveSummaryCardProps> = ({ summ
   return (
     <Card
       variant="panel"
-      className="flex flex-col gap-4 p-5 sm:p-6 border-slate-800/90 bg-[#121520] rounded-xl shadow-md relative overflow-hidden"
+      className="flex flex-col gap-4 p-5 sm:p-6 border-[rgba(255,255,255,0.10)] bg-[#080808] rounded-xl shadow-none relative overflow-hidden"
     >
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-          <Typography variant="h3" className="text-sm font-bold text-slate-100 uppercase tracking-wider">
+          <div className="w-2 h-2 rounded-full bg-[#62E6B2] shadow-none" />
+          <Typography variant="h3" className="text-sm font-bold text-[#F5F5F5] uppercase tracking-wider">
             Executive Summary
           </Typography>
         </div>
-        <div className="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-          <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400 font-semibold">
+        <div className="flex items-center gap-2 text-[11px] font-mono text-[#A3A3A3]">
+          <span className="px-2 py-0.5 rounded-full bg-[rgba(98,230,178,0.06)] border border-[rgba(98,230,178,0.22)] text-[#62E6B2] font-semibold uppercase">
             LIVE BRIEF
           </span>
-          <span className="text-slate-600 hidden sm:inline">•</span>
-          <span className="text-slate-400 hidden sm:inline">OpenRouter Gateway</span>
+          <span className="text-[#404040] hidden sm:inline">•</span>
+          <span className="text-[#A3A3A3] hidden sm:inline">OpenRouter Gateway</span>
         </div>
       </div>
 
-      <Typography variant="body" className="text-slate-200 text-sm sm:text-base leading-relaxed font-sans">
+      <Typography variant="body" className="text-[#F5F5F5] text-sm sm:text-base leading-relaxed font-sans">
         {summaryStatement}
       </Typography>
 
-      <div className="flex items-center justify-between pt-2 text-[11px] font-mono text-slate-500 border-t border-slate-800/40">
+      <div className="flex items-center justify-between pt-2 text-[11px] font-mono text-[#666666] border-t border-[rgba(255,255,255,0.06)]">
         <span>AI Gateway: OpenRouter (openrouter/auto)</span>
         <span>Storage: Neon PostgreSQL • Redis Connected</span>
       </div>

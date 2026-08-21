@@ -23,23 +23,23 @@ export const ExecutiveGreeting: React.FC<ExecutiveGreetingProps> = ({
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-2">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2.5">
-          <Typography variant="h1" className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white">
+          <Typography variant="h1" className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-[#F5F5F5]">
             {greeting}
           </Typography>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[11px] font-semibold tracking-wide">
+          <span className="px-2.5 py-0.5 rounded-full bg-[rgba(98,230,178,0.06)] border border-[rgba(98,230,178,0.22)] text-[#62E6B2] font-mono text-[11px] font-semibold tracking-wide uppercase">
             LIVE BRIEF
           </span>
         </div>
-        <Typography variant="caption" className="text-slate-400 text-xs sm:text-sm max-w-2xl leading-relaxed">
+        <Typography variant="caption" className="text-[#A3A3A3] text-xs sm:text-sm max-w-2xl leading-relaxed">
           {summaryStatement}
         </Typography>
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
         <div className="flex flex-col items-end text-right">
-          <span className="text-[11px] font-mono text-slate-400 font-medium">{currentDate}</span>
-          <span className="text-[10px] font-mono text-emerald-400 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-mono text-[#A3A3A3] font-medium">{currentDate}</span>
+          <span className="text-[10px] font-mono text-[#62E6B2] flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#62E6B2] animate-pulse" />
             SYNCHRONIZED (PROD-US-EAST-1)
           </span>
         </div>
