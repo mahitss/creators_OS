@@ -9,6 +9,8 @@ from app.schemas.memory import (
     MemoryUpdate,
     MemoryResponse,
     MemoryListResponse,
+    MemorySearchRequest,
+    MemorySearchResponse,
     MemoryCandidateResponse,
     MemoryCandidateListResponse,
 )
@@ -16,32 +18,37 @@ from app.services import memory_service
 
 router = APIRouter()
 
-@router.get("/memories", response_model=MemoryListResponse)
-async def list_memories(
-    type: Optional[str] = Query(None, description="Filter by memory type"),
-    importance: Optional[str] = Query(None, description="Filter by importance"),
-    search: Optional[str] = Query(None, description="Text search in title or content"),
-    archived: bool = Query(False, description="Include archived memories"),
+@router.post("/memory/search", response_model=MemorySearchResponse)
+@router.post("/memories/search", response_model=MemorySearchResponse)
+async def search_memories(
+    payload: MemorySearchRequest,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
-) -> MemoryListResponse:
-    items, total = await memory_service.list_memories(
-        db, ws_ctx.workspace_id, type_filter=type, importance_filter=importance, search_query=search, is_archived=archived
+) -> MemorySearchResponse:
+    items = await memory_service.retrieve_relevant_memories(
+        session=db,
+        workspace_id=ws_ctx.workspace_id,
+        query_context=payload.query,
+        limit=payload.limit or 5,
+        type_filter=payload.type_filter
     )
-    return MemoryListResponse(
+    return MemorySearchResponse(
         memories=[MemoryResponse(**m) for m in items],
-        total=total
+        count=len(items),
+        query=payload.query
     )
 
+@router.post("/memory", response_model=MemoryResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/memories", response_model=MemoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_memory(
     payload: MemoryCreate,
     ws_ctx: WorkspaceContext = Depends(get_current_workspace),
     db: Optional[AsyncSession] = Depends(get_db),
 ) -> MemoryResponse:
-    mem = await memory_service.create_memory(db, ws_ctx.workspace_id, payload)
+    mem = await memory_service.create_memory(db, ws_ctx.workspace_id, payload, created_by=ws_ctx.user_id)
     return MemoryResponse(**mem)
 
+@router.get("/memory/{id}", response_model=MemoryResponse)
 @router.get("/memories/{id}", response_model=MemoryResponse)
 async def get_memory(
     id: str,
@@ -55,6 +62,20 @@ async def get_memory(
             detail="Memory not found in active workspace."
         )
     return MemoryResponse(**mem)
+
+@router.delete("/memory/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/memories/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_memory_singular(
+    id: str,
+    ws_ctx: WorkspaceContext = Depends(get_current_workspace),
+    db: Optional[AsyncSession] = Depends(get_db),
+):
+    success = await memory_service.delete_memory(db, ws_ctx.workspace_id, id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Memory not found in active workspace."
+        )
 
 @router.patch("/memories/{id}", response_model=MemoryResponse)
 async def update_memory(

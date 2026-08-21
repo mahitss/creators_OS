@@ -306,6 +306,53 @@ class AgentEvent(Base):
         Index("idx_agent_events_workspace_time", "workspace_id", "timestamp"),
     )
 
+class ToolCallAuditLog(Base):
+    __tablename__ = "tool_call_audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tool_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    tool_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    agent_run_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="SET NULL"), nullable=True, index=True)
+    mission_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("missions.id", ondelete="SET NULL"), nullable=True, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    authorization_result: Mapped[str] = mapped_column(String(50), nullable=False, default="AUTHORIZED")
+    policy_result: Mapped[dict] = mapped_column(JSON, default=dict)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(50), nullable=False, default="SUCCESS")
+    error_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    truncated: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    input_sanitized: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_sanitized: Mapped[dict] = mapped_column(JSON, default=dict)
+
+    __table_args__ = (
+        Index("idx_tool_audit_ws_time", "workspace_id", "timestamp"),
+        Index("idx_tool_audit_run_time", "agent_run_id", "timestamp"),
+    )
+
+class ContextSnapshot(Base):
+    __tablename__ = "context_snapshots"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    agent_run_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_runs.id", ondelete="CASCADE"), nullable=False, index=True)
+    workspace_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("workspaces.id", ondelete="CASCADE"), nullable=False, index=True)
+    sources: Mapped[list] = mapped_column(JSON, default=list)
+    memory_ids: Mapped[list] = mapped_column(JSON, default=list)
+    knowledge_ids: Mapped[list] = mapped_column(JSON, default=list)
+    document_ids: Mapped[list] = mapped_column(JSON, default=list)
+    policy_version: Mapped[str] = mapped_column(String(50), nullable=False, default="v1")
+    agent_version_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_versions.id", ondelete="SET NULL"), nullable=True)
+    token_budget: Mapped[int] = mapped_column(Integer, nullable=False, default=16384)
+    estimated_tokens: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+
+    __table_args__ = (
+        Index("idx_ctx_snapshot_run", "agent_run_id"),
+        Index("idx_ctx_snapshot_ws_time", "workspace_id", "created_at"),
+    )
+
 class MissionExecution(Base):
     __tablename__ = "mission_executions"
 

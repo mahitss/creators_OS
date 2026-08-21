@@ -245,21 +245,42 @@ export interface AgentVersion {
 export interface AgentRun {
   id: string;
   agentId: string;
-  agentVersionId: string;
+  agentVersionId?: string;
+  agent_version_id?: string;
   missionId?: string | null;
+  mission_id?: string | null;
   workspaceId: string;
-  status: AgentRunStatus;
+  workspace_id?: string;
+  status: AgentRunStatus | string;
   currentStep: number;
+  current_step?: number;
+  maxSteps?: number;
+  max_steps?: number;
+  goal?: string;
+  finalResult?: string | null;
+  final_result?: string | null;
+  errorMessage?: string | null;
+  error_message?: string | null;
+  failureType?: string | null;
+  failure_type?: string | null;
   startedAt?: string | null;
+  started_at?: string | null;
   completedAt?: string | null;
+  completed_at?: string | null;
   durationMs: number;
+  duration_ms?: number;
   inputTokens: number;
+  input_tokens?: number;
   outputTokens: number;
+  output_tokens?: number;
   totalTokens: number;
+  total_tokens?: number;
   costUsd: number;
+  cost_usd?: number;
   errorInfo?: Record<string, unknown> | string | null;
   resultData?: Record<string, unknown> | string | null;
   createdAt: string;
+  created_at?: string;
 }
 
 export interface AgentObservation {
@@ -286,16 +307,189 @@ export interface AgentEvent {
   payload: Record<string, unknown>;
 }
 
+export type ToolCategory =
+  | 'READ'
+  | 'SEARCH'
+  | 'DATA'
+  | 'CONTENT'
+  | 'COMMUNICATION'
+  | 'WORKFLOW'
+  | 'SYSTEM'
+  | 'ADMIN';
+
 export interface ToolDefinition {
   id: string;
   name: string;
   description: string;
-  inputSchema: Record<string, unknown>;
+  version?: number | string;
+  category: ToolCategory | string;
+  inputSchema?: Record<string, unknown>;
+  input_schema?: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
-  requiredPermissions: string[];
-  riskLevel: ToolRiskLevel;
-  timeoutSeconds: number;
+  output_schema?: Record<string, unknown>;
+  requiredPermissions?: string[];
+  required_permissions?: string[];
+  riskLevel?: ToolRiskLevel | string;
+  risk_level?: ToolRiskLevel | string;
+  timeoutMs?: number;
+  timeout_ms?: number;
+  timeoutSeconds?: number;
+  timeout_seconds?: number;
   enabled: boolean;
+}
+
+export interface AgentToolDiscoveryResponse {
+  agentId?: string;
+  agent_id?: string;
+  workspaceId?: string;
+  workspace_id?: string;
+  authorizedTools?: ToolDefinition[];
+  authorized_tools?: ToolDefinition[];
+  deniedTools?: Array<{ tool_id?: string; name: string; reason: string }>;
+  denied_tools?: Array<{ tool_id?: string; name: string; reason: string }>;
+  totalAuthorized?: number;
+  total_authorized?: number;
+  totalDenied?: number;
+  total_denied?: number;
+}
+
+export interface ToolExecutionContext {
+  userId: string;
+  workspaceId: string;
+  tenantId?: string;
+  userRole?: string;
+  agentId?: string;
+  agentVersionId?: string;
+  agentRunId?: string;
+  missionId?: string;
+  requestId?: string;
+  traceId?: string;
+}
+
+export interface ToolCallAuditLog {
+  id: string;
+  toolId?: string;
+  tool_id?: string;
+  toolName?: string;
+  tool_name?: string;
+  agentRunId?: string | null;
+  agent_run_id?: string | null;
+  missionId?: string | null;
+  mission_id?: string | null;
+  workspaceId?: string;
+  workspace_id?: string;
+  userId?: string;
+  user_id?: string;
+  timestamp: string;
+  authorizationResult?: 'AUTHORIZED' | 'DENIED' | 'APPROVAL_REQUIRED' | string;
+  authorization_result?: 'AUTHORIZED' | 'DENIED' | 'APPROVAL_REQUIRED' | string;
+  policyResult?: Record<string, unknown>;
+  policy_result?: Record<string, unknown>;
+  durationMs?: number;
+  duration_ms?: number;
+  status: 'SUCCESS' | 'FAILED' | 'TIMEOUT' | 'DENIED' | string;
+  errorCode?: string | null;
+  error_code?: string | null;
+  idempotencyKey?: string | null;
+  idempotency_key?: string | null;
+  truncated?: boolean;
+  inputSanitized?: Record<string, unknown>;
+  input_sanitized?: Record<string, unknown>;
+  outputSanitized?: Record<string, unknown>;
+  output_sanitized?: Record<string, unknown>;
+  output_summary?: Record<string, unknown>;
+}
+
+export type MemoryType = 'EPISODIC' | 'SEMANTIC' | 'PROCEDURAL' | 'WORKING';
+
+export interface MemoryProvenance {
+  sourceType?: string;
+  source_type?: string;
+  sourceId?: string | null;
+  source_id?: string | null;
+  createdBy?: string;
+  created_by?: string;
+  confidence?: number;
+  timestamp?: string;
+}
+
+export interface MemoryRecord {
+  id: string;
+  workspaceId?: string;
+  workspace_id?: string;
+  type: MemoryType | string;
+  title: string;
+  content: string;
+  sourceType?: string;
+  source_type?: string;
+  sourceId?: string | null;
+  source_id?: string | null;
+  importance?: 'low' | 'medium' | 'high' | 'critical' | string;
+  confidence?: number;
+  isArchived?: boolean;
+  is_archived?: boolean;
+  createdAt?: string;
+  created_at?: string;
+  updatedAt?: string;
+  updated_at?: string;
+  provenance?: MemoryProvenance;
+  metadata?: Record<string, unknown>;
+}
+
+export interface CitationItem {
+  sourceType?: 'document' | 'knowledge' | 'memory' | 'mission_step' | string;
+  source_type?: 'document' | 'knowledge' | 'memory' | 'mission_step' | string;
+  sourceId?: string;
+  source_id?: string;
+  title: string;
+  snippet?: string;
+  workspaceId?: string;
+  workspace_id?: string;
+  confidence?: number;
+}
+
+export interface ContextSnapshot {
+  id: string;
+  agentRunId?: string;
+  agent_run_id?: string;
+  workspaceId?: string;
+  workspace_id?: string;
+  sources?: Array<{ type: string; id: string; title?: string }>;
+  memoryIds?: string[];
+  memory_ids?: string[];
+  knowledgeIds?: string[];
+  knowledge_ids?: string[];
+  documentIds?: string[];
+  document_ids?: string[];
+  policyVersion?: string;
+  policy_version?: string;
+  agentVersionId?: string | null;
+  agent_version_id?: string | null;
+  tokenBudget?: number;
+  token_budget?: number;
+  estimatedTokens?: number;
+  estimated_tokens?: number;
+  createdAt?: string;
+  created_at?: string;
+}
+
+export interface ContextPreview {
+  sections: Array<{
+    name: string;
+    content: string;
+    estimatedTokens?: number;
+    estimated_tokens?: number;
+    isUntrusted?: boolean;
+    is_untrusted?: boolean;
+  }>;
+  totalEstimatedTokens?: number;
+  total_estimated_tokens?: number;
+  tokenCeiling?: number;
+  token_ceiling?: number;
+  isBudgetExceeded?: boolean;
+  is_budget_exceeded?: boolean;
+  citations: CitationItem[];
+  sources?: Array<{ type: string; id: string; title?: string }>;
 }
 
 export interface Workflow {
