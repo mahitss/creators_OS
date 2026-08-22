@@ -4380,7 +4380,7 @@ class DegradationMode(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-class CircuitBreakerState(Base):
+class CircuitBreakerStateV2(Base):
     __tablename__ = "circuit_breaker_states_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -4400,7 +4400,7 @@ class DeadLetterEntry(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True) # pending, replayed, discarded
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
-class RecoveryPlan(Base):
+class RecoveryPlanV2(Base):
     __tablename__ = "recovery_plans_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -4441,7 +4441,7 @@ class IntegrityCheck(Base):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="passed") # passed, corrupted
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-class RecoveryExecution(Base):
+class RecoveryExecutionV2(Base):
     __tablename__ = "recovery_executions_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -5574,7 +5574,7 @@ class KPIReplacement(Base):
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     replaced_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-class Forecast(Base):
+class ForecastV2(Base):
     __tablename__ = "forecasts_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -6836,7 +6836,7 @@ class StrategicUncertainty(Base):
     is_critical: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
 
-class StrategicAssumption(Base):
+class StrategicAssumptionV2(Base):
     __tablename__ = "strategic_assumptions_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -8257,7 +8257,7 @@ class TransformationRootCauseAssessment(Base):
     description: Mapped[Text] = mapped_column(Text, nullable=False)
     confidence: Mapped[str] = mapped_column(String(50), nullable=False, default="high")
 
-class TransformationEarlyWarning(Base):
+class TransformationEarlyWarningV2(Base):
     __tablename__ = "transformation_early_warnings_v2"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
